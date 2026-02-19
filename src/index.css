@@ -8,6 +8,10 @@ html, body, #root {
   font-family: 'Pretendard', sans-serif;
 }
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: 'Pretendard';
   src: url('/fonts/PretendardJP-Thin.otf') format('opentype');
@@ -63,3 +67,4 @@ html, body, #root {
   src: url('/fonts/PretendardJP-Black.otf') format('opentype');
   font-weight: 900;
 }
+
