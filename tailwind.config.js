@@ -82,8 +82,14 @@ export default {
           10: '#002130',
         },
         primary: '#3385FF',
-        danger: '#FF4242'
-      }
+        danger: '#FF4242',
+        white: '#FEFEFE',
+        divider_grey: '#DADADA',
+      }, 
+      fontFamily: {
+        pretendard: ['Pretendard', 'sans-serif'],
+        suite: ['SUITE', 'sans-serif'],
+      },
     },
   },
   plugins: [],

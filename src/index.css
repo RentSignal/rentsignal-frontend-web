@@ -68,3 +68,10 @@ html, body, #root {
   font-weight: 900;
 }
 
+@font-face {
+  font-family: 'SUITE';
+  src: url('/fonts/SUITE-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
