@@ -1,12 +1,24 @@
 import { NavLink } from 'react-router-dom';
+import type { ComponentType, SVGProps } from 'react'
+import HomeIcon from '@/assets/icons/home.svg?react'
+import InfoIcon from '@/assets/icons/info.svg?react'
+import RecommendIcon from '@/assets/icons/recommend.svg?react'
+import CommunityIcon from '@/assets/icons/community.svg?react';
+import ProfileIcon from '@/assets/icons/profile.svg?react';
+
+type MenuItem = {
+  name: string
+  path: string
+  icon: ComponentType<SVGProps<SVGSVGElement>>
+}
 
 const Sidebar = () => {
-  const menu = [
-    { name: '홈', path: '/' },
-    { name: '정보', path: '/info' },
-    { name: '추천', path: '/recommend' },
-    { name: '커뮤니티', path: '/community' },
-    { name: '프로필', path: '/profile' },
+  const menu: MenuItem[] = [
+    { name: '홈', path: '/', icon: HomeIcon },
+    { name: '정보', path: '/info', icon: InfoIcon },
+    { name: '추천', path: '/recommend', icon: RecommendIcon },
+    { name: '커뮤니티', path: '/community', icon: CommunityIcon },
+    { name: '프로필', path: '/profile', icon: ProfileIcon },
   ];
 
   return (
@@ -21,24 +33,24 @@ const Sidebar = () => {
         gap: '40px',
       }}
     >
-      {menu.map((item) => (
-        <NavLink
-          key={item.path}
-          to={item.path}
-          style={({ isActive }) => ({
-            display: 'block',
-            width: '100%',   
-            padding: '12px 12px 12px 12px',
-            color: isActive ? 'orange' : 'black',
-            textDecoration: 'none',
-            fontWeight: isActive ? 'bold' : 'normal',
-            textAlign: 'center',  
-            fontSize: '13px',   
-          })}
-        >
-          {item.name}
-        </NavLink>
-      ))}
+    {menu.map((item) => (
+    <NavLink
+      key={item.path}
+      to={item.path}
+      className={({ isActive }) =>
+        `flex flex-col items-center gap-1 w-full py-3 text-sm ${
+          isActive
+            ? 'text-primary font-medium'
+            : 'text-textDefault'
+        }`
+      }
+    >
+        {item.icon && (
+          <item.icon width={24} height={24} fill="currentColor" />
+        )}
+        {item.name}
+      </NavLink>
+    ))}
     </div>
   );
 };
