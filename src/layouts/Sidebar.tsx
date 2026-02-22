@@ -22,17 +22,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div
-      style={{
-        width: '80px',
-        backgroundColor: '#FFFFFF',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-        paddingTop: '40px',
-        gap: '40px',
-      }}
-    >
+    <div className="w-[60px] h-full bg-white flex flex-col items-stretch border-r pt-10 gap-10">
     {menu.map((item) => (
     <NavLink
       key={item.path}
