@@ -75,3 +75,11 @@ html, body, #root {
   font-style: normal;
   font-display: swap;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;           /* Chrome, Safari */
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE, Edge (legacy) */
+  scrollbar-width: none;    /* Firefox */
+}

@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Map from '../components/Map';
-import RentSignalIcon from '@/assets/icons/rentsignal.svg?react';
-import MenuIcon from '@/assets/icons/menu.svg?react'; // 경로는 맞게 수정
+import PanelHeader from '@/components/Panel/PanelHeader';
 
 const MainLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -23,29 +22,17 @@ const MainLayout = () => {
         <Map />
 
         {/* 패널 */}
-          <div
+        <div
             className={`
               absolute left-0 top-0 h-full w-[377px]
-              bg-white p-5 border-r border-divider_grey
+              bg-white border-r border-divider_grey
               z-40
               transition-transform duration-300 ease-in-out
               ${isOpen ? 'translate-x-0' : 'translate-x-[-315px]'}
             `}
           >
           {/* 헤더 */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <RentSignalIcon className="w-6 h-6" />
-              <p className="font-suite font-bold text-lg">
-                RentSignal
-              </p>
-            </div>
-
-            <button onClick={() => setIsOpen(prev => !prev)}>
-              <MenuIcon className="w-5 h-5" />
-            </button>
-          </div>
-
+          <PanelHeader onToggle={() => setIsOpen(prev => !prev)} />
           <Outlet />
         </div>
 

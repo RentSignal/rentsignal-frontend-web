@@ -1,5 +1,11 @@
+import InfoToggle from "@/components/InfoToggle";
+
 const Info = () => {
-  return <div>정보 탭</div>;
+  return (
+    <>
+      <InfoToggle/>
+    </>
+  );
 };
 
 export default Info;

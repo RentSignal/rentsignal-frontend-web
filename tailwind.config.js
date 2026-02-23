@@ -85,6 +85,7 @@ export default {
         danger: '#FF4242',
         white: '#FEFEFE',
         divider_grey: '#DADADA',
+        toggle_grey: '#B4B4B4',
       }, 
       fontFamily: {
         pretendard: ['Pretendard', 'sans-serif'],
