@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import seoulGeoJson from "@/assets/geojson/seoul-gu.json";
+// import seoulGeoJson from "@/assets/geojson/seoul-gu.json";
+import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
+import { regionMap } from "@/constants/regionMap";
+import { regionColor, regionBoundaryColor } from "@/constants/regionColor";
 
 declare global {
   interface Window {
@@ -103,37 +106,52 @@ const Map = () => {
       }
     });
   };
-
   const createPolygon = (map: any, rings: number[][][], properties: any) => {
     const paths = rings.map((ring) =>
       ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
     );
 
+    const guName = properties.SIG_KOR_NM;
+    const region = regionMap[guName];
+    const fillColor = regionColor[region] ?? "#C4ECFE";
+    const strokeColor = regionBoundaryColor[region] ?? "#C4ECFE";
+
     const polygon = new window.kakao.maps.Polygon({
       map,
       path: paths,
-      ...POLYGON_STYLE,
+      strokeWeight: 2,
+      strokeColor,
+      strokeOpacity: 1,
+      fillColor,
+      fillOpacity: 0.6,
     });
+
+    /* ---------------- Hover ---------------- */
 
     window.kakao.maps.event.addListener(
       polygon,
       "mouseover",
       (mouseEvent: any) => {
-        polygon.setOptions(mouseoverOption);
+        polygon.setOptions({
+          fillOpacity: 0.9,
+        });
 
         if (!overlayRef.current) return;
 
         overlayRef.current.setContent(`
-          <div style="
-            padding:6px 10px;
-            background:white;
-            border-radius:6px;
-            font-size:12px;
-            box-shadow:0 2px 6px rgba(0,0,0,0.2);
-          ">
-            ${properties.SIG_KOR_NM}
-          </div>
-        `);
+        <div style="
+          padding:6px 20px;
+          background:white;
+          text-align: center;
+          border-radius: 3px;
+          font-size: 14px;
+          font-family:'Pretendard', sans-serif;
+          box-shadow:0 2px 6px rgba(0,0,0,0.2);
+        ">
+          ${region}<br/>
+          ${guName}
+        </div>
+      `);
 
         overlayRef.current.setPosition(mouseEvent.latLng);
         overlayRef.current.setMap(map);
@@ -141,13 +159,60 @@ const Map = () => {
     );
 
     window.kakao.maps.event.addListener(polygon, "mouseout", () => {
-      polygon.setOptions(mouseoutOption);
+      polygon.setOptions({
+        fillOpacity: 0.6,
+      });
 
       if (overlayRef.current) {
         overlayRef.current.setMap(null);
       }
     });
   };
+
+  // const createPolygon = (map: any, rings: number[][][], properties: any) => {
+  //   const paths = rings.map((ring) =>
+  //     ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
+  //   );
+
+  //   const polygon = new window.kakao.maps.Polygon({
+  //     map,
+  //     path: paths,
+  //     ...POLYGON_STYLE,
+  //   });
+
+  //   window.kakao.maps.event.addListener(
+  //     polygon,
+  //     "mouseover",
+  //     (mouseEvent: any) => {
+  //       polygon.setOptions(mouseoverOption);
+
+  //       if (!overlayRef.current) return;
+
+  //       overlayRef.current.setContent(`
+  //         <div style="
+  //           padding:6px 10px;
+  //           background:white;
+  //           border-radius:6px;
+  //           font-size:12px;
+  //           box-shadow:0 2px 6px rgba(0,0,0,0.2);
+  //         ">
+  //           ${properties.SIG_KOR_NM}
+  //         </div>
+  //       `);
+
+  //       overlayRef.current.setPosition(mouseEvent.latLng);
+  //       overlayRef.current.setMap(map);
+  //     },
+  //   );
+
+  //   window.kakao.maps.event.addListener(polygon, "mouseout", () => {
+  //     polygon.setOptions(mouseoutOption);
+
+  //     if (overlayRef.current) {
+  //       overlayRef.current.setMap(null);
+  //     }
+  //   });
+  // };
 
   /* ------------------------- Current Location ------------------------- */
 
