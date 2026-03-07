@@ -26,4 +26,4 @@ npm run dev
 
 ## Tech Stack
 
-<img src="https://img.shields.io/badge/React.js-%2320232a.svg?&logo=react&logoColor=%2361DAFB"/> <img src="https://img.shields.io/badge/Typescript-3178C6?logo=Typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind CSS-06B6D4?logo=Tailwind CSS&logoColor=white"/>
+<img src="https://img.shields.io/badge/React.js-%2320232a.svg?&logo=react&logoColor=%2361DAFB"/> <img src="https://img.shields.io/badge/Typescript-3178C6?logo=Typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white"/>
