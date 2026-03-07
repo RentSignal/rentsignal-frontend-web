@@ -11,7 +11,7 @@ const CategoryToggle = ({ items, value, onChange }: CategoryToggleProps) => {
     useDragScroll<HTMLDivElement>();
 
   const onClickItem = (item: string) => {
-    if (shouldBlockClick()) return; 
+    if (shouldBlockClick()) return;
     onChange(item);
   };
 
@@ -39,9 +39,11 @@ const CategoryToggle = ({ items, value, onChange }: CategoryToggleProps) => {
             rounded-md 
             text-sm font-medium 3
             transition-all
-            ${value === item
-              ? "bg-blue-90 text-coolNeutral-10 border border-blue-90"
-              : "text-[#626363] border border-gray-300"}
+            ${
+              value === item
+                ? "bg-blue-90 text-coolNeutral-10 border border-blue-90"
+                : "text-[#626363] border border-gray-300"
+            }
           `}
         >
           {item}
