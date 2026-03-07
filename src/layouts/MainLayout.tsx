@@ -1,15 +1,16 @@
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
-import Sidebar from './Sidebar';
-import Map from '../components/Map';
-import PanelHeader from '@/components/Panel/PanelHeader';
+import { useState } from "react";
+import { Outlet } from "react-router-dom";
+import Sidebar from "./Sidebar";
+import Map from "@/components/Map";
+import PanelHeader from "@/components/Panel/PanelHeader";
+import LoginModal from "@/components/LoginModal";
 
 const MainLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
+  const [loginOpen, setLoginOpen] = useState(false); //로그인 모달 상태
 
   return (
     <div className="flex h-screen overflow-hidden">
-      
       {/* 60px Sidebar */}
       <div className="relative z-50">
         <Sidebar />
@@ -17,25 +18,24 @@ const MainLayout = () => {
 
       {/* Map, Overlay 영역 */}
       <div className="relative flex-1">
-
         {/* 지도 */}
         <Map />
 
         {/* 패널 */}
         <div
-            className={`
+          className={`
               absolute left-0 top-0 h-full w-[377px]
               bg-white border-r border-divider_grey
               z-40
               transition-transform duration-300 ease-in-out
-              ${isOpen ? 'translate-x-0' : 'translate-x-[-315px]'}
+              ${isOpen ? "translate-x-0" : "translate-x-[-315px]"}
             `}
-          >
+        >
           {/* 헤더 */}
-          <PanelHeader onToggle={() => setIsOpen(prev => !prev)} />
-          <Outlet />
+          <PanelHeader onToggle={() => setIsOpen((prev) => !prev)} />
+          <Outlet context={{ openLoginModal: () => setLoginOpen(true) }} />
         </div>
-
+        <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
       </div>
     </div>
   );
