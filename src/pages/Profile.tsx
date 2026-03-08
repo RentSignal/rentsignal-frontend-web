@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useOutletContext, useNavigate } from "react-router-dom";
-import { getMyProfile, logout } from "@/services/userApi";
-
-interface UserProfile {
-  name: string;
-  imageUrl: string;
-  role: string;
-}
+import { logout } from "@/services/userApi";
+import { useUserStore } from "@/store/userStore";
 
 type LayoutContext = {
   openLoginModal: () => void;
@@ -28,29 +23,28 @@ const settingsMenu = [
 
 const Profile = () => {
   const { openLoginModal } = useOutletContext<LayoutContext>();
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const user = useUserStore((state) => state.user);
+
   const navigate = useNavigate();
+  const fetchUser = useUserStore((s) => s.fetchUser);
+  const clearUser = useUserStore((s) => s.clearUser);
 
   const handleLogout = async () => {
-    try {
-      await logout();
-
-      navigate("/", { replace: true });
-    } catch (e) {
-      console.error(e);
-    }
+    await logout();
+    clearUser();
+    navigate("/");
   };
+
   useEffect(() => {
-    const loadProfile = async () => {
+    const load = async () => {
       try {
-        const profile = await getMyProfile();
-        setUser(profile);
-      } catch (error) {
+        await fetchUser();
+      } catch (e) {
         openLoginModal();
       }
     };
 
-    loadProfile();
+    load();
   }, []);
 
   if (!user) return null;
