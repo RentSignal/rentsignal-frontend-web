@@ -5,6 +5,7 @@ import { useUserStore } from "@/store/userStore";
 
 type LayoutContext = {
   openLoginModal: () => void;
+  openPhoneModal: () => void;
 };
 
 const myActivityMenu = [
@@ -22,7 +23,7 @@ const settingsMenu = [
 ];
 
 const Profile = () => {
-  const { openLoginModal } = useOutletContext<LayoutContext>();
+  const { openLoginModal, openPhoneModal } = useOutletContext<LayoutContext>();
   const user = useUserStore((state) => state.user);
 
   const navigate = useNavigate();
@@ -46,6 +47,14 @@ const Profile = () => {
 
     load();
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (user.role === "ROLE_GUEST") {
+      openPhoneModal();
+    }
+  }, [user]);
 
   if (!user) return null;
 
