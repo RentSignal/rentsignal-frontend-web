@@ -27,3 +27,10 @@ npm run dev
 ## Tech Stack
 
 <img src="https://img.shields.io/badge/React.js-%2320232a.svg?&logo=react&logoColor=%2361DAFB"/> <img src="https://img.shields.io/badge/Typescript-3178C6?logo=Typescript&logoColor=white"/> <img src="https://img.shields.io/badge/Tailwind%20CSS-06B6D4?logo=tailwindcss&logoColor=white"/>
+
+## Members
+
+|                                                                               |                                                                               |
+| ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| <img src="https://avatars.githubusercontent.com/u/181914316?v=4" width="80"/> | <img src="https://avatars.githubusercontent.com/u/232282659?v=4" width="80"/> |
+| 최우진                                                                        | 한지민                                                                        |
