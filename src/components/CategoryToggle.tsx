@@ -51,14 +51,14 @@ const CategoryToggle = ({ items, value, onChange }: CategoryToggleProps) => {
             onClick={() => onClickItem(item.id)}
             className={`
         whitespace-nowrap
-        px-3 py-1
-        rounded-md
+        px-2 py-1
+        rounded-lg
         text-sm font-medium
         transition-all
         ${
           value === item.id
-            ? "bg-blue-90 text-coolNeutral-10 border border-blue-90"
-            : "text-[#626363] border border-gray-300"
+            ? "bg-white text-coolNeutral-10 border-[1.5px] border-blue-60"
+            : "text-coolNeutral-50 border-[1.5px] border-coolNeutral-50"
         }
       `}
           >
