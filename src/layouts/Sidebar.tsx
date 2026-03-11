@@ -9,7 +9,7 @@ const Sidebar = () => {
           key={item.id}
           to={item.path}
           className={({ isActive }) =>
-            `flex flex-col items-center gap-1 w-full py-3 text-sm ${
+            `flex flex-col items-center gap-1 w-full py-3  text-coolNeutral-25 text-sm ${
               isActive ? "text-primary font-medium" : "text-textDefault"
             }`
           }
