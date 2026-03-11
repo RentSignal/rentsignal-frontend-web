@@ -4,10 +4,12 @@ import Sidebar from "./Sidebar";
 import Map from "@/components/Map";
 import PanelHeader from "@/components/Panel/PanelHeader";
 import LoginModal from "@/components/LoginModal";
+import PhoneModal from "@/components/phoneModal";
 
 const MainLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false); //로그인 모달 상태
+  const [phoneOpen, setPhoneOpen] = useState(false); //전화번호 입력 모달 상태
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -33,9 +35,15 @@ const MainLayout = () => {
         >
           {/* 헤더 */}
           <PanelHeader onToggle={() => setIsOpen((prev) => !prev)} />
-          <Outlet context={{ openLoginModal: () => setLoginOpen(true) }} />
+          <Outlet
+            context={{
+              openLoginModal: () => setLoginOpen(true),
+              openPhoneModal: () => setPhoneOpen(true),
+            }}
+          />
         </div>
         <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
+        <PhoneModal open={phoneOpen} onClose={() => setPhoneOpen(false)} />
       </div>
     </div>
   );

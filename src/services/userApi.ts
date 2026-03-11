@@ -13,5 +13,15 @@ export const logout = async () => {
   const res = await fetchDataFromApiPost({
     apiUrl: OAUTH_URL.LOGOUT,
   });
+
+  return res.success;
+};
+
+export const registerPhoneNumber = async (phone: string) => {
+  const res = await fetchDataFromApiPost({
+    apiUrl: OAUTH_URL.PHONE,
+    body: { phone },
+  });
+
   return res.success;
 };
