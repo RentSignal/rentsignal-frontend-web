@@ -1,4 +1,5 @@
 import { loginWithNaver } from "@/services/auth";
+import NaverLoginButton from "@/assets/social/naver_login.svg?react";
 
 type LoginModalProps = {
   open: boolean;
@@ -9,19 +10,28 @@ const LoginModal = ({ open, onClose }: LoginModalProps) => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white w-[360px] rounded-md shadow-lg p-6 flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-center">로그인</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white w-[460px] rounded-lg shadow-lg pt-10 pb-10 py-10 flex flex-col gap-10"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
+        <div className="flex flex-col gap-5">
+          <h2 className="text-lg font-semibold text-center text-coolNeutral-25">
+            로그인
+          </h2>
 
-        <p className="text-sm text-center text-gray-500">
-          RentSignal 서비스를 이용하려면 로그인이 필요합니다.
-        </p>
+          <p className="text-base text-center text-coolNeutral-50">
+            RentSignal 커뮤니티 서비스를 이용하려면 <br /> 로그인이 필요합니다.
+          </p>
+        </div>
 
-        <button
-          onClick={loginWithNaver}
-          className="py-2 text-white bg-green-500 rounded-md hover:bg-green-600"
-        >
-          네이버로 로그인
+        <button onClick={loginWithNaver} className="flex justify-center">
+          <NaverLoginButton />
         </button>
       </div>
     </div>
