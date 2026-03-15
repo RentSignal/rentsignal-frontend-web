@@ -6,6 +6,12 @@ import Recommend from "./pages/Recommend";
 import Community from "./pages/Community";
 import Profile from "./pages/Profile";
 import OAuthRedirect from "./pages/auth/OAuthRedirect";
+import ProfileComments from "./pages/profile/ProfileComments";
+import ProfileLikes from "./pages/profile/ProfileLikes";
+import ProfilePosts from "./pages/profile/ProfilePosts";
+import ProfileName from "./pages/profile/UpdateName";
+import ProfilePhone from "./pages/profile/UpdatePhone";
+import ProfileDelete from "./pages/profile/DeleteAccount";
 
 function App() {
   return (
@@ -16,7 +22,14 @@ function App() {
         <Route path="/info" element={<Info />} />
         <Route path="/recommend" element={<Recommend />} />
         <Route path="/community" element={<Community />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" element={<Profile />}>
+          <Route path="posts" element={<ProfilePosts />} />
+          <Route path="comments" element={<ProfileComments />} />
+          <Route path="likes" element={<ProfileLikes />} />
+          <Route path="name" element={<ProfileName />} />
+          <Route path="phone" element={<ProfilePhone />} />
+          <Route path="delete" element={<ProfileDelete />} />
+        </Route>
       </Route>
     </Routes>
   );

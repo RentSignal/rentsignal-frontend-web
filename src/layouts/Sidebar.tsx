@@ -3,7 +3,7 @@ import { menuItems } from "@/navigation/menu";
 
 const Sidebar = () => {
   return (
-    <div className="w-[60px] h-full bg-white flex flex-col items-stretch border-r pt-10 gap-10">
+    <div className="w-[64px] h-full bg-white flex flex-col items-stretch border-r pt-10 gap-10">
       {menuItems.map((item) => (
         <NavLink
           key={item.id}

@@ -1,34 +1,44 @@
-import { useEffect, useState } from "react";
-import { Link, useOutletContext, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useNavigate,
+  useOutletContext,
+} from "react-router-dom";
+
 import { logout } from "@/services/userApi";
 import { useUserStore } from "@/store/userStore";
+
+import Post from "@/assets/icons/post.svg?react";
+import Comment from "@/assets/icons/comment.svg?react";
+import Favorite from "@/assets/icons/favorite.svg?react";
+import RightArrow from "@/assets/icons/right_arrow.svg?react";
 
 type LayoutContext = {
   openLoginModal: () => void;
   openPhoneModal: () => void;
 };
 
-const myActivityMenu = [
-  { id: 1, name: "내가 쓴 글", path: "/profile/posts" },
-  { id: 2, name: "댓글 단 글", path: "/profile/comments" },
-  { id: 3, name: "공감한 글", path: "/profile/likes" },
-];
+type MenuItem = {
+  id: number;
+  name: string;
+  path?: string;
+  action?: () => void;
+  danger?: boolean;
+};
 
-const settingsMenu = [
-  { id: 1, name: "이름 변경", path: "/profile/name" },
-  { id: 2, name: "이메일 변경", path: "/profile/email" },
-  { id: 3, name: "휴대전화번호 변경", path: "/profile/phone" },
-  { id: 4, name: "로그아웃", path: "/logout", isLogout: true },
-  { id: 5, name: "탈퇴하기", path: "/profile/delete", danger: true },
-];
-
-const Profile = () => {
+function Profile() {
   const { openLoginModal, openPhoneModal } = useOutletContext<LayoutContext>();
-  const user = useUserStore((state) => state.user);
 
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const user = useUserStore((state) => state.user);
   const fetchUser = useUserStore((s) => s.fetchUser);
   const clearUser = useUserStore((s) => s.clearUser);
+
+  const isProfileRoot = location.pathname === "/profile";
 
   const handleLogout = async () => {
     await logout();
@@ -36,11 +46,24 @@ const Profile = () => {
     navigate("/");
   };
 
+  const activityMenus = [
+    { id: 1, icon: Post, label: "내가 쓴 글", path: "/profile/posts" },
+    { id: 2, icon: Comment, label: "댓글 단 글", path: "/profile/comments" },
+    { id: 3, icon: Favorite, label: "공감 단 글", path: "/profile/likes" },
+  ];
+
+  const settingsMenu: MenuItem[] = [
+    { id: 1, name: "이름 변경", path: "/profile/name" },
+    { id: 3, name: "휴대전화번호 변경", path: "/profile/phone" },
+    { id: 4, name: "탈퇴하기", path: "/profile/delete" },
+    { id: 5, name: "로그아웃", action: handleLogout, danger: true },
+  ];
+
   useEffect(() => {
     const load = async () => {
       try {
         await fetchUser();
-      } catch (e) {
+      } catch {
         openLoginModal();
       }
     };
@@ -59,70 +82,97 @@ const Profile = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-md mx-auto">
-      {/* 프로필 */}
-      <div className="flex gap-4 p-4 border-b border-gray-200">
-        <img
-          src={user.imageUrl}
-          className="object-cover rounded-full w-[66px] h-[66px]"
-        />
+    <div className="flex flex-col max-w-md gap-8 px-5 mx-auto ">
+      {isProfileRoot ? (
+        <>
+          <ProfileHeader user={user} />
+          <ActivityMenuSection menus={activityMenus} />
+          <MenuSection title="정보 수정" menus={settingsMenu} />
 
-        <div className="flex flex-col justify-center">
-          <p className="font-semibold">{user.name}</p>
-          <p className="text-sm text-gray-500">{user.role}</p>
-        </div>
-      </div>
-
-      {/* 내 활동 */}
-      <section>
-        <h2 className="px-4 py-3 text-sm font-semibold text-gray-500 bg-gray-50">
-          내 활동
-        </h2>
-
-        {myActivityMenu.map((item) => (
-          <Link
-            key={item.path}
-            to={item.path}
-            className="flex items-center justify-between px-4 py-4 text-sm text-gray-700 border-b hover:bg-gray-50"
-          >
-            {item.name}
-            <span>›</span>
-          </Link>
-        ))}
-      </section>
-
-      {/* 정보 수정 */}
-      <section>
-        <h2 className="px-4 py-3 text-sm font-semibold text-gray-500 bg-gray-50">
-          정보 수정
-        </h2>
-
-        {settingsMenu.map((item) =>
-          item.isLogout ? (
-            <button
-              key={item.id}
-              onClick={handleLogout}
-              className="flex items-center justify-between w-full px-4 py-4 text-sm text-gray-700 border-b hover:bg-gray-50"
-            >
-              {item.name}
-              <span>›</span>
-            </button>
-          ) : (
-            <Link
-              key={item.id}
-              to={item.path}
-              className={`flex justify-between items-center px-4 py-4 border-b text-sm hover:bg-gray-50 ${
-                item.danger ? "text-red-500" : "text-gray-700"
-              }`}
-            >
-              {item.name}
-              <span>›</span>
-            </Link>
-          ),
-        )}
-      </section>
+          <div className="h-1 -mx-5 bg-coolNeutral-97" />
+        </>
+      ) : (
+        <Outlet />
+      )}
     </div>
   );
-};
+}
 
 export default Profile;
+
+function ProfileHeader({ user }: { user: any }) {
+  return (
+    <div className="flex gap-5">
+      <img
+        src={user.imageUrl}
+        className="object-cover rounded-full w-[61px] h-[61px]"
+      />
+
+      <div className="flex flex-col justify-center">
+        <p className="font-semibold">{user.name}</p>
+        <p className="text-sm text-coolNeutral-50">
+          {user.role == "ROLE_USER" ? "@user" : "@guest"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ActivityMenuSection({ menus }: { menus: any[] }) {
+  return (
+    <div className="py-3 border rounded-lg border-blue-95 bg-blue-99">
+      <div className="flex justify-center">
+        {menus.map((item, index) => {
+          const Icon = item.icon;
+
+          return (
+            <div key={item.id} className="flex items-center">
+              <Link to={item.path} className="flex flex-col items-center px-6">
+                <Icon />
+                <p className="text-xs text-coolNeutral-25">{item.label}</p>
+              </Link>
+
+              {index !== menus.length - 1 && (
+                <div className="w-px h-10 bg-gray-200" />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MenuSection({ title, menus }: { title: string; menus: MenuItem[] }) {
+  return (
+    <section>
+      <h2 className="text-base font-semibold text-coolNeutral-25">{title}</h2>
+
+      {menus.map((item) =>
+        item.action ? (
+          <button
+            key={item.id}
+            onClick={item.action}
+            className={`flex justify-between items-center w-full px-4 py-4 text-sm hover:bg-gray-50 ${
+              item.danger ? "text-red-500" : "text-coolNeutral-50"
+            }`}
+          >
+            {item.name}
+            <RightArrow />
+          </button>
+        ) : (
+          <Link
+            key={item.id}
+            to={item.path!}
+            className={`flex justify-between items-center px-4 py-4 text-sm hover:bg-gray-50 ${
+              item.danger ? "text-red-500" : "text-coolNeutral-50"
+            }`}
+          >
+            {item.name}
+            <RightArrow />
+          </Link>
+        ),
+      )}
+    </section>
+  );
+}
