@@ -19,7 +19,7 @@ const DropDown = ({
   value,
   onChange,
   placeholder = "선택",
-  width = "w-[160px]",
+  width = "",
 }: DropDownProps) => {
   return (
     <Select.Root value={value} onValueChange={onChange}>

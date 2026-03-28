@@ -1,8 +1,51 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import CategoryToggle from "@/components/CategoryToggle";
+import ResidenceTypeToggle from "./ResidenceTypeToggle";
+import TimeIndicator from "./TimeIndicator";
+import Divider from "./Divider";
+import RankingList from "./RankingList";
+import DropDown from "./DropDown";
+
+type ResidenceType = "OFFICETEL" | "VILLA";
 
 const InfoToggle = () => {
   const [optionTabIndex, setOptionTabIndex] = useState(0);
+  const [residenceType, setResidenceType] =
+    useState<ResidenceType>("OFFICETEL");
+  const [indexSelected, setIndexSelected] = useState("rent-index");
+  const [facilitiesSelected, setFacilitiesSelected] = useState("facility");
+  const [value, setValue] = useState("seoul");
+
+  const indexItems = useMemo(() => {
+    const baseItems = [
+      {
+        id: "rent-index",
+        label: "전월세 통합지수",
+        title: "전월세 통합지수란?",
+        description:
+          "특정 지역의 전세와 월세 가격 흐름을 하나로 묶어, 지금 그 지역의 임대 시장이 어느 정도 수준인지를 한눈에 보여주는 지표입니다.",
+      },
+      {
+        id: "consumer-index",
+        label: "소비자 심리지수",
+        title: "소비자 심리지수(Consumer Sentiment Index, CSI)란?",
+        description:
+          "소비자 심리지수는 소비자들이 현재와 미래의 경제 상황을 어떻게 인식하고 있는지를 수치로 나타낸 경기 체감 지표입니다. 소비·투자·주택·고용 등 경제 전반에 대한 심리 상태를 요약합니다.",
+      },
+      {
+        id: "station-index",
+        label: "지하철 역세권 지수",
+        title: "지하철 역세권 지수란?",
+        description:
+          "주요 지하철역과의 접근성 및 가치를 지수로 표현한 것입니다.",
+      },
+    ];
+
+    return baseItems.map((item) => ({
+      ...item,
+      showPopover: item.id === indexSelected,
+    }));
+  }, [indexSelected]);
 
   const facilitiesItems = [
     { id: "facility", label: "편의시설" },
@@ -10,89 +53,106 @@ const InfoToggle = () => {
     { id: "safety", label: "치안" },
     { id: "cost", label: "비용" },
   ];
-  type CategoryItem = {
-    id: string;
-    label: string;
-    showPopover?: boolean;
-    title?: string;
-    description?: string;
-  };
 
-  const indexItems = [
-    {
-      id: "rent-index",
-      label: "전월세 통합지수",
-      showPopover: true,
-      title: "전월세 통합지수란?",
-      description:
-        "특정 지역의 전세와 월세 가격 흐름을 하나로 묶어, 지금 그 지역의 임대 시장이 어느 정도 수준인지 한눈에 보여주는 지표입니다.",
-    },
-    {
-      id: "consumer-index",
-      label: "소비자 심리지수",
-      showPopover: false,
-      title: "소비자 심리지수란?",
-      description:
-        "소비자들이 현재 경제 상황과 향후 경기 전망을 어떻게 인식하고 있는지를 보여주는 지표입니다.",
-    },
-    {
-      id: "station-index",
-      label: "지하철 역세권 지수",
-      showPopover: false,
-      title: "지하철 역세권 지수란?",
-      description:
-        "지하철 접근성을 기준으로 지역의 교통 편의성과 생활 인프라 수준을 평가한 지표입니다.",
-    },
-  ];
-  const [indexSelected, setIndexSelected] = useState("rent-index");
-  const [facilitiesSelected, setFacilitiesSelected] = useState("facility");
+  const dropdownItems = [{ value: "seoul", label: "서울특별시" }];
+
   return (
-    <div className="pl-5">
-      {/* 토글 영역 */}
-      <div className="flex gap-3 pb-2">
+    <div className="w-full h-screen overflow-x-hidden overflow-y-auto no-scrollbar">
+      {/* 탭 버튼 영역 */}
+      <div className="flex pl-5 gap-[12px] mb-2 sticky top-0 bg-white z-20 pt-2">
         <button
           onClick={() => setOptionTabIndex(0)}
-          className={`
-            text-lg font-semibold   transition-colors
-            ${
-              optionTabIndex === 0
-                ? "text-blue-50 border-b-2 border-blue-50"
-                : "text-toggle_grey border-b-2 border-transparent"
-            }
-          `}
+          className={`text-lg font-semibold transition-colors pb-1 ${
+            optionTabIndex === 0
+              ? "text-blue-60 border-b-2 border-blue-60"
+              : "text-toggle_grey border-b-2 border-transparent"
+          }`}
         >
           지수 중심
         </button>
-
         <button
           onClick={() => setOptionTabIndex(1)}
-          className={`
-            text-lg font-semibold   transition-colors
-            ${
-              optionTabIndex === 1
-                ? "text-blue-50 border-b-2 border-blue-50"
-                : "text-toggle_grey border-b-2 border-transparent"
-            }
-          `}
+          className={`text-lg font-semibold transition-colors pb-1 ${
+            optionTabIndex === 1
+              ? "text-blue-60 border-b-2 border-blue-60"
+              : "text-toggle_grey border-b-2 border-transparent"
+          }`}
         >
           생활요소 중심
         </button>
       </div>
 
-      {/* 레이아웃 분기 */}
       {optionTabIndex === 0 && (
-        <div className="w-full mt-3">
-          {/* 지수 중심 레이아웃 */}
-          <CategoryToggle
-            items={indexItems}
-            value={indexSelected}
-            onChange={setIndexSelected}
-          />
+        <div className="flex flex-col items-start w-full ">
+          <div className="flex items-center justify-center w-full pl-5">
+            <CategoryToggle
+              items={indexItems}
+              value={indexSelected}
+              onChange={setIndexSelected}
+            />
+          </div>
+
+          {indexSelected === "rent-index" && (
+            <>
+              <div className="pl-5 duration-300 mt-7 animate-in fade-in">
+                <ResidenceTypeToggle
+                  value={residenceType}
+                  onChange={setResidenceType}
+                />
+              </div>
+              <div className="flex flex-col w-full pt-5 pl-5">
+                <div className="text-base font-semibold text-coolNeutral-10">
+                  전년대비 전월세 통합지수
+                </div>
+                <div className="flex justify-end pr-5 pt-[7px] font-medium text-[14px] text-coolNeutral-30">
+                  2026년 02월
+                </div>
+                <div className="h-8" />
+                <div className="flex flex-col gap-4">
+                  <TimeIndicator />
+                </div>
+              </div>
+              <div className="h-[56px]"></div>
+              <Divider />
+              <div className="h-[32px]"></div>
+              <div className="flex flex-col gap-[18px]">
+                <div className="pl-5 flex flex-col gap-[13px] items-start">
+                  <h2 className="text-xl font-semibold text-coolNeutral-10">
+                    급상승 지역 확인하기
+                  </h2>
+                  <DropDown
+                    items={dropdownItems}
+                    value={value}
+                    onChange={setValue}
+                    placeholder="지역 선택"
+                  />
+                </div>
+                <RankingList />
+              </div>
+              <div className="h-[56px]"></div>
+              <Divider />
+              <div className="h-[32px]"></div>
+              <div className="flex flex-col gap-[18px]">
+                <div className="pl-5 flex flex-col gap-[13px] items-start">
+                  <h2 className="text-xl font-semibold text-coolNeutral-10">
+                    급하락 지역 확인하기
+                  </h2>
+                  <DropDown
+                    items={dropdownItems}
+                    value={value}
+                    onChange={setValue}
+                    placeholder="지역 선택"
+                  />
+                </div>
+                <RankingList />
+              </div>
+              <div className="h-[100px]"></div>
+            </>
+          )}
         </div>
       )}
       {optionTabIndex === 1 && (
-        <div className="flex flex-col gap-4 mt-3">
-          {/* 생활요소 중심 레이아웃 */}
+        <div className="flex flex-col gap-4 px-5 pb-10 mt-3">
           <CategoryToggle
             items={facilitiesItems}
             value={facilitiesSelected}
@@ -103,5 +163,4 @@ const InfoToggle = () => {
     </div>
   );
 };
-
 export default InfoToggle;
