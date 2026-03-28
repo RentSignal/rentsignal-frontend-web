@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
-import CategoryToggle from "@/components/CategoryToggle";
-import ResidenceTypeToggle from "./ResidenceTypeToggle";
-import TimeIndicator from "./TimeIndicator";
-import Divider from "./Divider";
-import RankingList from "./RankingList";
-import DropDown from "./DropDown";
+import CategoryToggle from "@/components/Info/CategoryToggle";
+import ResidenceTypeToggle from "../ResidenceTypeToggle";
+import TimeIndicator from "../TimeIndicator";
+import Divider from "../Divider";
+import RankingList from "../RankingList";
+import DropDown from "../DropDown";
 
 type ResidenceType = "OFFICETEL" | "VILLA";
 
@@ -149,6 +149,8 @@ const InfoToggle = () => {
               <div className="h-[100px]"></div>
             </>
           )}
+          {indexSelected === "consumer-index" && <></>}
+          {indexSelected === "station-index" && <></>}
         </div>
       )}
       {optionTabIndex === 1 && (

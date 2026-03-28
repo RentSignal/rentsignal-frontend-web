@@ -1,9 +1,9 @@
-import InfoToggle from "@/components/InfoToggle";
+import InfoToggle from "@/components/Info/InfoToggle";
 
 const Info = () => {
   return (
     <>
-      <InfoToggle/>
+      <InfoToggle />
     </>
   );
 };
