@@ -1,13 +1,20 @@
 import { useState, useMemo } from "react";
 import CategoryToggle from "@/components/Info/CategoryToggle";
 import ResidenceTypeToggle from "../ResidenceTypeToggle";
-import TimeIndicator from "../TimeIndicator";
 import Divider from "../Divider";
 import RankingList from "../RankingList";
 import DropDown from "../DropDown";
-import InfoSectionHeader from "./section/InfoSectionHeader";
+import IndexSectionHeader from "./section/InfoSectionHeader";
 
 type ResidenceType = "OFFICETEL" | "VILLA";
+
+export const IndexState = {
+  rentIndex: 0,
+  consumerIndex: 1,
+  stationIndex: 2,
+} as const;
+
+type IndexState = (typeof IndexState)[keyof typeof IndexState];
 
 const InfoToggle = () => {
   const [optionTabIndex, setOptionTabIndex] = useState(0);
@@ -18,7 +25,7 @@ const InfoToggle = () => {
   const [value, setValue] = useState("seoul");
 
   const indexItems = useMemo(() => {
-    const baseItems = [
+    const popoverItems = [
       {
         id: "rent-index",
         label: "전월세 통합지수",
@@ -42,7 +49,7 @@ const InfoToggle = () => {
       },
     ];
 
-    return baseItems.map((item) => ({
+    return popoverItems.map((item) => ({
       ...item,
       showPopover: item.id === indexSelected,
     }));
@@ -102,16 +109,11 @@ const InfoToggle = () => {
                 />
               </div>
               <div className="flex flex-col w-full pt-5 pl-5">
-                <div className="text-base font-semibold text-coolNeutral-10">
-                  전년대비 전월세 통합지수
-                </div>
-                <div className="flex justify-end pr-5 pt-[7px] font-medium text-[14px] text-coolNeutral-30">
-                  2026년 02월
-                </div>
-                <div className="h-8" />
-                <div className="flex flex-col gap-4">
-                  <TimeIndicator />
-                </div>
+                <IndexSectionHeader
+                  title="전월세 통합지수"
+                  date="2026년 2월"
+                  selectedIndex={IndexState.rentIndex}
+                />
               </div>
               <div className="h-[56px]"></div>
               <Divider />
@@ -152,15 +154,23 @@ const InfoToggle = () => {
           )}
           {indexSelected === "consumer-index" && (
             <>
-              {" "}
-              <InfoSectionHeader
+              <IndexSectionHeader
                 title="서울특별시 소비자 심리지수"
                 date="2026년 2월"
-                disabled={true}
+                selectedIndex={IndexState.consumerIndex}
               />
+              <Divider />
             </>
           )}
-          {indexSelected === "station-index" && <></>}
+          {indexSelected === "station-index" && (
+            <>
+              <IndexSectionHeader
+                title="서울 지하철 역세권 지수"
+                selectedIndex={IndexState.stationIndex}
+              />
+              <Divider />
+            </>
+          )}
         </div>
       )}
       {optionTabIndex === 1 && (
