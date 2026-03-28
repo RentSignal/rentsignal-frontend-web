@@ -5,6 +5,7 @@ import TimeIndicator from "../TimeIndicator";
 import Divider from "../Divider";
 import RankingList from "../RankingList";
 import DropDown from "../DropDown";
+import InfoSectionHeader from "./section/InfoSectionHeader";
 
 type ResidenceType = "OFFICETEL" | "VILLA";
 
@@ -149,7 +150,16 @@ const InfoToggle = () => {
               <div className="h-[100px]"></div>
             </>
           )}
-          {indexSelected === "consumer-index" && <></>}
+          {indexSelected === "consumer-index" && (
+            <>
+              {" "}
+              <InfoSectionHeader
+                title="서울특별시 소비자 심리지수"
+                date="2026년 2월"
+                disabled={true}
+              />
+            </>
+          )}
           {indexSelected === "station-index" && <></>}
         </div>
       )}
