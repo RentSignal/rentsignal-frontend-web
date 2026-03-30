@@ -6,7 +6,7 @@ type Props = {
 
 export default function InfoSectionToggle({ value, onChange }: Props) {
   return (
-    <div className="flex pl-5 gap-[12px] mb-2 sticky top-0 bg-white z-20 pt-2">
+    <div className="flex pl-5 gap-[12px] mb-2 sticky top-0 bg-white z-20 ">
       <button
         onClick={() => onChange("INFO")}
         className={`text-lg font-semibold transition-colors pb-1 ${
