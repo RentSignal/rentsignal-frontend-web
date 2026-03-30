@@ -82,7 +82,7 @@ function Profile() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col max-w-md gap-8 px-5 mx-auto ">
+    <div className="flex flex-col max-w-md gap-[26px] px-6 mx-auto ">
       {isProfileRoot ? (
         <>
           <ProfileHeader user={user} />
@@ -102,15 +102,15 @@ export default Profile;
 
 function ProfileHeader({ user }: { user: any }) {
   return (
-    <div className="flex gap-5">
+    <div className="flex gap-[18px]">
       <img
         src={user.imageUrl}
         className="object-cover rounded-full w-[61px] h-[61px]"
       />
 
       <div className="flex flex-col justify-center">
-        <p className="font-semibold">{user.name}</p>
-        <p className="text-sm text-coolNeutral-50">
+        <p className="text-base font-medium text-coolNeutral-25">{user.name}</p>
+        <p className="text-sm font-medium text-coolNeutral-50">
           {user.role == "ROLE_USER" ? "@user" : "@guest"}
         </p>
       </div>
@@ -146,15 +146,17 @@ function ActivityMenuSection({ menus }: { menus: any[] }) {
 function MenuSection({ title, menus }: { title: string; menus: MenuItem[] }) {
   return (
     <section>
-      <h2 className="text-base font-semibold text-coolNeutral-25">{title}</h2>
+      <h2 className="text-base font-semibold pb-[14px] text-coolNeutral-25">
+        {title}
+      </h2>
 
       {menus.map((item) =>
         item.action ? (
           <button
             key={item.id}
             onClick={item.action}
-            className={`flex justify-between items-center w-full px-4 py-4 text-sm hover:bg-gray-50 ${
-              item.danger ? "text-red-500" : "text-coolNeutral-50"
+            className={`flex justify-between items-center w-full text-sm font-medium hover:bg-gray-50 ${
+              item.danger ? "text-[#FF4242]" : "text-coolNeutral-50"
             }`}
           >
             {item.name}
@@ -164,7 +166,7 @@ function MenuSection({ title, menus }: { title: string; menus: MenuItem[] }) {
           <Link
             key={item.id}
             to={item.path!}
-            className={`flex justify-between items-center px-4 py-4 text-sm hover:bg-gray-50 ${
+            className={`flex justify-between items-center pb-5 text-sm hover:bg-gray-50 ${
               item.danger ? "text-red-500" : "text-coolNeutral-50"
             }`}
           >
