@@ -5,8 +5,10 @@ import Divider from "../Divider";
 import RankingList from "../RankingList";
 import DropDown from "../DropDown";
 import IndexSectionHeader from "./section/InfoSectionHeader";
+import InfoSectionToggle from "./section/InfoSectionToggle";
 
 type ResidenceType = "OFFICETEL" | "VILLA";
+type InfoSectionToggleType = "INFO" | "LIFESTYLE";
 
 export const IndexState = {
   rentIndex: 0,
@@ -17,7 +19,8 @@ export const IndexState = {
 type IndexState = (typeof IndexState)[keyof typeof IndexState];
 
 const InfoSection = () => {
-  const [optionTabIndex, setOptionTabIndex] = useState(0);
+  const [optionTabIndex, setOptionTabIndex] =
+    useState<InfoSectionToggleType>("INFO");
   const [residenceType, setResidenceType] =
     useState<ResidenceType>("OFFICETEL");
   const [indexSelected, setIndexSelected] = useState("rent-index");
@@ -66,31 +69,10 @@ const InfoSection = () => {
 
   return (
     <div className="w-full h-screen overflow-x-hidden overflow-y-auto no-scrollbar">
-      {/* 탭 버튼 영역 */}
-      <div className="flex pl-5 gap-[12px] mb-2 sticky top-0 bg-white z-20 pt-2">
-        <button
-          onClick={() => setOptionTabIndex(0)}
-          className={`text-lg font-semibold transition-colors pb-1 ${
-            optionTabIndex === 0
-              ? "text-blue-60 border-b-2 border-blue-60"
-              : "text-toggle_grey border-b-2 border-transparent"
-          }`}
-        >
-          지수 중심
-        </button>
-        <button
-          onClick={() => setOptionTabIndex(1)}
-          className={`text-lg font-semibold transition-colors pb-1 ${
-            optionTabIndex === 1
-              ? "text-blue-60 border-b-2 border-blue-60"
-              : "text-toggle_grey border-b-2 border-transparent"
-          }`}
-        >
-          생활요소 중심
-        </button>
-      </div>
+      {/* 지수중심, 생활요소 탭 버튼 영역 */}
+      <InfoSectionToggle value={optionTabIndex} onChange={setOptionTabIndex} />
 
-      {optionTabIndex === 0 && (
+      {optionTabIndex === "INFO" && (
         <div className="flex flex-col items-start w-full ">
           <div className="flex items-center justify-center w-full pl-5">
             <CategoryToggle
@@ -99,7 +81,6 @@ const InfoSection = () => {
               onChange={setIndexSelected}
             />
           </div>
-
           {indexSelected === "rent-index" && (
             <>
               <div className="pl-5 duration-300 mt-7 animate-in fade-in">
@@ -173,8 +154,7 @@ const InfoSection = () => {
           )}
         </div>
       )}
-      {/* 생활요소 중심 */}
-      {optionTabIndex === 1 && (
+      {optionTabIndex === "LIFESTYLE" && (
         <div className="flex flex-col gap-4 px-5 pb-10 mt-3">
           <CategoryToggle
             items={facilitiesItems}
