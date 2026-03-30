@@ -112,7 +112,7 @@ const ConsumerIndexSection = ({ title, date }: Props) => {
                 alignOffset={-80}
                 className="px-[24px] pt-[30px] pb-[30px] bg-white 
               shadow-[0_2px_8px_rgba(0,0,0,0.12)] 
-              w-[346px] rounded-[21px]"
+              w-[346px] rounded-[21px] ring-0"
               >
                 <button
                   onClick={() => setOpen(false)}
