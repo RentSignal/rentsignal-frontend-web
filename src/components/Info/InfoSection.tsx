@@ -16,7 +16,7 @@ export const IndexState = {
 
 type IndexState = (typeof IndexState)[keyof typeof IndexState];
 
-const InfoToggle = () => {
+const InfoSection = () => {
   const [optionTabIndex, setOptionTabIndex] = useState(0);
   const [residenceType, setResidenceType] =
     useState<ResidenceType>("OFFICETEL");
@@ -173,6 +173,7 @@ const InfoToggle = () => {
           )}
         </div>
       )}
+      {/* 생활요소 중심 */}
       {optionTabIndex === 1 && (
         <div className="flex flex-col gap-4 px-5 pb-10 mt-3">
           <CategoryToggle
@@ -185,4 +186,4 @@ const InfoToggle = () => {
     </div>
   );
 };
-export default InfoToggle;
+export default InfoSection;
