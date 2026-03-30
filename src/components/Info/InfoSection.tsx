@@ -3,7 +3,6 @@ import CategoryToggle from "@/components/Info/CategoryToggle";
 import ResidenceTypeToggle from "../ResidenceTypeToggle";
 import Divider from "../Divider";
 import RankingList from "../RankingList";
-import DropDown from "../DropDown";
 import IndexSectionHeader from "./section/InfoSectionHeader";
 import InfoSectionToggle from "./section/InfoSectionToggle";
 
@@ -25,7 +24,6 @@ const InfoSection = () => {
     useState<ResidenceType>("OFFICETEL");
   const [indexSelected, setIndexSelected] = useState("rent-index");
   const [facilitiesSelected, setFacilitiesSelected] = useState("facility");
-  const [value, setValue] = useState("seoul");
 
   const indexItems = useMemo(() => {
     const popoverItems = [
@@ -65,8 +63,6 @@ const InfoSection = () => {
     { id: "cost", label: "비용" },
   ];
 
-  const dropdownItems = [{ value: "seoul", label: "서울특별시" }];
-
   return (
     <div className="w-full h-screen overflow-x-hidden overflow-y-auto no-scrollbar">
       {/* 지수중심, 생활요소 탭 버튼 영역 */}
@@ -100,35 +96,13 @@ const InfoSection = () => {
               <Divider />
               <div className="h-[32px]"></div>
               <div className="flex flex-col gap-[18px]">
-                <div className="pl-5 flex flex-col gap-[13px] items-start">
-                  <h2 className="text-xl font-semibold text-coolNeutral-10">
-                    급상승 지역 확인하기
-                  </h2>
-                  <DropDown
-                    items={dropdownItems}
-                    value={value}
-                    onChange={setValue}
-                    placeholder="지역 선택"
-                  />
-                </div>
-                <RankingList />
+                <RankingList title="급상승 지역 확인하기" />
               </div>
               <div className="h-[56px]"></div>
               <Divider />
               <div className="h-[32px]"></div>
               <div className="flex flex-col gap-[18px]">
-                <div className="pl-5 flex flex-col gap-[13px] items-start">
-                  <h2 className="text-xl font-semibold text-coolNeutral-10">
-                    급하락 지역 확인하기
-                  </h2>
-                  <DropDown
-                    items={dropdownItems}
-                    value={value}
-                    onChange={setValue}
-                    placeholder="지역 선택"
-                  />
-                </div>
-                <RankingList />
+                <RankingList title="급하락 지역 확인하기" />
               </div>
               <div className="h-[100px]"></div>
             </>

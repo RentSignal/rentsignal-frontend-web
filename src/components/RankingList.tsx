@@ -1,4 +1,6 @@
+import { useState } from "react";
 import RankingItem from "./RankingItem";
+import DropDown from "./DropDown";
 
 // TODO: Dummy data -> Fetch list로 바꿔야함
 const data = [
@@ -11,17 +13,32 @@ const data = [
   { rank: 7, name: "강북 동북권", value: 5.31 },
 ];
 
-const RankingList = () => {
+const dropdownItems = [{ value: "seoul", label: "서울특별시" }];
+
+const RankingList = ({ title }: any) => {
+  const [value, setValue] = useState("seoul");
+
   return (
-    <div className="w-full bg-white">
-      {data.map((item) => (
-        <RankingItem
-          key={item.rank}
-          rank={item.rank}
-          name={item.name}
-          value={item.value}
+    <div className="flex flex-col gap-[16px] items-start">
+      <div className="pl-5 flex flex-col gap-[16px] items-start">
+        <h2 className="text-xl font-semibold text-coolNeutral-10">{title}</h2>
+        <DropDown
+          items={dropdownItems}
+          value={value}
+          onChange={setValue}
+          placeholder="지역 선택"
         />
-      ))}
+      </div>
+      <div className="w-full bg-white">
+        {data.map((item) => (
+          <RankingItem
+            key={item.rank}
+            rank={item.rank}
+            name={item.name}
+            value={item.value}
+          />
+        ))}
+      </div>
     </div>
   );
 };
