@@ -15,6 +15,8 @@ import Comment from "@/assets/icons/comment.svg?react";
 import Favorite from "@/assets/icons/favorite.svg?react";
 import RightArrow from "@/assets/icons/right_arrow.svg?react";
 
+import Divider from "@/components/Divider";
+
 type LayoutContext = {
   openLoginModal: () => void;
   openPhoneModal: () => void;
@@ -82,19 +84,20 @@ function Profile() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col max-w-md gap-[26px] px-6 mx-auto ">
-      {isProfileRoot ? (
-        <>
-          <ProfileHeader user={user} />
-          <ActivityMenuSection menus={activityMenus} />
-          <MenuSection title="정보 수정" menus={settingsMenu} />
-
-          <div className="h-1 -mx-5 bg-coolNeutral-97" />
-        </>
-      ) : (
-        <Outlet />
-      )}
-    </div>
+    <>
+      <div className="flex flex-col max-w-md gap-[26px] px-6 pb-[32px] mx-auto ">
+        {isProfileRoot ? (
+          <>
+            <ProfileHeader user={user} />
+            <ActivityMenuSection menus={activityMenus} />
+            <MenuSection title="정보 수정" menus={settingsMenu} />
+          </>
+        ) : (
+          <Outlet />
+        )}
+      </div>
+      <Divider />
+    </>
   );
 }
 
