@@ -9,4 +9,7 @@ export const OAUTH_URL = {
 export const API_URL = {
   /* 내 정보 조회 */
   MYPAGE_ME: "/api/mypage/me",
+
+  /* 추천 탭 */
+  RECOMMEND: "/api/recommend",
 };
