@@ -10,31 +10,20 @@ declare global {
   }
 }
 
+type Props = {
+  enableOverlay?: boolean;
+};
+
 const KAKAO_SDK_ID = "kakao-map-sdk";
 
-const POLYGON_STYLE = {
-  strokeWeight: 2,
-  strokeColor: "#004c80",
-  strokeOpacity: 0.5,
-  fillColor: "#C4ECFE",
-  fillOpacity: 0.3,
-};
-
-const mouseoverOption = {
-  fillColor: "#00AEFF",
-  fillOpacity: 0.5,
-};
-
-const mouseoutOption = {
-  fillColor: "#C4ECFE",
-  fillOpacity: 0.3,
-};
-
-const Map = () => {
+const Map = ({ enableOverlay = true }: Props) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapRefInstance = useRef<any>(null);
   const overlayRef = useRef<any>(null);
+  const basicPolygonsRef = useRef<any[]>([]);
+
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
+  const [isMapReady, setIsMapReady] = useState(false);
 
   /* ------------------------- SDK Load ------------------------- */
 
@@ -85,28 +74,34 @@ const Map = () => {
       yAnchor: 1,
     });
 
-    drawGeoJSON(map);
-    setCurrentLocation(map);
+    setIsMapReady(true);
+
+    // setCurrentLocation(map);
   };
 
   /* ------------------------- GeoJSON ------------------------- */
 
-  const drawGeoJSON = (map: any) => {
+  const drawBasicGeoJSON = (map: any) => {
     seoulGeoJson.features.forEach((feature: any) => {
       const { geometry, properties } = feature;
 
       if (geometry.type === "Polygon") {
-        createPolygon(map, geometry.coordinates, properties);
+        createBasicPolygon(map, geometry.coordinates, properties);
       }
 
       if (geometry.type === "MultiPolygon") {
         geometry.coordinates.forEach((coords: any) => {
-          createPolygon(map, coords, properties);
+          createBasicPolygon(map, coords, properties);
         });
       }
     });
   };
-  const createPolygon = (map: any, rings: number[][][], properties: any) => {
+
+  const createBasicPolygon = (
+    map: any,
+    rings: number[][][],
+    properties: any,
+  ) => {
     const paths = rings.map((ring) =>
       ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
     );
@@ -126,6 +121,8 @@ const Map = () => {
       fillOpacity: 0.6,
     });
 
+    basicPolygonsRef.current.push(polygon);
+
     /* ---------------- Hover ---------------- */
 
     window.kakao.maps.event.addListener(
@@ -136,7 +133,7 @@ const Map = () => {
           fillOpacity: 0.9,
         });
 
-        if (!overlayRef.current) return;
+        if (!overlayRef.current || !enableOverlay) return;
 
         overlayRef.current.setContent(`
         <div style="
@@ -167,6 +164,13 @@ const Map = () => {
         overlayRef.current.setMap(null);
       }
     });
+  };
+
+  const clearBasicPolygons = () => {
+    basicPolygonsRef.current.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    basicPolygonsRef.current = [];
   };
 
   // const createPolygon = (map: any, rings: number[][][], properties: any) => {
@@ -250,6 +254,18 @@ const Map = () => {
         : window.kakao.maps.MapTypeId.HYBRID,
     );
   }, [mapType]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    if (enableOverlay) {
+      if (basicPolygonsRef.current.length === 0) {
+        drawBasicGeoJSON(mapRefInstance.current);
+      }
+    } else {
+      clearBasicPolygons();
+    }
+  }, [enableOverlay, isMapReady]);
 
   return (
     <div className="relative w-full h-full">

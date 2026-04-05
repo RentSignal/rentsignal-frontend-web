@@ -71,8 +71,10 @@ export default {
           10: "#171719",
           5: "#0F0F10",
         },
-        red: {
-          DEFAULT: "#FF4242",
+        trend: {
+          up: "#FF4242",
+          neutral: "#FF8000",
+          down: "#0054D1",
         },
         lightBlue: {
           99: "#F7FDFF",

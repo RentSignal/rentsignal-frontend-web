@@ -1,9 +1,9 @@
-import InfoToggle from "@/components/InfoToggle";
+import InfoSection from "@/components/Info/InfoSection";
 
 const Info = () => {
   return (
     <>
-      <InfoToggle/>
+      <InfoSection />
     </>
   );
 };
