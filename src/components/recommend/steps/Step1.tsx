@@ -41,10 +41,10 @@ export default function Step1({
   }, [debounced]);
 
   return (
-    <div className="pt-[17px] px-5">
+    <div className="px-5 ">
       {/* Step 1 헤더 */}
-      <div className="flex flex-col gap-[6px] mb-5">
-        <h2 className="text-base font-semibold text-coolNeutral-20">Step 1</h2>
+      <div className="flex flex-col gap-[6px] mb-[30px] pt-[47px]">
+        <h2 className="text-base font-semibold text-coolNeutral-25">Step 1</h2>
         <p className="text-sm font-medium text-coolNeutral-25 ">
           아래 검색창을 통해 위치를 선택해주세요.
         </p>
@@ -93,7 +93,7 @@ export default function Step1({
             )}
           </span>
           {open && list.length > 0 && (
-            <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden bg-white border rounded-lg shadow-md top-full border-coolNeutral-95">
+            <div className="absolute left-0 right-0 z-20 mt-3 overflow-hidden bg-white border rounded-lg shadow-md top-full border-coolNeutral-95">
               {list.map((item) => (
                 <button
                   key={item}
