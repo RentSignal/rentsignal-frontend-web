@@ -33,13 +33,13 @@ export default function Step2({
           주거형태를 선택해주세요.
         </p>
 
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-[5px] mt-2">
           {housingOption.map((item) => (
             <button
               key={item}
               onClick={() => handleSelect("houseType", item)}
               className={`
-                px-3 py-2 border rounded-lg
+                flex-1 px-3 py-2 border rounded-lg
                 ${
                   value.houseType === item
                     ? "bg-blue-60 text-white border-blue-60"
@@ -58,13 +58,13 @@ export default function Step2({
           계약형태를 선택해주세요.
         </p>
 
-        <div className="flex gap-2 mt-2">
+        <div className="flex gap-[5px] mt-2">
           {rentOption.map((item) => (
             <button
               key={item}
               onClick={() => handleSelect("rentType", item)}
               className={`
-                px-3 py-2 border rounded-lg
+                flex-1 px-3 py-2 border rounded-lg
                 ${
                   value.rentType === item
                     ? "bg-blue-60 text-white border-blue-60"
@@ -82,7 +82,7 @@ export default function Step2({
       <div className="flex justify-end gap-1">
         <button
           onClick={onPrev}
-          className="px-[27px] py-1 rounded-lg text-sm font-bold bg-blue-80 text-white"
+          className="px-[47px] py-[10px] text-sm font-bold rounded-lg bg-blue-80 text-white"
         >
           이전
         </button>
@@ -90,8 +90,8 @@ export default function Step2({
           onClick={onNext}
           disabled={!isValid}
           className={`
-            px-[27px] py-1 rounded-lg text-sm font-bold
-            ${isValid ? "bg-blue-60 text-white" : "bg-gray-300 text-gray-500"}
+            px-[47px] py-[10px] text-sm font-bold rounded-lg
+            ${isValid ? "bg-blue-60 text-white" : "bg-coolNeutral-70 text-white"}
           `}
         >
           다음
