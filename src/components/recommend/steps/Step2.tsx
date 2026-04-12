@@ -24,7 +24,7 @@ export default function Step2({
   const isValid = value.houseType && value.rentType;
 
   return (
-    <div className="pt-[17px] px-5 flex flex-col gap-6">
+    <div className="pt-[47px] px-5 flex flex-col gap-6">
       <div>
         <h2 className="mb-[6px] text-base font-semibold text-coolNeutral-20">
           Step 2

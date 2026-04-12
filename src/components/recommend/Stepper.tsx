@@ -9,7 +9,7 @@ export default function Stepper({ currentStep }: StepperProps) {
   const progress = (currentStep - 1) / (steps.length - 1);
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full mt-[21px]">
       {/* 배경 선 */}
       <div
         className="absolute top-[13px] left-0 right-0 h-[8px] bg-coolNeutral-97"
@@ -42,8 +42,8 @@ export default function Stepper({ currentStep }: StepperProps) {
                   w-[35px] h-[35px] rounded-full flex items-center justify-center text-[12px]
                   ${
                     isActive
-                      ? "bg-blue-80 text-white shadow-[inset_0_0_0_3px_#3B82F6]"
-                      : "bg-coolNeutral-97 text-coolNeutral-40 shadow-[inset_0_0_0_3px_#E2E3E4]"
+                      ? "bg-blue-80 text-white font-semibold text-sm shadow-[inset_0_0_0_3px_#3B82F6]"
+                      : "bg-coolNeutral-97 text-coolNeutral-90 font-semibold text-sm shadow-[inset_0_0_0_3px_#E2E3E4]"
                   }
                 `}
               >
@@ -53,8 +53,8 @@ export default function Stepper({ currentStep }: StepperProps) {
               {/* 라벨 */}
               <p
                 className={`
-                  text-xs
-                  ${isActive ? "text-coolNeutral-25" : "text-coolNeutral-90"}
+                  text-[13px] font-semibold 
+                  ${isActive ? "text-coolNeutral-30" : "text-coolNeutral-90"}
                 `}
               >
                 {label}
