@@ -24,6 +24,7 @@ const Recommend = () => {
     houseType: "",
     rentType: "",
     sortBy: "",
+    facilityPriorities: [],
   });
 
   useEffect(() => {

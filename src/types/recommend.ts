@@ -3,4 +3,5 @@ export type RecommendFormData = {
   houseType: string;
   rentType: string;
   sortBy: string;
+  facilityPriorities?: string[];
 };
