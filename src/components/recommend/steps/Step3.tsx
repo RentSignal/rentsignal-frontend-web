@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDraggable, useDroppable, DragDropProvider } from "@dnd-kit/react";
 import CloseIcon from "@/assets/icons/close_icon.svg?react";
 
@@ -82,7 +82,7 @@ export default function Step3({
   value: string;
   onChange: (v: string) => void;
   onPrev: () => void;
-  onSubmit: () => void;
+  onSubmit: (priority: Record<number, string>) => void;
 }) {
   const preferOption = ["가성비", "편의시설"];
   const facilityOption = [
@@ -95,7 +95,10 @@ export default function Step3({
     "교통",
     "치안",
   ];
+
   const [priority, setPriority] = useState<Record<number, string>>({});
+  const [isLoading, setIsLoading] = useState(false);
+
   const isValid = value.length > 0;
 
   return (
@@ -191,14 +194,21 @@ export default function Step3({
           </button>
 
           <button
-            onClick={onSubmit}
+            onClick={async () => {
+              setIsLoading(true);
+              try {
+                await onSubmit(priority);
+              } finally {
+                setIsLoading(false);
+              }
+            }}
             disabled={!isValid}
             className={`
             px-[27px] py-1 rounded-lg text-sm font-bold
             ${isValid ? "bg-blue-60 text-white" : "bg-gray-300 text-gray-500"}
           `}
           >
-            완료
+            맞춤 추천 조회하기
           </button>
         </div>
       </div>

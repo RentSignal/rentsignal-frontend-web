@@ -55,11 +55,24 @@ export default function StepContent({
           value={formData.sortBy}
           onChange={(v) => setFormData((prev) => ({ ...prev, sortBy: v }))}
           onPrev={() => setStep(2)}
-          onSubmit={async () => {
+          onSubmit={async (priority) => {
             try {
-              const res = await fetchHousingRecommendations(formData);
+              let payload = { ...formData };
 
-              console.log(formData);
+              if (formData.sortBy === "편의시설") {
+                const facilityPriorities = Object.entries(priority)
+                  .sort(([a], [b]) => Number(a) - Number(b))
+                  .map(([, value]) => value);
+
+                payload = {
+                  ...payload,
+                  facilityPriorities,
+                };
+              }
+
+              const res = await fetchHousingRecommendations(payload);
+
+              console.log(payload);
 
               if (res.success) {
                 console.log("추천 조회 성공");
