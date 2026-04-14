@@ -6,8 +6,8 @@ function DraggableItem({ id }: { id: string }) {
   const { ref, handleRef } = useDraggable({ id });
 
   return (
-    <div ref={ref} className="py-2 text-center bg-white border rounded-lg">
-      <button ref={handleRef} className="cursor-grab">
+    <div ref={ref} className="bg-white border rounded-lg ">
+      <button ref={handleRef} className="w-full py-2 text-center cursor-grab">
         {id}
       </button>
     </div>
@@ -29,8 +29,8 @@ function DroppableSlot({
     <div
       ref={ref}
       className={`
-    flex items-center justify-between pt-2 pb-2 gap-[34px]
-    transition-colors
+        flex items-center justify-between pt-2 pb-2 gap-[34px]
+        transition-colors
     ${isDropTarget ? "text-white bg-blue-95 rounded-lg" : ""}
   `}
     >
