@@ -41,16 +41,19 @@ export default function Step1({
   }, [debounced]);
 
   return (
-    <div className="px-5 ">
+    <div className="flex flex-col min-h-screen px-5">
       {/* Step 1 헤더 */}
-      <div className="flex flex-col gap-[6px] mb-[30px] pt-[47px]">
-        <h2 className="text-base font-semibold text-coolNeutral-25">Step 1</h2>
+      <div className="flex flex-col gap-[6px] pt-[16px] pb-[10px]">
+        <h2 className="text-[22px] font-semibold text-coolNeutral-25">
+          Step 1
+        </h2>
         <p className="text-sm font-medium text-coolNeutral-25 ">
           아래 검색창을 통해 위치를 선택해주세요.
         </p>
       </div>
-      <div className="flex flex-col gap-[207px]">
+      <div className="flex flex-col flex-1">
         <div className="relative">
+          {/* 검색영역 */}
           <span className="absolute -translate-y-1/2 left-3 top-1/2">
             <SearchIcon />
           </span>
@@ -75,7 +78,7 @@ export default function Step1({
               setOpen(true);
               setIsSelected(false);
             }}
-            placeholder="거주하고자 하는 희망 지역을 검색해 주세요. (ex: 명동)"
+            placeholder="거주하고자 하는 지역을 검색해 주세요. (ex: 명동)"
           />
           <span className="absolute -translate-y-1/2 right-3 top-1/2">
             {value && (
@@ -122,13 +125,14 @@ export default function Step1({
             </div>
           )}
         </div>
-        <button
-          onClick={onNext}
-          className="self-end px-[47px] py-[10px] text-sm font-bold
-             text-white rounded-lg bg-coolNeutral-70"
-        >
-          다음
-        </button>
+        <div className="fixed bottom-0 left-0 right-0 px-5 py-[32px] bg-white">
+          <button
+            onClick={onNext}
+            className="w-full py-[17px] text-sm font-semibold rounded-lg text-coolNeutral-50 bg-coolNeutral-97"
+          >
+            다음
+          </button>
+        </div>
       </div>
     </div>
   );
