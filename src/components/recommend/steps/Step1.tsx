@@ -41,13 +41,13 @@ export default function Step1({
   }, [debounced]);
 
   return (
-    <div className="flex flex-col min-h-screen px-5">
+    <div className="flex flex-col min-h-screen px-6">
       {/* Step 1 헤더 */}
       <div className="flex flex-col gap-[6px] pt-[16px] pb-[10px]">
         <h2 className="text-[22px] font-semibold text-coolNeutral-25">
           Step 1
         </h2>
-        <p className="text-sm font-medium text-coolNeutral-25 ">
+        <p className="text-lg font-medium text-coolNeutral-25 ">
           아래 검색창을 통해 위치를 선택해주세요.
         </p>
       </div>
@@ -63,7 +63,7 @@ export default function Step1({
                       border rounded-[10px]
                       outline-none
                       bg-blue-99
-                      text-[12px] font-medium
+                      text-[14px] font-semibold text-coolNeutral-30
                       w-full
 
                       ${
@@ -78,7 +78,7 @@ export default function Step1({
               setOpen(true);
               setIsSelected(false);
             }}
-            placeholder="거주하고자 하는 지역을 검색해 주세요. (ex: 명동)"
+            placeholder="거주하고자 하는 지역을 검색해 주세요."
           />
           <span className="absolute -translate-y-1/2 right-3 top-1/2">
             {value && (
@@ -96,13 +96,13 @@ export default function Step1({
             )}
           </span>
           {open && list.length > 0 && (
-            <div className="absolute left-0 right-0 z-20 mt-3 overflow-hidden bg-white border rounded-lg shadow-md top-full border-coolNeutral-95">
+            <div className="absolute left-0 right-0 z-20 mt-3 overflow-hidden bg-white border rounded-lg top-full border-coolNeutral-95">
               {list.map((item) => (
                 <button
                   key={item}
                   type="button"
-                  className="block w-full px-3 py-2 gap-[6px]
-                             text-[12px] font-medium text-left text-coolNeutral-30
+                  className="block w-full px-4 py-[10px] gap-[14px]
+                             text-[14px] font-semibold text-left text-coolNeutral-30
                              hover:text-blue-60"
                   onMouseDown={() => {
                     onChange(item);
@@ -127,8 +127,10 @@ export default function Step1({
         </div>
         <div className="fixed bottom-0 left-0 right-0 px-5 py-[32px] bg-white">
           <button
+            disabled={!isSelected}
             onClick={onNext}
-            className="w-full py-[17px] text-sm font-semibold rounded-lg text-coolNeutral-50 bg-coolNeutral-97"
+            className={`w-full py-[19px] text-[17px] font-semibold rounded-lg 
+              ${isSelected ? "text-white bg-blue-60 " : " text-coolNeutral-50 bg-coolNeutral-97"}`}
           >
             다음
           </button>

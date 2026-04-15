@@ -5,6 +5,7 @@ import Map from "@/components/Map";
 import PanelHeader from "@/components/Panel/PanelHeader";
 import LoginModal from "@/components/LoginModal";
 import PhoneModal from "@/components/phoneModal";
+import RecommnedationResultPanel from "@/components/recommend/RecommendationResultPanel";
 
 const MainLayout = () => {
   const location = useLocation();
@@ -12,6 +13,8 @@ const MainLayout = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false); //로그인 모달 상태
   const [phoneOpen, setPhoneOpen] = useState(false); //전화번호 입력 모달 상태
+  const [recommendResultOpen, setRecommendResultOpen] = useState(false); //추천 결과 오른쪽 패널 상태관리
+  const [recommendResult, setRecommendResult] = useState<any>(null);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -24,6 +27,11 @@ const MainLayout = () => {
       <div className="relative flex-1">
         {/* 지도 */}
         <Map enableOverlay={isHome} />
+        <RecommnedationResultPanel
+          open={recommendResultOpen}
+          onClose={() => setRecommendResultOpen(false)}
+          data={recommendResult}
+        />
 
         {/* 패널 */}
         <div
@@ -41,6 +49,8 @@ const MainLayout = () => {
             context={{
               openLoginModal: () => setLoginOpen(true),
               openPhoneModal: () => setPhoneOpen(true),
+              openResultPanel: () => setRecommendResultOpen(true),
+              setRecommendResult,
             }}
           />
         </div>

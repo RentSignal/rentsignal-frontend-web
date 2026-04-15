@@ -3,6 +3,7 @@ import Step2 from "@/components/recommend/steps/Step2";
 import Step3 from "@/components/recommend/steps/Step3";
 import type { RecommendFormData } from "@/types/recommend";
 import { fetchHousingRecommendations } from "@/services/recommendApi";
+import { useOutletContext } from "react-router-dom";
 
 type StepContentProps = {
   step: number;
@@ -11,12 +12,20 @@ type StepContentProps = {
   setFormData: React.Dispatch<React.SetStateAction<RecommendFormData>>;
 };
 
+type LayoutContext = {
+  openResultPanel: () => void;
+  setRecommendResult: (data: any) => void;
+};
+
 export default function StepContent({
   step,
   setStep,
   formData,
   setFormData,
 }: StepContentProps) {
+  const { openResultPanel, setRecommendResult } =
+    useOutletContext<LayoutContext>();
+
   switch (step) {
     case 1:
       return (
@@ -75,6 +84,8 @@ export default function StepContent({
               console.log(payload);
 
               if (res.success) {
+                setRecommendResult(res.data);
+                openResultPanel();
                 console.log("추천 조회 성공");
                 console.log(res.data);
               }
