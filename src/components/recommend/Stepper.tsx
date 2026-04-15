@@ -53,7 +53,7 @@ export default function Stepper({ currentStep }: StepperProps) {
               {/* 라벨 */}
               <p
                 className={`
-                  text-[13px] font-semibold 
+                  text-sm font-semibold 
                   ${isActive ? "text-coolNeutral-30" : "text-coolNeutral-90"}
                 `}
               >
