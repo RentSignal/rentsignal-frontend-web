@@ -21,7 +21,7 @@ export default function Stepper({ currentStep }: StepperProps) {
 
       {/* 진행 선 */}
       <div
-        className="absolute top-[13px] h-[8px] bg-blue-80 transition-all"
+        className="absolute top-[13px] h-[8px] bg-blue-60 transition-all"
         style={{
           left: `${RADIUS}px`,
           width: `calc(${progress} * (100% - ${RADIUS * 2}px))`,
@@ -42,7 +42,7 @@ export default function Stepper({ currentStep }: StepperProps) {
                   w-[35px] h-[35px] rounded-full flex items-center justify-center text-[12px]
                   ${
                     isActive
-                      ? "bg-blue-80 text-white font-semibold text-sm shadow-[inset_0_0_0_3px_#3B82F6]"
+                      ? "bg-blue-70 text-white font-semibold text-sm shadow-[inset_0_0_0_3px_#3B82F6]"
                       : "bg-coolNeutral-97 text-coolNeutral-90 font-semibold text-sm shadow-[inset_0_0_0_3px_#E2E3E4]"
                   }
                 `}
