@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Map from "@/components/Map";
@@ -15,7 +15,9 @@ const MainLayout = () => {
   const [phoneOpen, setPhoneOpen] = useState(false); //전화번호 입력 모달 상태
   const [recommendResultOpen, setRecommendResultOpen] = useState(false); //추천 결과 오른쪽 패널 상태관리
   const [recommendResult, setRecommendResult] = useState<any>(null);
-
+  // useEffect(() => {
+  //   console.log("recommendResult:", recommendResult);
+  // }, [recommendResult]);
   return (
     <div className="flex h-screen overflow-hidden">
       {/* 60px Sidebar */}
