@@ -1,75 +1,35 @@
 import { useState } from "react";
-import { useDraggable, useDroppable, DragDropProvider } from "@dnd-kit/react";
-import CloseIcon from "@/assets/icons/close_icon.svg?react";
 
-function DraggableItem({ id }: { id: string }) {
-  const { ref, handleRef } = useDraggable({ id });
-
-  return (
-    <div ref={ref} className="bg-white border rounded-lg ">
-      <button ref={handleRef} className="w-full py-2 text-center cursor-grab">
-        {id}
-      </button>
-    </div>
-  );
-}
-
-function DroppableSlot({
+function SelectableItem({
   id,
-  value,
-  onRemove,
+  priority,
+  onSelect,
 }: {
   id: string;
-  value?: string;
-  onRemove?: (id: string) => void;
+  priority: Record<number, string>;
+  onSelect: (id: string) => void;
 }) {
-  const { ref, isDropTarget } = useDroppable({ id });
+  const order = Object.entries(priority).find(([, value]) => value === id)?.[0];
 
   return (
-    <div
-      ref={ref}
+    <button
+      onClick={() => onSelect(id)}
       className={`
-        flex items-center justify-between pt-2 pb-2 gap-[34px]
-        transition-colors
-    ${isDropTarget ? "text-white bg-blue-95 rounded-lg" : ""}
-  `}
-    >
-      {/* 왼쪽 묶음 */}
-      <div className="flex items-center gap-[34px]">
-        <div
-          className={`w-[25px] h-[25px] rounded-full flex items-center justify-center text-sm
-        ${
-          isDropTarget
-            ? "text-white bg-blue-80"
-            : value
-              ? "font-medium bg-blue-80 text-white"
-              : "text-gray-400 bg-coolNeutral-95"
-        }
-        ${isDropTarget || value ? "shadow-[inset_0_0_0_2px_#3B82F6]" : ""}
+        relative flex items-center justify-center gap-1 py-3
+        border rounded-lg
+        ${order ? "border-blue-60 text-blue-60 bg-white font-semibold" : "border-coolNeutral-90  text-coolNeutral-30 font-medium"}
       `}
-        >
-          {id}
+    >
+      {/* 텍스트 */}
+      <span className="text-base ">{id}</span>
+
+      {/* 우선순위 뱃지 */}
+      {order && (
+        <div className="absolute flex items-center justify-center w-6 h-6 text-xs text-white rounded-full shadow -bottom-2 -right-2 bg-blue-60">
+          {order}
         </div>
-
-        <p
-          className={`text-sm ${
-            value ? "text-blue-60 font-medium" : "text-gray-400"
-          }`}
-        >
-          {value ?? "여기에 드래그 앤 드롭"}
-        </p>
-      </div>
-
-      {/* 오른쪽 버튼 */}
-      {value && (
-        <button
-          onClick={() => onRemove?.(id)}
-          className="p-1 transition rounded hover:bg-gray-200"
-        >
-          <CloseIcon className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-        </button>
       )}
-    </div>
+    </button>
   );
 }
 
@@ -101,94 +61,96 @@ export default function Step3({
 
   const isValid = value.length > 0;
 
+  const handleSelect = (selected: string) => {
+    setPriority((prev) => {
+      const updated = { ...prev };
+
+      // 이미 선택된 경우 → 제거 (toggle)
+      const existingKey = Object.keys(updated).find(
+        (key) => updated[Number(key)] === selected,
+      );
+
+      if (existingKey) {
+        delete updated[Number(existingKey)];
+        return updated;
+      }
+
+      // 빈 슬롯에 순서대로 추가 (1~5)
+      for (let i = 1; i <= 5; i++) {
+        if (!updated[i]) {
+          updated[i] = selected;
+          break;
+        }
+      }
+
+      return updated;
+    });
+  };
+
   return (
-    <DragDropProvider
-      onDragEnd={(event) => {
-        if (event.canceled) return;
-
-        const targetId = Number(event.operation.target?.id);
-        const sourceId = String(event.operation.source?.id);
-
-        if (event.operation.target == null || event.operation.source == null)
-          return;
-        setPriority((prev) => {
-          const updated = { ...prev };
-
-          Object.keys(updated).forEach((key) => {
-            if (updated[Number(key)] === sourceId) {
-              delete updated[Number(key)];
-            }
-          });
-
-          updated[Number(targetId)] = sourceId;
-
-          return updated;
-        });
-      }}
-    >
-      <div className="pt-[17px] px-5 flex flex-col gap-6">
-        <div>
-          <h2 className="text-base font-semibold">Step 3</h2>
-          <p className="text-sm font-medium text-coolNeutral-30">
-            우선순위로 둘 생활요소를 선택하세요.
+    <div className="pt-[17px] px-5 flex flex-col gap-6">
+      <div>
+        <div className="flex flex-col gap-[6px] pt-[16px]">
+          <h2 className="text-[22px] font-semibold text-coolNeutral-25">
+            Step 3
+          </h2>
+          <p className="text-lg font-medium text-coolNeutral-25 ">
+            우선순위로 둘 생활요소를 선택해주세요.
           </p>
-
-          <div className="flex gap-[5px] mt-3">
-            {preferOption.map((item) => {
-              const selected = value.includes(item);
-
-              return (
-                <button
-                  key={item}
-                  onClick={() => onChange(item)}
-                  className={`
-                  flex-1 px-3 py-2 border rounded-lg
-                  ${
-                    selected
-                      ? "bg-blue-60 text-white border-blue-60"
-                      : "border-gray-300"
-                  }
-                `}
-                >
-                  {item}
-                </button>
-              );
-            })}
-          </div>
-          {value === "편의시설" && (
-            <div className="pt-[48px] mt-3">
-              <p className="text-sm font-medium text-coolNeutral-25 mb-[26px]">
-                드래그하여 우선순위를 정해주세요.
-              </p>
-              <div className="mt-3">
-                {[1, 2, 3, 4, 5].map((num) => (
-                  <DroppableSlot
-                    key={num}
-                    id={String(num)}
-                    value={priority[num]}
-                    onRemove={(id) => {
-                      setPriority((prev) => {
-                        const updated = { ...prev };
-                        delete updated[Number(id)];
-                        return updated;
-                      });
-                    }}
-                  />
-                ))}
-              </div>
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                {facilityOption.map((item) => (
-                  <DraggableItem key={item} id={item} />
-                ))}
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="flex justify-end gap-1">
+        {/* 상단 선택 */}
+        <div className="flex gap-[10px] py-[26px]">
+          {preferOption.map((item) => {
+            const selected = value.includes(item);
+
+            return (
+              <button
+                key={item}
+                onClick={() => onChange(item)}
+                className={`
+                  px-[30px] py-2 border rounded-lg text-base
+                  ${
+                    selected
+                      ? "bg-white text-blue-60 border-blue-60 font-semibold"
+                      : "border-coolNeutral-90 font-medium text-coolNeutral-30"
+                  }
+                `}
+              >
+                {item}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 편의시설 선택 */}
+        {value === "편의시설" && (
+          <div>
+            <p className="text-lg font-medium text-coolNeutral-25 ">
+              1순위부터 5순위 까지 우선순위를 정해주세요.
+            </p>
+
+            <div className="grid grid-cols-3 gap-2 my-[26px]">
+              {facilityOption.map((item) => (
+                <SelectableItem
+                  key={item}
+                  id={item}
+                  priority={priority}
+                  onSelect={handleSelect}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 하단 버튼 */}
+      <div className="fixed bottom-0 left-0 right-0 px-[24px] pb-[24px] bg-white">
+        <div className="flex gap-[10px] ">
           <button
             onClick={onPrev}
-            className="px-[27px] py-1 rounded-lg text-sm font-bold bg-blue-80 text-white"
+            className="w-[99px] py-[19px] text-[17px] font-semibold rounded-lg
+                     bg-white text-coolNeutral-50 border border-b border-coolNeutral-95"
           >
             이전
           </button>
@@ -204,14 +166,18 @@ export default function Step3({
             }}
             disabled={!isValid}
             className={`
-            px-[27px] py-1 rounded-lg text-sm font-bold
-            ${isValid ? "bg-blue-60 text-white" : "bg-gray-300 text-gray-500"}
-          `}
+                flex-1 py-[19px] rounded-lg text-[17px] font-semibold
+                ${
+                  isValid
+                    ? "bg-blue-60 text-white"
+                    : "bg-coolNeutral-95 text-coolNeutral-30"
+                }
+              `}
           >
-            맞춤 추천 조회하기
+            맞춤 추천 보기
           </button>
         </div>
       </div>
-    </DragDropProvider>
+    </div>
   );
 }
