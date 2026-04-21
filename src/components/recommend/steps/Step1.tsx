@@ -125,11 +125,11 @@ export default function Step1({
             </div>
           )}
         </div>
-        <div className="fixed bottom-0 left-0 right-0 px-5 py-[32px] bg-white">
+        <div className="fixed bottom-0 left-0 right-0 px-5 py-[24px] bg-white">
           <button
             disabled={!isSelected}
             onClick={onNext}
-            className={`w-full py-[19px] text-[17px] font-semibold rounded-lg 
+            className={`w-full h-[51px] text-[17px] font-semibold rounded-lg 
               ${isSelected ? "text-white bg-blue-60 " : " text-coolNeutral-50 bg-coolNeutral-97"}`}
           >
             다음

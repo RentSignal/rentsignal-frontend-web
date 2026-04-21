@@ -21,7 +21,7 @@ export default function RecommendationResultPanel({
   return (
     <div
       className={`
-        absolute right-0 top-0 h-full w-[550px]
+        absolute right-0 top-0 h-full w-[377px]
         bg-white border-l border-divider_grey
         z-40
         overflow-y-auto
@@ -41,14 +41,14 @@ function BodySection({ data }: { data: any }) {
     <div className=" mt-3 gap-[5px]">
       <HeaderSection />
       <SelectedTag data={data} />
-      <RecommendItem data={data} />
+      <RecommendList data={data} />
     </div>
   );
 }
 
 function HeaderSection() {
   return (
-    <div className="mt-[47px] mx-6">
+    <div className="mt-[47px] px-6 py-3">
       <h2 className="text-[22px] font-semibold text-coolNeutral-25 ">
         이 동네는 어때요?
       </h2>
@@ -59,7 +59,26 @@ function HeaderSection() {
   );
 }
 
-function RecommendItem({ data }: { data: any }) {
+function SelectedTag({ data }: { data: any }) {
+  if (!data) return null;
+
+  const tags = [data.houseType, data.rentType, data.priority].filter(Boolean);
+
+  return (
+    <div className="mx-6 flex flex-row gap-[8px] py-[19px]">
+      {tags.map((tag, idx) => (
+        <p
+          key={idx}
+          className="bg-blue-95 py-1 px-[10px] text-coolNeutral-30 text-[15px] font-medium rounded-lg"
+        >
+          # {tag}
+        </p>
+      ))}
+    </div>
+  );
+}
+
+function RecommendList({ data }: { data: any }) {
   const list = data?.recommendedNeighborhoods;
 
   if (!list?.length) return null;
@@ -177,31 +196,12 @@ function FacilityRow({
         </span>
       </div>
 
-      <div className="w-full h-3 overflow-hidden bg-gray-200 rounded-full">
+      <div className="w-full h-[6px] overflow-hidden rounded-full bg-coolNeutral-95 ">
         <div
           className="h-full rounded-full bg-blue-60"
           style={{ width: `${percent}%` }}
         />
       </div>
-    </div>
-  );
-}
-
-function SelectedTag({ data }: { data: any }) {
-  if (!data) return null;
-
-  const tags = [data.houseType, data.rentType, data.priority].filter(Boolean);
-
-  return (
-    <div className="mx-6 flex flex-row gap-[10px] py-[19px]">
-      {tags.map((tag, idx) => (
-        <p
-          key={idx}
-          className="bg-blue-95 py-1 px-[10px] text-coolNeutral-30 text-[15px] font-medium rounded-lg"
-        >
-          # {tag}
-        </p>
-      ))}
     </div>
   );
 }
@@ -212,13 +212,13 @@ function StatItem({ item }: { item: any }) {
   type SafetyLabel = "안전" | "보통" | "위험";
 
   const safetyMap: Record<SafetyLabel, string> = {
-    안전: "text-green-500",
-    보통: "text-yellow-500",
-    위험: "text-red-500",
+    안전: "text-[#66D575]",
+    보통: "text-[#FF9000]",
+    위험: "text-[#FF0000]",
   };
 
   const safetyLabel: SafetyLabel =
-    item.safety >= 0.8 ? "안전" : item.safety >= 0.6 ? "보통" : "위험";
+    item.safety >= 0.8 ? "안전" : item.safety >= 0.2 ? "보통" : "위험";
 
   return (
     <div className="flex flex-row gap-[53px] mb-[23px] mt-5 mx-7">

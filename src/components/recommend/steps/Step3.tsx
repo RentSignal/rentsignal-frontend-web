@@ -15,7 +15,7 @@ function SelectableItem({
     <button
       onClick={() => onSelect(id)}
       className={`
-        relative flex items-center justify-center gap-1 py-3
+        relative flex items-center justify-center  h-[40px]
         border rounded-lg
         ${order ? "border-blue-60 text-blue-60 bg-white font-semibold" : "border-coolNeutral-90  text-coolNeutral-30 font-medium"}
       `}
@@ -130,7 +130,7 @@ export default function Step3({
               1순위부터 5순위 까지 우선순위를 정해주세요.
             </p>
 
-            <div className="grid grid-cols-3 gap-2 my-[26px]">
+            <div className="grid grid-cols-3 gap-[12px] my-[26px]">
               {facilityOption.map((item) => (
                 <SelectableItem
                   key={item}
@@ -149,7 +149,7 @@ export default function Step3({
         <div className="flex gap-[10px] ">
           <button
             onClick={onPrev}
-            className="w-[99px] py-[19px] text-[17px] font-semibold rounded-lg
+            className="w-[99px] text-[17px] font-semibold rounded-lg
                      bg-white text-coolNeutral-50 border border-b border-coolNeutral-95"
           >
             이전
@@ -166,7 +166,7 @@ export default function Step3({
             }}
             disabled={!isValid}
             className={`
-                flex-1 py-[19px] rounded-lg text-[17px] font-semibold
+                flex-1 h-[51px] rounded-lg text-[17px] font-semibold
                 ${
                   isValid
                     ? "bg-blue-60 text-white"
