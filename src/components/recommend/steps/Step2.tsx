@@ -117,7 +117,7 @@ export default function Step2({
         <div className="flex gap-[10px] ">
           <button
             onClick={onPrev}
-            className="w-[99px] py-[19px] text-[17px] font-semibold rounded-lg
+            className="w-[99px] h-[51px] text-[17px] font-semibold rounded-lg
                      bg-white text-coolNeutral-50 border border-b border-coolNeutral-95"
           >
             이전
@@ -126,7 +126,7 @@ export default function Step2({
             onClick={onNext}
             disabled={!isValid}
             className={`
-            flex-1 py-[19px] text-[17px] font-semibold rounded-lg
+            flex-1 text-[17px] font-semibold rounded-lg
             ${isValid ? "bg-blue-60 text-white" : "bg-coolNeutral-95 text-coolNeutral-30"}
           `}
           >

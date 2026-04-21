@@ -12,7 +12,7 @@ export default function Stepper({ currentStep }: StepperProps) {
     <div className="relative w-full mt-[21px]">
       {/* 배경 선 */}
       <div
-        className="absolute top-[13px] left-0 right-0 h-[8px] bg-coolNeutral-97"
+        className="absolute top-[13px] left-0 right-0 h-[5px] bg-coolNeutral-95"
         style={{
           left: `${RADIUS}px`,
           right: `${RADIUS}px`,
@@ -21,7 +21,7 @@ export default function Stepper({ currentStep }: StepperProps) {
 
       {/* 진행 선 */}
       <div
-        className="absolute top-[13px] h-[8px] bg-blue-60 transition-all"
+        className="absolute top-[13px] h-[5px] bg-blue-60 transition-all"
         style={{
           left: `${RADIUS}px`,
           width: `calc(${progress} * (100% - ${RADIUS * 2}px))`,
