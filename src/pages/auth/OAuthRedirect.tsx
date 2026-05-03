@@ -1,15 +1,25 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { setAccessToken } from "@/services/auth";
 
 const OAuthRedirect = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // console.log("현재 URL:", window.location.href);
-    // console.log("query string:", location.search);
-
     const params = new URLSearchParams(location.search);
-    console.log("error param:", params.get("error"));
+
+    const accessToken = params.get("accessToken");
+    const error = params.get("error");
+
+    if (error) {
+      console.error("OAuth 로그인 오류:", error);
+      navigate("/");
+      return;
+    }
+
+    if (accessToken) {
+      setAccessToken(accessToken);
+    }
 
     navigate("/");
   }, []);
