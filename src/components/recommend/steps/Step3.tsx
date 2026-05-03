@@ -6,10 +6,11 @@ function SelectableItem({
   onSelect,
 }: {
   id: string;
-  priority: Record<number, string>;
+  priority: string[];
   onSelect: (id: string) => void;
 }) {
-  const order = Object.entries(priority).find(([, value]) => value === id)?.[0];
+  const index = priority.indexOf(id);
+  const order = index !== -1 ? index + 1 : null;
 
   return (
     <button
@@ -42,7 +43,7 @@ export default function Step3({
   value: string;
   onChange: (v: string) => void;
   onPrev: () => void;
-  onSubmit: (priority: Record<number, string>) => void;
+  onSubmit: (priority: string[]) => void;
 }) {
   const preferOption = ["가성비", "편의시설"];
   const facilityOption = [
@@ -56,34 +57,19 @@ export default function Step3({
     "치안",
   ];
 
-  const [priority, setPriority] = useState<Record<number, string>>({});
+  const [priority, setPriority] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const isValid = value.length > 0;
 
   const handleSelect = (selected: string) => {
     setPriority((prev) => {
-      const updated = { ...prev };
-
-      // 이미 선택된 경우 → 제거 (toggle)
-      const existingKey = Object.keys(updated).find(
-        (key) => updated[Number(key)] === selected,
-      );
-
-      if (existingKey) {
-        delete updated[Number(existingKey)];
-        return updated;
+      if (prev.includes(selected)) {
+        return prev.filter((item) => item !== selected);
       }
 
-      // 빈 슬롯에 순서대로 추가 (1~5)
-      for (let i = 1; i <= 5; i++) {
-        if (!updated[i]) {
-          updated[i] = selected;
-          break;
-        }
-      }
-
-      return updated;
+      if (prev.length >= 5) return prev;
+      return [...prev, selected];
     });
   };
 
@@ -110,10 +96,9 @@ export default function Step3({
                 onClick={() => onChange(item)}
                 className={`
                   px-[30px] py-2 border rounded-lg text-base
-                  ${
-                    selected
-                      ? "bg-white text-blue-60 border-blue-60 font-semibold"
-                      : "border-coolNeutral-90 font-medium text-coolNeutral-30"
+                  ${selected
+                    ? "bg-white text-blue-60 border-blue-60 font-semibold"
+                    : "border-coolNeutral-90 font-medium text-coolNeutral-30"
                   }
                 `}
               >
@@ -164,14 +149,13 @@ export default function Step3({
                 setIsLoading(false);
               }
             }}
-            disabled={!isValid}
+            disabled={!isValid || isLoading}
             className={`
                 flex-1 h-[51px] rounded-lg text-[17px] font-semibold
-                ${
-                  isValid
-                    ? "bg-blue-60 text-white"
-                    : "bg-coolNeutral-95 text-coolNeutral-30"
-                }
+                ${isValid && !isLoading
+                ? "bg-blue-60 text-white"
+                : "bg-coolNeutral-95 text-coolNeutral-30"
+              }
               `}
           >
             맞춤 추천 보기
