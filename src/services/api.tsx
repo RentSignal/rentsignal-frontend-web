@@ -1,3 +1,5 @@
+import { getAccessToken, reissueToken, clearAccessToken } from "./auth";
+
 interface ApiParams {
   apiUrl: string;
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -8,13 +10,10 @@ interface ApiParams {
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const request = async ({
-  apiUrl,
-  method = "GET",
-  params,
-  body,
-  responseType = "json",
-}: ApiParams) => {
+const request = async (
+  { apiUrl, method = "GET", params, body, responseType = "json" }: ApiParams,
+  retry = true,
+) => {
   let url = API_BASE_URL + apiUrl;
 
   if (params) {
@@ -22,14 +21,28 @@ const request = async ({
     url += `?${query}`;
   }
 
+  const accessToken = getAccessToken();
+
   const response = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
     credentials: "include",
   });
+
+  if (response.status === 401 && retry) {
+    const newAccessToken = await reissueToken();
+
+    if (!newAccessToken) {
+      clearAccessToken();
+      throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
+    }
+
+    return request({ apiUrl, method, params, body, responseType }, false);
+  }
 
   if (!response.ok) {
     throw new Error(`API Error: ${response.status}`);
@@ -40,6 +53,7 @@ const request = async ({
 
   return response.json();
 };
+
 export const fetchDataFromApiGet = async ({
   apiUrl,
   params,

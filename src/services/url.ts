@@ -4,6 +4,7 @@ export const OAUTH_URL = {
   //   GOOGLE_LOGIN: "",
   LOGOUT: "/api/auth/logout",
   PHONE: "/api/auth/phone",
+  REISSUE: "/api/auth/reissue",
 };
 
 export const API_URL = {
