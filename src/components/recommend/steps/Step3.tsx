@@ -64,7 +64,11 @@ export default function Step3({
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const isValid = value.length > 0;
+  const isPriorityComplete = priority.length === 5;
+  const isValid =
+    value === "가성비" ||
+    (value === "편의시설" && isPriorityComplete);
+
 
   const handleSelect = (selected: string) => {
     setPriority((prev) => {
