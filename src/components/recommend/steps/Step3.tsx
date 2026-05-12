@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ToastMessage from "@/components/ToastMessage";
 
 function SelectableItem({
   id,
@@ -34,6 +35,8 @@ function SelectableItem({
   );
 }
 
+
+
 export default function Step3({
   value,
   onChange,
@@ -43,7 +46,7 @@ export default function Step3({
   value: string;
   onChange: (v: string) => void;
   onPrev: () => void;
-  onSubmit: (priority: string[]) => void;
+  onSubmit: (priority: string[]) => Promise<void>;
 }) {
   const preferOption = ["가성비", "편의시설"];
   const facilityOption = [
@@ -59,6 +62,7 @@ export default function Step3({
 
   const [priority, setPriority] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const isValid = value.length > 0;
 
@@ -73,8 +77,30 @@ export default function Step3({
     });
   };
 
+  const handleSubmit = async () => {
+    if (!isValid || isLoading) return;
+
+    setIsLoading(true);
+    setErrorMessage("");
+
+    try {
+      await onSubmit(priority);
+    } catch (error) {
+      console.error(error);
+
+      setErrorMessage("추천 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
+
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 3000);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="pt-[17px] px-5 flex flex-col gap-6">
+      <ToastMessage message={errorMessage} />
       <div>
         <div className="flex flex-col gap-[6px] pt-[16px]">
           <h2 className="text-[22px] font-semibold text-coolNeutral-25">
@@ -141,14 +167,7 @@ export default function Step3({
           </button>
 
           <button
-            onClick={async () => {
-              setIsLoading(true);
-              try {
-                await onSubmit(priority);
-              } finally {
-                setIsLoading(false);
-              }
-            }}
+            onClick={handleSubmit}
             disabled={!isValid || isLoading}
             className={`
                 flex-1 h-[51px] rounded-lg text-[17px] font-semibold
@@ -158,10 +177,11 @@ export default function Step3({
               }
               `}
           >
-            맞춤 추천 보기
+            {isLoading ? "추천 불러오는 중..." : "맞춤 추천 보기"}
           </button>
         </div>
       </div>
     </div>
   );
+
 }

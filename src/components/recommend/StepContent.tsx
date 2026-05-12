@@ -90,7 +90,7 @@ export default function StepContent({
                 console.log(res.data);
               }
             } catch (e) {
-              console.error("추천 조회 실패", e);
+              throw e;
             }
           }}
         />
