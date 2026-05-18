@@ -60,7 +60,6 @@ const InfoSection = () => {
     { id: "facility", label: "편의시설" },
     { id: "transport", label: "교통" },
     { id: "safety", label: "치안" },
-    { id: "cost", label: "비용" },
   ];
 
   return (
