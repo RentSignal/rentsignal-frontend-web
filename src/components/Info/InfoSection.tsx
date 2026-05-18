@@ -96,13 +96,13 @@ const InfoSection = () => {
               <Divider />
               <div className="h-[32px]"></div>
               <div className="flex flex-col gap-[18px]">
-                <RankingList title="급상승 지역 확인하기" />
+                <RankingList title="급상승 지역 확인하기" showDropDown />
               </div>
               <div className="h-[56px]"></div>
               <Divider />
               <div className="h-[32px]"></div>
               <div className="flex flex-col gap-[18px]">
-                <RankingList title="급하락 지역 확인하기" />
+                <RankingList title="급하락 지역 확인하기" showDropDown />
               </div>
               <div className="h-[100px]"></div>
             </>
@@ -129,13 +129,22 @@ const InfoSection = () => {
         </div>
       )}
       {optionTabIndex === "LIFESTYLE" && (
-        <div className="flex flex-col gap-4 px-5 pb-10 mt-3">
-          <CategoryToggle
-            items={facilitiesItems}
-            value={facilitiesSelected}
-            onChange={setFacilitiesSelected}
-          />
-        </div>
+        <>
+          <div className="flex flex-col gap-4 px-5 mt-3 h-[57px]">
+            <CategoryToggle
+              items={facilitiesItems}
+              value={facilitiesSelected}
+              onChange={setFacilitiesSelected}
+            />
+          </div>
+          {facilitiesSelected === "facility" && (
+            <>
+              <div className="flex flex-col gap-[18px]">
+                <RankingList title="편의시설 상위 7곳" showDropDown={false} />
+              </div>
+            </>
+          )}
+        </>
       )}
     </div>
   );
