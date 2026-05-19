@@ -5,6 +5,7 @@ import Divider from "../Divider";
 import RankingList from "../RankingList";
 import IndexSectionHeader from "./section/InfoSectionHeader";
 import InfoSectionToggle from "./section/InfoSectionToggle";
+import InfoAmenities from "./InfoAmenities";
 
 type ResidenceType = "OFFICETEL" | "VILLA";
 type InfoSectionToggleType = "INFO" | "LIFESTYLE";
@@ -138,9 +139,12 @@ const InfoSection = () => {
           </div>
           {facilitiesSelected === "facility" && (
             <>
-              <div className="flex flex-col gap-[18px]">
+              <InfoAmenities title={"노원구 공릉동"} />
+              <Divider />
+              <div className="flex flex-col gap-[18px] pt-5">
                 <RankingList title="편의시설 상위 7곳" showDropDown={false} />
               </div>
+              <div className="h-[150px]"></div>
             </>
           )}
         </>
