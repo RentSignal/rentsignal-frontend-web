@@ -17,6 +17,20 @@ export const logout = async () => {
   return res.success;
 };
 
+export const deleteAccount = async (reasons: string[]) => {
+  const formData = new FormData();
+  reasons.forEach((r) => formData.append("reasons", r));
+
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/delete-account`, {
+    method: "DELETE",
+    body: formData,
+    credentials: "include",
+  });
+
+  if (!res.ok) throw new Error(`API Error: ${res.status}`);
+  return res.json();
+};
+
 export const registerPhoneNumber = async (phone: string) => {
   const res = await fetchDataFromApiPost({
     apiUrl: OAUTH_URL.PHONE,
