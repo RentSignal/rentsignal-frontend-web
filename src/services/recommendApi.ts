@@ -1,4 +1,4 @@
-import { fetchDataFromApiGet, fetchDataFromApiPost } from "./api";
+import { fetchDataFromApiPost } from "./api";
 import { API_URL } from "./url";
 import type { RecommendFormData } from "@/types/recommend";
 

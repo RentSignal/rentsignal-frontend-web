@@ -13,4 +13,8 @@ export const API_URL = {
 
   /* 추천 탭 */
   RECOMMEND: "/api/recommend",
+
+  /* 정보 탭 */
+  RENT_INDEX_RANKINGS: "/api/info/rent-index/current",
+  RENT_INDEX_CHANGE: "/api/info/rent-index/change",
 };
