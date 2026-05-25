@@ -15,7 +15,6 @@ type Props = {
 
 export default function RecommendationResultPanel({
   open,
-  onClose,
   data,
 }: Props) {
   return (

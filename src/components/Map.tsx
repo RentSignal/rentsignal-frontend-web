@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from "react";
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
 import { regionMap } from "@/constants/regionMap";
 import { regionColor, regionBoundaryColor } from "@/constants/regionColor";
+import { useMapOverlayStore } from "@/store/mapOverlayStore";
+import type {
+  RentIndexMapOverlayItem,
+  RentIndexMapOverlayType,
+} from "@/store/mapOverlayStore";
 
 declare global {
   interface Window {
@@ -16,11 +21,107 @@ type Props = {
 
 const KAKAO_SDK_ID = "kakao-map-sdk";
 
+const getRegionName = (name: string) => {
+  return name.split(" ").at(-1) ?? name;
+};
+
+const getOverlayColor = (type: RentIndexMapOverlayType) => {
+  if (type === "RISE") return "#FF5555";
+  if (type === "FALL") return "#4D8DFF";
+  return "#3385FF";
+};
+
+const getOverlayValueLabel = (item: RentIndexMapOverlayItem) => {
+  if (item.type === "CURRENT") {
+    return item.value.toFixed(1);
+  }
+
+  const prefix = item.type === "RISE" && item.value > 0 ? "+" : "";
+
+  return `${prefix}${item.value.toFixed(0)}%`;
+};
+
+const getGeoJsonLngLatPoints = (geometry: any) => {
+  const points: number[][] = [];
+
+  if (geometry.type === "Polygon") {
+    geometry.coordinates.forEach((ring: number[][]) => {
+      points.push(...ring);
+    });
+  }
+
+  if (geometry.type === "MultiPolygon") {
+    geometry.coordinates.forEach((polygon: number[][][]) => {
+      polygon.forEach((ring: number[][]) => {
+        points.push(...ring);
+      });
+    });
+  }
+
+  return points;
+};
+
+const getRegionCenters = () => {
+  const regionPoints = new globalThis.Map<string, number[][]>();
+
+  seoulGeoJson.features.forEach((feature: any) => {
+    const guName = feature.properties.SIG_KOR_NM;
+    const region = regionMap[guName];
+
+    if (!region) return;
+
+    const points = getGeoJsonLngLatPoints(feature.geometry);
+    const existingPoints = regionPoints.get(region) ?? [];
+
+    regionPoints.set(region, [...existingPoints, ...points]);
+  });
+
+  const centers = new globalThis.Map<string, { lat: number; lng: number }>();
+
+  regionPoints.forEach((points: number[][], region: string) => {
+    if (points.length === 0) return;
+
+    const bounds = points.reduce(
+      (
+        acc: {
+          minLat: number;
+          maxLat: number;
+          minLng: number;
+          maxLng: number;
+        },
+        [lng, lat]: number[],
+      ) => ({
+        minLat: Math.min(acc.minLat, lat),
+        maxLat: Math.max(acc.maxLat, lat),
+        minLng: Math.min(acc.minLng, lng),
+        maxLng: Math.max(acc.maxLng, lng),
+      }),
+      {
+        minLat: Number.POSITIVE_INFINITY,
+        maxLat: Number.NEGATIVE_INFINITY,
+        minLng: Number.POSITIVE_INFINITY,
+        maxLng: Number.NEGATIVE_INFINITY,
+      },
+    );
+
+    centers.set(region, {
+      lat: (bounds.minLat + bounds.maxLat) / 2,
+      lng: (bounds.minLng + bounds.maxLng) / 2,
+    });
+  });
+
+  return centers;
+};
+
+const regionCenters = getRegionCenters();
+
 const Map = ({ enableOverlay = true }: Props) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapRefInstance = useRef<any>(null);
   const overlayRef = useRef<any>(null);
   const basicPolygonsRef = useRef<any[]>([]);
+  const rentIndexOverlaysRef = useRef<any[]>([]);
+  const rentIndexItems = useMapOverlayStore((state) => state.rentIndexItems);
 
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
   const [isMapReady, setIsMapReady] = useState(false);
@@ -173,6 +274,56 @@ const Map = ({ enableOverlay = true }: Props) => {
     basicPolygonsRef.current = [];
   };
 
+  const clearRentIndexOverlays = () => {
+    rentIndexOverlaysRef.current.forEach((overlay) => {
+      overlay.setMap(null);
+    });
+    rentIndexOverlaysRef.current = [];
+  };
+
+  const drawRentIndexOverlays = (
+    map: any,
+    items: RentIndexMapOverlayItem[],
+  ) => {
+    clearRentIndexOverlays();
+
+    items.forEach((item) => {
+      const region = getRegionName(item.name);
+      const center = regionCenters.get(region);
+
+      if (!center) return;
+
+      const color = getOverlayColor(item.type);
+      const overlay = new window.kakao.maps.CustomOverlay({
+        map,
+        position: new window.kakao.maps.LatLng(center.lat, center.lng),
+        zIndex: 5,
+        content: `
+          <div style="
+            width: 145px;
+            height: 145px;
+            border-radius: 9999px;
+            background: ${color};
+            opacity: 0.82;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            font-family: 'Pretendard', sans-serif;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+          ">
+            ${getOverlayValueLabel(item)}
+          </div>
+        `,
+      });
+
+      rentIndexOverlaysRef.current.push(overlay);
+    });
+  };
+
   // const createPolygon = (map: any, rings: number[][][], properties: any) => {
   //   const paths = rings.map((ring) =>
   //     ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
@@ -220,23 +371,6 @@ const Map = ({ enableOverlay = true }: Props) => {
 
   /* ------------------------- Current Location ------------------------- */
 
-  const setCurrentLocation = (map: any) => {
-    if (!navigator.geolocation) return;
-
-    navigator.geolocation.getCurrentPosition((position) => {
-      const { latitude, longitude } = position.coords;
-
-      const loc = new window.kakao.maps.LatLng(latitude, longitude);
-
-      map.setCenter(loc);
-
-      new window.kakao.maps.Marker({
-        position: loc,
-        map,
-      });
-    });
-  };
-
   /* ------------------------- Effect ------------------------- */
 
   useEffect(() => {
@@ -266,6 +400,16 @@ const Map = ({ enableOverlay = true }: Props) => {
       clearBasicPolygons();
     }
   }, [enableOverlay, isMapReady]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawRentIndexOverlays(mapRefInstance.current, rentIndexItems);
+
+    return () => {
+      clearRentIndexOverlays();
+    };
+  }, [isMapReady, rentIndexItems]);
 
   return (
     <div className="relative w-full h-full">
