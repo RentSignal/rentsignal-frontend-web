@@ -2,7 +2,11 @@ import { fetchDataFromApiGet } from "./api";
 import { API_URL } from "./url";
 
 export type HousingType = "APARTMENT" | "MULTI_FAMILY_HOUSE";
-export type RentIndexPeriodType = "ONE_YEAR" | "SIX_MONTH" | "ONE_MONTH";
+export type RentIndexChangePeriodType =
+  | "ONE_YEAR"
+  | "SIX_MONTH"
+  | "ONE_MONTH";
+export type RentIndexPeriodType = RentIndexChangePeriodType | "CURRENT";
 
 export type RentIndexRankingItem = {
   rank: number;
@@ -52,7 +56,7 @@ export const fetchRentIndexChangeRankings = async ({
   periodType,
 }: {
   housingType: HousingType;
-  periodType: RentIndexPeriodType;
+  periodType: RentIndexChangePeriodType;
 }) => {
   const res = (await fetchDataFromApiGet({
     apiUrl: API_URL.RENT_INDEX_CHANGE,
