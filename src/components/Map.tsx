@@ -121,7 +121,11 @@ const Map = ({ enableOverlay = true }: Props) => {
   const overlayRef = useRef<any>(null);
   const basicPolygonsRef = useRef<any[]>([]);
   const rentIndexOverlaysRef = useRef<any[]>([]);
+  const selectedRegionPolygonsRef = useRef<any[]>([]);
   const rentIndexItems = useMapOverlayStore((state) => state.rentIndexItems);
+  const selectedRentIndexItem = useMapOverlayStore(
+    (state) => state.selectedRentIndexItem,
+  );
 
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
   const [isMapReady, setIsMapReady] = useState(false);
@@ -203,9 +207,7 @@ const Map = ({ enableOverlay = true }: Props) => {
     rings: number[][][],
     properties: any,
   ) => {
-    const paths = rings.map((ring) =>
-      ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
-    );
+    const paths = createPolygonPaths(rings);
 
     const guName = properties.SIG_KOR_NM;
     const region = regionMap[guName];
@@ -274,11 +276,94 @@ const Map = ({ enableOverlay = true }: Props) => {
     basicPolygonsRef.current = [];
   };
 
+  const createPolygonPaths = (rings: number[][][]) => {
+    return rings.map((ring) =>
+      ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
+    );
+  };
+
   const clearRentIndexOverlays = () => {
     rentIndexOverlaysRef.current.forEach((overlay) => {
       overlay.setMap(null);
     });
     rentIndexOverlaysRef.current = [];
+  };
+
+  const clearSelectedRegionPolygons = () => {
+    selectedRegionPolygonsRef.current.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    selectedRegionPolygonsRef.current = [];
+  };
+
+  const drawSelectedRegionPolygons = (
+    map: any,
+    regionName: string,
+    type: RentIndexMapOverlayType,
+  ) => {
+    clearSelectedRegionPolygons();
+
+    const fillColor = getOverlayColor(type);
+
+    seoulGeoJson.features.forEach((feature: any) => {
+      const guName = feature.properties.SIG_KOR_NM;
+
+      if (regionMap[guName] !== regionName) return;
+
+      const { geometry } = feature;
+      const polygons =
+        geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+
+      polygons.forEach((rings: number[][][]) => {
+        const polygon = new window.kakao.maps.Polygon({
+          map,
+          path: createPolygonPaths(rings),
+          strokeWeight: 3,
+          strokeColor: fillColor,
+          strokeOpacity: 1,
+          fillColor,
+          fillOpacity: 0.28,
+          zIndex: 4,
+        });
+
+        selectedRegionPolygonsRef.current.push(polygon);
+      });
+    });
+  };
+
+  const createRentIndexOverlayContent = (
+    item: RentIndexMapOverlayItem,
+    color: string,
+    onClick: () => void,
+  ) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.style.width = "145px";
+    button.style.height = "145px";
+    button.style.border = "none";
+    button.style.borderRadius = "9999px";
+    button.style.background = color;
+    button.style.opacity = "0.82";
+    button.style.display = "flex";
+    button.style.alignItems = "center";
+    button.style.justifyContent = "center";
+    button.style.color = "white";
+    button.style.fontSize = "24px";
+    button.style.fontWeight = "700";
+    button.style.fontFamily = "'Pretendard', sans-serif";
+    button.style.textShadow = "0 1px 2px rgba(0,0,0,0.2)";
+    button.style.boxShadow = "0 4px 12px rgba(0,0,0,0.12)";
+    button.style.cursor = "pointer";
+    button.style.padding = "0";
+    button.textContent = getOverlayValueLabel(item);
+
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      onClick();
+    });
+
+    return button;
   };
 
   const drawRentIndexOverlays = (
@@ -294,34 +379,32 @@ const Map = ({ enableOverlay = true }: Props) => {
       if (!center) return;
 
       const color = getOverlayColor(item.type);
+      const content = createRentIndexOverlayContent(item, color, () => {
+        selectRentIndexItemOnMap(map, item);
+      });
       const overlay = new window.kakao.maps.CustomOverlay({
         map,
         position: new window.kakao.maps.LatLng(center.lat, center.lng),
         zIndex: 5,
-        content: `
-          <div style="
-            width: 145px;
-            height: 145px;
-            border-radius: 9999px;
-            background: ${color};
-            opacity: 0.82;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            font-weight: 700;
-            font-family: 'Pretendard', sans-serif;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
-          ">
-            ${getOverlayValueLabel(item)}
-          </div>
-        `,
+        content,
       });
 
       rentIndexOverlaysRef.current.push(overlay);
     });
+  };
+
+  const selectRentIndexItemOnMap = (
+    map: any,
+    item: RentIndexMapOverlayItem,
+  ) => {
+    const region = getRegionName(item.name);
+    const center = regionCenters.get(region);
+
+    if (!center) return;
+
+    drawSelectedRegionPolygons(map, region, item.type);
+    clearRentIndexOverlays();
+    map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
   // const createPolygon = (map: any, rings: number[][][], properties: any) => {
@@ -408,8 +491,17 @@ const Map = ({ enableOverlay = true }: Props) => {
 
     return () => {
       clearRentIndexOverlays();
+      clearSelectedRegionPolygons();
     };
   }, [isMapReady, rentIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current || !selectedRentIndexItem) {
+      return;
+    }
+
+    selectRentIndexItemOnMap(mapRefInstance.current, selectedRentIndexItem);
+  }, [isMapReady, selectedRentIndexItem]);
 
   return (
     <div className="relative w-full h-full">

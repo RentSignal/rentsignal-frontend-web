@@ -4,6 +4,7 @@ type RankingItemProps = {
   value: number;
   suffix?: string;
   fractionDigits?: number;
+  onClick?: () => void;
 };
 
 const RankingItem = ({
@@ -12,9 +13,15 @@ const RankingItem = ({
   value,
   suffix = "%",
   fractionDigits = 2,
+  onClick,
 }: RankingItemProps) => {
   return (
-    <div className="flex items-center justify-between py-[10px] px-[20px] w-[360px]">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center justify-between py-[10px] px-[24px] w-[376px] text-left transition-colors hover:bg-coolNeutral-99 disabled:hover:bg-transparent"
+      disabled={!onClick}
+    >
       <div className="text-sm text-coolNeutral-30">{rank}</div>
 
       <div className="text-sm font-medium text-coolNeutral-30">{name}</div>
@@ -23,7 +30,7 @@ const RankingItem = ({
         {value.toFixed(fractionDigits)}
         {suffix}
       </div>
-    </div>
+    </button>
   );
 };
 

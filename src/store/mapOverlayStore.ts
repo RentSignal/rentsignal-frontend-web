@@ -11,12 +11,17 @@ export type RentIndexMapOverlayItem = {
 
 type MapOverlayStore = {
   rentIndexItems: RentIndexMapOverlayItem[];
+  selectedRentIndexItem: RentIndexMapOverlayItem | null;
   setRentIndexItems: (items: RentIndexMapOverlayItem[]) => void;
+  selectRentIndexItem: (item: RentIndexMapOverlayItem) => void;
   clearRentIndexItems: () => void;
 };
 
 export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   rentIndexItems: [],
+  selectedRentIndexItem: null,
   setRentIndexItems: (items) => set({ rentIndexItems: items }),
-  clearRentIndexItems: () => set({ rentIndexItems: [] }),
+  selectRentIndexItem: (item) => set({ selectedRentIndexItem: item }),
+  clearRentIndexItems: () =>
+    set({ rentIndexItems: [], selectedRentIndexItem: null }),
 }));

@@ -14,6 +14,7 @@ type RankingListProps = {
   emptyMessage?: string;
   suffix?: string;
   fractionDigits?: number;
+  onItemClick?: (item: RentIndexRankingItem) => void;
 };
 
 const RankingList = ({
@@ -25,6 +26,7 @@ const RankingList = ({
   emptyMessage = "표시할 데이터가 없습니다.",
   suffix = "%",
   fractionDigits = 2,
+  onItemClick,
 }: RankingListProps) => {
   const [value, setValue] = useState("seoul");
   const rankingItems = items ?? [];
@@ -70,6 +72,7 @@ const RankingList = ({
               value={item.value}
               suffix={suffix}
               fractionDigits={fractionDigits}
+              onClick={onItemClick ? () => onItemClick(item) : undefined}
             />
           ))}
       </div>

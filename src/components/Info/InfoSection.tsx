@@ -67,6 +67,9 @@ const InfoSection = () => {
   const clearRentIndexMapItems = useMapOverlayStore(
     (state) => state.clearRentIndexItems,
   );
+  const selectRentIndexMapItem = useMapOverlayStore(
+    (state) => state.selectRentIndexItem,
+  );
 
   useEffect(() => {
     if (optionTabIndex !== "INFO" || indexSelected !== "rent-index") return;
@@ -225,6 +228,9 @@ const InfoSection = () => {
                     emptyMessage="표시할 전월세 통합지수 데이터가 없습니다."
                     suffix=""
                     fractionDigits={1}
+                    onItemClick={(item) =>
+                      selectRentIndexMapItem({ ...item, type: "CURRENT" })
+                    }
                   />
                 </div>
               ) : (
@@ -239,6 +245,9 @@ const InfoSection = () => {
                       emptyMessage="표시할 급상승 데이터가 없습니다."
                       suffix="%"
                       fractionDigits={2}
+                      onItemClick={(item) =>
+                        selectRentIndexMapItem({ ...item, type: "RISE" })
+                      }
                     />
                   </div>
                   <div className="h-[56px]"></div>
@@ -254,6 +263,9 @@ const InfoSection = () => {
                       emptyMessage="표시할 급하락 데이터가 없습니다."
                       suffix="%"
                       fractionDigits={2}
+                      onItemClick={(item) =>
+                        selectRentIndexMapItem({ ...item, type: "FALL" })
+                      }
                     />
                   </div>
                 </>
