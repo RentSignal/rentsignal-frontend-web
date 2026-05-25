@@ -1,14 +1,14 @@
-type ResidenceType = "OFFICETEL" | "VILLA";
+import type { HousingType } from "@/services/infoApi";
 
 interface ResidenceTypeToggleProps {
-  value: ResidenceType;
-  onChange: (value: ResidenceType) => void;
+  value: HousingType;
+  onChange: (value: HousingType) => void;
 }
 
 const ResidenceTypeToggle = ({ value, onChange }: ResidenceTypeToggleProps) => {
   const items = [
-    { id: "OFFICETEL" as const, label: "오피스텔" },
-    { id: "VILLA" as const, label: "연립/다세대" },
+    { id: "APARTMENT" as const, label: "아파트" },
+    { id: "MULTI_FAMILY_HOUSE" as const, label: "연립/다세대" },
   ];
 
   return (

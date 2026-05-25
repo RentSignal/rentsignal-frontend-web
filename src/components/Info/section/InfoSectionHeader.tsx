@@ -1,5 +1,6 @@
 import { useState } from "react";
 import TimeIndicator from "@/components/TimeIndicator";
+import type { TimeIndicatorValue } from "@/components/TimeIndicator";
 import PopOverIcon from "@/assets/icons/grey_popover_icon.svg?react";
 import PopOverBlue from "@/assets/icons/blue_60_popover_icon.svg?react";
 import PopOverClose from "@/assets/icons/popover_close.svg?react";
@@ -26,6 +27,8 @@ type Props = {
   date?: string;
   selectedIndex?: IndexState;
   description?: string;
+  periodType?: TimeIndicatorValue;
+  onPeriodTypeChange?: (value: TimeIndicatorValue) => void;
 };
 
 const phases = [
@@ -49,7 +52,12 @@ const phases = [
   },
 ];
 
-const RentIndexSection = ({ title, date }: Props) => {
+const RentIndexSection = ({
+  title,
+  date,
+  periodType = "ONE_YEAR",
+  onPeriodTypeChange,
+}: Props) => {
   return (
     <>
       {/* 제목 */}
@@ -63,7 +71,7 @@ const RentIndexSection = ({ title, date }: Props) => {
           </div>
         </div>
         <div className="pt-[40px]">
-          <TimeIndicator />
+          <TimeIndicator value={periodType} onChange={onPeriodTypeChange} />
         </div>
       </div>
     </>
@@ -178,13 +186,26 @@ const StationIndexSection = ({ title }: Props) => {
   );
 };
 
-const IndexSectionHeader = ({ title, date, selectedIndex }: Props) => {
+const IndexSectionHeader = ({
+  title,
+  date,
+  selectedIndex,
+  periodType,
+  onPeriodTypeChange,
+}: Props) => {
   const currentIndex = selectedIndex ?? IndexState.rentIndex;
 
   const renderSection = () => {
     switch (currentIndex) {
       case IndexState.rentIndex:
-        return <RentIndexSection title={title} date={date} />;
+        return (
+          <RentIndexSection
+            title={title}
+            date={date}
+            periodType={periodType}
+            onPeriodTypeChange={onPeriodTypeChange}
+          />
+        );
 
       case IndexState.consumerIndex:
         return <ConsumerIndexSection title={title} date={date} />;
