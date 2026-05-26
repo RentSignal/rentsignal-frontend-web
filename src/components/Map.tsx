@@ -5,6 +5,7 @@ import { regionMap } from "@/constants/regionMap";
 import { regionColor, regionBoundaryColor } from "@/constants/regionColor";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
 import type {
+  ConsumerIndexMapOverlayItem,
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
 } from "@/store/mapOverlayStore";
@@ -29,6 +30,18 @@ const getOverlayColor = (type: RentIndexMapOverlayType) => {
   if (type === "RISE") return "#FF5555";
   if (type === "FALL") return "#4D8DFF";
   return "#3385FF";
+};
+
+const getConsumerIndexPhase = (value: number) => {
+  if (value <= 94) return "하강 국면";
+  if (value <= 114) return "보합 국면";
+  return "상승 국면";
+};
+
+const getConsumerIndexOverlayColor = (value: number) => {
+  if (value <= 94) return "#4D8DFF";
+  if (value <= 114) return "#F2C94C";
+  return "#FF5555";
 };
 
 const getOverlayValueLabel = (item: RentIndexMapOverlayItem) => {
@@ -122,9 +135,13 @@ const Map = ({ enableOverlay = true }: Props) => {
   const basicPolygonsRef = useRef<any[]>([]);
   const rentIndexOverlaysRef = useRef<any[]>([]);
   const selectedRegionPolygonsRef = useRef<any[]>([]);
+  const consumerIndexPolygonsRef = useRef<any[]>([]);
   const rentIndexItems = useMapOverlayStore((state) => state.rentIndexItems);
   const selectedRentIndexItem = useMapOverlayStore(
     (state) => state.selectedRentIndexItem,
+  );
+  const consumerIndexItem = useMapOverlayStore(
+    (state) => state.consumerIndexItem,
   );
 
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
@@ -296,6 +313,13 @@ const Map = ({ enableOverlay = true }: Props) => {
     selectedRegionPolygonsRef.current = [];
   };
 
+  const clearConsumerIndexPolygons = () => {
+    consumerIndexPolygonsRef.current.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    consumerIndexPolygonsRef.current = [];
+  };
+
   const drawSelectedRegionPolygons = (
     map: any,
     regionName: string,
@@ -407,6 +431,83 @@ const Map = ({ enableOverlay = true }: Props) => {
     map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
+  const drawConsumerIndexPolygons = (
+    map: any,
+    item: ConsumerIndexMapOverlayItem | null,
+  ) => {
+    clearConsumerIndexPolygons();
+
+    if (!item) return;
+
+    const fillColor = getConsumerIndexOverlayColor(item.value);
+    const phase = getConsumerIndexPhase(item.value);
+
+    seoulGeoJson.features.forEach((feature: any) => {
+      const { geometry, properties } = feature;
+      const guName = properties.SIG_KOR_NM;
+      const polygons =
+        geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+
+      polygons.forEach((rings: number[][][]) => {
+        const polygon = new window.kakao.maps.Polygon({
+          map,
+          path: createPolygonPaths(rings),
+          strokeWeight: 2,
+          strokeColor: fillColor,
+          strokeOpacity: 0.95,
+          fillColor,
+          fillOpacity: 0.34,
+          zIndex: 3,
+        });
+
+        window.kakao.maps.event.addListener(
+          polygon,
+          "mouseover",
+          (mouseEvent: any) => {
+            polygon.setOptions({
+              fillOpacity: 0.52,
+            });
+
+            if (!overlayRef.current || !enableOverlay) return;
+
+            overlayRef.current.setContent(`
+              <div style="
+                padding:8px 18px;
+                background:white;
+                text-align:center;
+                border-radius:4px;
+                font-size:13px;
+                line-height:1.45;
+                font-family:'Pretendard', sans-serif;
+                box-shadow:0 2px 6px rgba(0,0,0,0.2);
+              ">
+                <strong>${guName}</strong><br/>
+                서울 소비자 심리지수<br/>
+                ${item.year}년 ${item.month}월 ${item.value.toFixed(1)}점<br/>
+                <span style="color:${fillColor}; font-weight:700;">${phase}</span>
+              </div>
+            `);
+
+            overlayRef.current.setPosition(mouseEvent.latLng);
+            overlayRef.current.setMap(map);
+          },
+        );
+
+        window.kakao.maps.event.addListener(polygon, "mouseout", () => {
+          polygon.setOptions({
+            fillOpacity: 0.34,
+          });
+
+          if (overlayRef.current) {
+            overlayRef.current.setMap(null);
+          }
+        });
+
+        consumerIndexPolygonsRef.current.push(polygon);
+      });
+    });
+  };
+
   // const createPolygon = (map: any, rings: number[][][], properties: any) => {
   //   const paths = rings.map((ring) =>
   //     ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
@@ -494,6 +595,16 @@ const Map = ({ enableOverlay = true }: Props) => {
       clearSelectedRegionPolygons();
     };
   }, [isMapReady, rentIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawConsumerIndexPolygons(mapRefInstance.current, consumerIndexItem);
+
+    return () => {
+      clearConsumerIndexPolygons();
+    };
+  }, [consumerIndexItem, isMapReady]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current || !selectedRentIndexItem) {

@@ -76,6 +76,12 @@ const InfoSection = () => {
   const clearRentIndexMapItems = useMapOverlayStore(
     (state) => state.clearRentIndexItems,
   );
+  const setConsumerIndexMapItem = useMapOverlayStore(
+    (state) => state.setConsumerIndexItem,
+  );
+  const clearConsumerIndexMapItem = useMapOverlayStore(
+    (state) => state.clearConsumerIndexItem,
+  );
   const selectRentIndexMapItem = useMapOverlayStore(
     (state) => state.selectRentIndexItem,
   );
@@ -155,15 +161,29 @@ const InfoSection = () => {
         setIsConsumerIndexLoading(true);
         setConsumerIndexError("");
 
-        const data = await fetchConsumerIndex(consumerIndexPeriodType);
+        const selectedIndexPromise = fetchConsumerIndex(consumerIndexPeriodType);
+        const currentIndexPromise =
+          consumerIndexPeriodType === "CURRENT"
+            ? selectedIndexPromise
+            : fetchConsumerIndex("CURRENT");
+        const [data, currentData] = await Promise.all([
+          selectedIndexPromise,
+          currentIndexPromise,
+        ]);
 
         if (!controller.signal.aborted) {
           setConsumerIndexData(data);
+          setConsumerIndexMapItem({
+            year: currentData.year,
+            month: currentData.month,
+            value: currentData.value,
+          });
         }
       } catch {
         if (!controller.signal.aborted) {
           setConsumerIndexError("소비자 심리지수 데이터를 불러오지 못했습니다.");
           setConsumerIndexData(null);
+          clearConsumerIndexMapItem();
         }
       } finally {
         if (!controller.signal.aborted) {
@@ -175,7 +195,13 @@ const InfoSection = () => {
     fetchIndex();
 
     return () => controller.abort();
-  }, [consumerIndexPeriodType, indexSelected, optionTabIndex]);
+  }, [
+    clearConsumerIndexMapItem,
+    consumerIndexPeriodType,
+    indexSelected,
+    optionTabIndex,
+    setConsumerIndexMapItem,
+  ]);
 
   useEffect(() => {
     if (optionTabIndex === "INFO" && indexSelected === "rent-index") return;
@@ -184,8 +210,19 @@ const InfoSection = () => {
   }, [clearRentIndexMapItems, indexSelected, optionTabIndex]);
 
   useEffect(() => {
-    return () => clearRentIndexMapItems();
-  }, [clearRentIndexMapItems]);
+    if (optionTabIndex === "INFO" && indexSelected === "consumer-index") {
+      return;
+    }
+
+    clearConsumerIndexMapItem();
+  }, [clearConsumerIndexMapItem, indexSelected, optionTabIndex]);
+
+  useEffect(() => {
+    return () => {
+      clearRentIndexMapItems();
+      clearConsumerIndexMapItem();
+    };
+  }, [clearConsumerIndexMapItem, clearRentIndexMapItems]);
 
   const indexItems = useMemo(() => {
     const popoverItems = [
