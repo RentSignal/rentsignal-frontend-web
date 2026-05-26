@@ -7,6 +7,10 @@ import PopOverClose from "@/assets/icons/popover_close.svg?react";
 import CircularProgress from "../CircularProgress";
 import BasicLineChart from "../BasicLineChart";
 import StationIndexBar from "@/assets/icons/station_index_tip.svg?react";
+import type {
+  ConsumerIndexData,
+  ConsumerIndexPeriodType,
+} from "@/services/infoApi";
 
 import {
   Popover,
@@ -29,6 +33,16 @@ type Props = {
   description?: string;
   periodType?: TimeIndicatorValue;
   onPeriodTypeChange?: (value: TimeIndicatorValue) => void;
+  consumerIndexData?: ConsumerIndexData | null;
+  isLoading?: boolean;
+  errorMessage?: string;
+};
+
+const periodTypeLabels: Record<ConsumerIndexPeriodType, string> = {
+  ONE_YEAR: "1년전 대비",
+  SIX_MONTH: "6개월전 대비",
+  ONE_MONTH: "1개월전 대비",
+  CURRENT: "현재 지수",
 };
 
 const phases = [
@@ -77,8 +91,39 @@ const RentIndexSection = ({
     </>
   );
 };
-const ConsumerIndexSection = ({ title, date }: Props) => {
+
+const ConsumerIndexSection = ({
+  title,
+  periodType = "ONE_YEAR",
+  onPeriodTypeChange,
+  consumerIndexData,
+  isLoading = false,
+  errorMessage,
+}: Props) => {
   const [open, setOpen] = useState(false);
+  const consumerPeriodType = periodType as ConsumerIndexPeriodType;
+  const value = consumerIndexData?.value ?? 0;
+  const isCurrent = consumerPeriodType === "CURRENT";
+  const isPositive = value > 0;
+  const isNegative = value < 0;
+  const trendText = isCurrent
+    ? `${value.toFixed(1)}점`
+    : `${isPositive ? "▲" : isNegative ? "▼" : ""}${Math.abs(value).toFixed(
+        2,
+      )}% ${isPositive ? "증가" : isNegative ? "감소" : "변동 없음"}`;
+  const trendColor = isPositive
+    ? "text-trend-up"
+    : isNegative
+      ? "text-trend-down"
+      : "text-trend-neutral";
+  const date = consumerIndexData
+    ? `${consumerIndexData.year}년 ${consumerIndexData.month}월`
+    : "";
+  const chartData =
+    consumerIndexData?.trend.map((item) => ({
+      date: item.yearMonth.replace(/\s/g, ""),
+      value: item.value,
+    })) ?? [];
 
   return (
     <>
@@ -92,7 +137,7 @@ const ConsumerIndexSection = ({ title, date }: Props) => {
         <div>
           <div className="flex items-center justify-between pr-5">
             <p className="font-semibold text-coolNeutral-30 text-[15px]">
-              1년전 대비
+              {periodTypeLabels[consumerPeriodType]}
             </p>
 
             <div className="font-medium text-[14px] text-coolNeutral-30">
@@ -101,7 +146,9 @@ const ConsumerIndexSection = ({ title, date }: Props) => {
           </div>
 
           <div className="relative flex items-center gap-2">
-            <p className="text-sm font-medium text-trend-up">▲75% 증가</p>
+            <p className={`text-sm font-medium ${trendColor}`}>
+              {isLoading ? "불러오는 중" : trendText}
+            </p>
 
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
@@ -152,17 +199,32 @@ const ConsumerIndexSection = ({ title, date }: Props) => {
             </Popover>
           </div>
         </div>
+        {errorMessage && (
+          <p className="pr-5 text-sm text-coolNeutral-50">{errorMessage}</p>
+        )}
         <div className="flex justify-center py-[50px]">
-          <CircularProgress value={70} />
+          {isLoading ? (
+            <div className="w-8 h-8 border-[3px] border-coolNeutral-95 border-t-blue-60 rounded-full animate-spin" />
+          ) : (
+            <CircularProgress
+              value={isCurrent ? value : Math.abs(value)}
+              max={isCurrent ? 200 : 100}
+              suffix={isCurrent ? "점" : "%"}
+              fractionDigits={isCurrent ? 1 : 2}
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-4 pb-[55px]">
-          <TimeIndicator />
+          <TimeIndicator
+            value={consumerPeriodType}
+            onChange={onPeriodTypeChange}
+          />
         </div>
       </div>
 
       <div className="w-full h-[222px] pr-4 pl-2 ">
-        <BasicLineChart />
+        <BasicLineChart data={chartData} />
       </div>
 
       <div className="h-[62px]" />
@@ -192,6 +254,9 @@ const IndexSectionHeader = ({
   selectedIndex,
   periodType,
   onPeriodTypeChange,
+  consumerIndexData,
+  isLoading,
+  errorMessage,
 }: Props) => {
   const currentIndex = selectedIndex ?? IndexState.rentIndex;
 
@@ -208,7 +273,17 @@ const IndexSectionHeader = ({
         );
 
       case IndexState.consumerIndex:
-        return <ConsumerIndexSection title={title} date={date} />;
+        return (
+          <ConsumerIndexSection
+            title={title}
+            date={date}
+            periodType={periodType}
+            onPeriodTypeChange={onPeriodTypeChange}
+            consumerIndexData={consumerIndexData}
+            isLoading={isLoading}
+            errorMessage={errorMessage}
+          />
+        );
 
       case IndexState.stationIndex:
         return <StationIndexSection title={title} />;

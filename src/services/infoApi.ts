@@ -7,6 +7,7 @@ export type RentIndexChangePeriodType =
   | "SIX_MONTH"
   | "ONE_MONTH";
 export type RentIndexPeriodType = RentIndexChangePeriodType | "CURRENT";
+export type ConsumerIndexPeriodType = RentIndexPeriodType;
 
 export type RentIndexRankingItem = {
   rank: number;
@@ -36,6 +37,25 @@ type RentIndexChangeResponse = {
 export type RentIndexChangeRankings = {
   rise: RentIndexRankingItem[];
   fall: RentIndexRankingItem[];
+};
+
+export type ConsumerIndexTrendItem = {
+  yearMonth: string;
+  value: number;
+};
+
+export type ConsumerIndexData = {
+  trend: ConsumerIndexTrendItem[];
+  year: string;
+  month: string;
+  value: number;
+};
+
+type ConsumerIndexResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: ConsumerIndexData;
 };
 
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {
@@ -69,4 +89,15 @@ export const fetchRentIndexChangeRankings = async ({
   };
 
   return rankings;
+};
+
+export const fetchConsumerIndex = async (
+  periodType: ConsumerIndexPeriodType,
+) => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: API_URL.CONSUMER_INDEX,
+    params: { periodType },
+  })) as ConsumerIndexResponse;
+
+  return res.data;
 };

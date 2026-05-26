@@ -7,8 +7,11 @@ import IndexSectionHeader from "./section/InfoSectionHeader";
 import InfoSectionToggle from "./section/InfoSectionToggle";
 import InfoAmenities from "./InfoAmenities";
 import {
+  fetchConsumerIndex,
   fetchRentIndexRankings,
   fetchRentIndexChangeRankings,
+  type ConsumerIndexData,
+  type ConsumerIndexPeriodType,
   type HousingType,
   type RentIndexChangePeriodType,
   type RentIndexChangeRankings,
@@ -48,6 +51,8 @@ const InfoSection = () => {
   const [residenceType, setResidenceType] = useState<HousingType>("APARTMENT");
   const [rentIndexPeriodType, setRentIndexPeriodType] =
     useState<RentIndexPeriodType>("ONE_YEAR");
+  const [consumerIndexPeriodType, setConsumerIndexPeriodType] =
+    useState<ConsumerIndexPeriodType>("ONE_YEAR");
   const [indexSelected, setIndexSelected] = useState("rent-index");
   const [facilitiesSelected, setFacilitiesSelected] = useState("facility");
   const [rentIndexChangeRankings, setRentIndexChangeRankings] =
@@ -61,6 +66,10 @@ const InfoSection = () => {
   const [isRentIndexRankingsLoading, setIsRentIndexRankingsLoading] =
     useState(false);
   const [rentIndexRankingsError, setRentIndexRankingsError] = useState("");
+  const [consumerIndexData, setConsumerIndexData] =
+    useState<ConsumerIndexData | null>(null);
+  const [isConsumerIndexLoading, setIsConsumerIndexLoading] = useState(false);
+  const [consumerIndexError, setConsumerIndexError] = useState("");
   const setRentIndexMapItems = useMapOverlayStore(
     (state) => state.setRentIndexItems,
   );
@@ -133,6 +142,40 @@ const InfoSection = () => {
     residenceType,
     setRentIndexMapItems,
   ]);
+
+  useEffect(() => {
+    if (optionTabIndex !== "INFO" || indexSelected !== "consumer-index") {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchIndex = async () => {
+      try {
+        setIsConsumerIndexLoading(true);
+        setConsumerIndexError("");
+
+        const data = await fetchConsumerIndex(consumerIndexPeriodType);
+
+        if (!controller.signal.aborted) {
+          setConsumerIndexData(data);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setConsumerIndexError("소비자 심리지수 데이터를 불러오지 못했습니다.");
+          setConsumerIndexData(null);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsConsumerIndexLoading(false);
+        }
+      }
+    };
+
+    fetchIndex();
+
+    return () => controller.abort();
+  }, [consumerIndexPeriodType, indexSelected, optionTabIndex]);
 
   useEffect(() => {
     if (optionTabIndex === "INFO" && indexSelected === "rent-index") return;
@@ -277,8 +320,14 @@ const InfoSection = () => {
             <>
               <IndexSectionHeader
                 title="서울특별시 소비자 심리지수"
-                date="2026년 2월"
                 selectedIndex={IndexState.consumerIndex}
+                periodType={consumerIndexPeriodType}
+                onPeriodTypeChange={(value) => {
+                  setConsumerIndexPeriodType(value);
+                }}
+                consumerIndexData={consumerIndexData}
+                isLoading={isConsumerIndexLoading}
+                errorMessage={consumerIndexError}
               />
               <Divider />
             </>

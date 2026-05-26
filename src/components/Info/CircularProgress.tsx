@@ -1,8 +1,16 @@
 type Props = {
   value: number;
+  max?: number;
+  suffix?: string;
+  fractionDigits?: number;
 };
 
-const CircularProgress = ({ value }: Props) => {
+const CircularProgress = ({
+  value,
+  max = 100,
+  suffix = "%",
+  fractionDigits = 0,
+}: Props) => {
   const size = 140;
 
   const bgStroke = 7;
@@ -14,7 +22,12 @@ const CircularProgress = ({ value }: Props) => {
   const progressRadius = (size - progressStroke) / 2;
 
   const circumference = 2 * Math.PI * progressRadius;
-  const offset = circumference - (value / 100) * circumference;
+  const progressValue = Math.min(Math.max(value, 0), max);
+  const offset = circumference - (progressValue / max) * circumference;
+  const displayValue = value.toLocaleString("ko-KR", {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  });
 
   return (
     <div className="w-[140px] h-[140px] relative">
@@ -52,7 +65,8 @@ const CircularProgress = ({ value }: Props) => {
       {/* 중앙 텍스트 */}
       <div className="absolute inset-0 flex items-center justify-center">
         <span className="text-[24.5px] font-medium text-coolNeutral-25">
-          {value}%
+          {displayValue}
+          {suffix}
         </span>
       </div>
     </div>
