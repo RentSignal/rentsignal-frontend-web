@@ -1,49 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import CategoryToggle from "@/components/Info/CategoryToggle";
-import ResidenceTypeToggle from "../ResidenceTypeToggle";
 import Divider from "../Divider";
 import RankingList from "../RankingList";
-import IndexSectionHeader from "./section/InfoSectionHeader";
 import InfoSectionToggle from "./section/InfoSectionToggle";
 import InfoAmenities from "./InfoAmenities";
+import ConsumerIndexPanel from "./ConsumerIndexPanel";
+import RentIndexPanel from "./RentIndexPanel";
+import StationIndexPanel from "./StationIndexPanel";
 import {
-  fetchConsumerIndex,
-  fetchRentIndexRankings,
-  fetchRentIndexChangeRankings,
-  type ConsumerIndexData,
+  facilitiesItems,
+  indexItemsBase,
+  type InfoFacilityId,
+  type InfoIndexId,
+  type InfoSectionToggleType,
+} from "@/constants/infoSection";
+import {
   type ConsumerIndexPeriodType,
   type HousingType,
-  type RentIndexChangePeriodType,
-  type RentIndexChangeRankings,
   type RentIndexPeriodType,
-  type RentIndexRankingItem,
 } from "@/services/infoApi";
-import { useMapOverlayStore } from "@/store/mapOverlayStore";
-
-type InfoSectionToggleType = "INFO" | "LIFESTYLE";
-
-export const IndexState = {
-  rentIndex: 0,
-  consumerIndex: 1,
-  stationIndex: 2,
-} as const;
-
-type IndexState = (typeof IndexState)[keyof typeof IndexState];
-
-const periodTypeMonthOffset: Record<RentIndexChangePeriodType, number> = {
-  ONE_YEAR: 12,
-  SIX_MONTH: 6,
-  ONE_MONTH: 1,
-};
-
-const getIndexDateLabel = (periodType: RentIndexPeriodType) => {
-  const monthOffset =
-    periodType === "CURRENT" ? 0 : periodTypeMonthOffset[periodType];
-  const date = new Date();
-  date.setMonth(date.getMonth() - 1 - monthOffset);
-
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
-};
+import { useConsumerIndex } from "@/hooks/useConsumerIndex";
+import { useRentIndexRankings } from "@/hooks/useRentIndexRankings";
 
 const InfoSection = () => {
   const [optionTabIndex, setOptionTabIndex] =
@@ -53,340 +30,78 @@ const InfoSection = () => {
     useState<RentIndexPeriodType>("CURRENT");
   const [consumerIndexPeriodType, setConsumerIndexPeriodType] =
     useState<ConsumerIndexPeriodType>("CURRENT");
-  const [indexSelected, setIndexSelected] = useState("rent-index");
-  const [facilitiesSelected, setFacilitiesSelected] = useState("facility");
-  const [rentIndexChangeRankings, setRentIndexChangeRankings] =
-    useState<RentIndexChangeRankings>({
-      rise: [],
-      fall: [],
-    });
-  const [currentRentIndexRankings, setCurrentRentIndexRankings] = useState<
-    RentIndexRankingItem[]
-  >([]);
-  const [isRentIndexRankingsLoading, setIsRentIndexRankingsLoading] =
-    useState(false);
-  const [rentIndexRankingsError, setRentIndexRankingsError] = useState("");
-  const [consumerIndexData, setConsumerIndexData] =
-    useState<ConsumerIndexData | null>(null);
-  const [isConsumerIndexLoading, setIsConsumerIndexLoading] = useState(false);
-  const [consumerIndexError, setConsumerIndexError] = useState("");
-  const setRentIndexMapItems = useMapOverlayStore(
-    (state) => state.setRentIndexItems,
-  );
-  const clearRentIndexMapItems = useMapOverlayStore(
-    (state) => state.clearRentIndexItems,
-  );
-  const setConsumerIndexMapItem = useMapOverlayStore(
-    (state) => state.setConsumerIndexItem,
-  );
-  const clearConsumerIndexMapItem = useMapOverlayStore(
-    (state) => state.clearConsumerIndexItem,
-  );
-  const selectRentIndexMapItem = useMapOverlayStore(
-    (state) => state.selectRentIndexItem,
-  );
+  const [indexSelected, setIndexSelected] =
+    useState<InfoIndexId>("rent-index");
+  const [facilitiesSelected, setFacilitiesSelected] =
+    useState<InfoFacilityId>("facility");
 
-  useEffect(() => {
-    if (optionTabIndex !== "INFO" || indexSelected !== "rent-index") return;
-
-    const controller = new AbortController();
-
-    const fetchRankings = async () => {
-      try {
-        setIsRentIndexRankingsLoading(true);
-        setRentIndexRankingsError("");
-
-        if (rentIndexPeriodType === "CURRENT") {
-          const rankings = await fetchRentIndexRankings(residenceType);
-
-          if (!controller.signal.aborted) {
-            setCurrentRentIndexRankings(rankings);
-            setRentIndexChangeRankings({ rise: [], fall: [] });
-            setRentIndexMapItems(
-              rankings.map((item) => ({ ...item, type: "CURRENT" })),
-            );
-          }
-
-          return;
-        }
-
-        const rankings = await fetchRentIndexChangeRankings({
-          housingType: residenceType,
-          periodType: rentIndexPeriodType,
-        });
-
-        if (!controller.signal.aborted) {
-          setRentIndexChangeRankings(rankings);
-          setCurrentRentIndexRankings([]);
-          setRentIndexMapItems([
-            ...rankings.rise.map((item) => ({ ...item, type: "RISE" as const })),
-            ...rankings.fall.map((item) => ({ ...item, type: "FALL" as const })),
-          ]);
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setRentIndexRankingsError("랭킹 데이터를 불러오지 못했습니다.");
-          setRentIndexChangeRankings({ rise: [], fall: [] });
-          setCurrentRentIndexRankings([]);
-          clearRentIndexMapItems();
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsRentIndexRankingsLoading(false);
-        }
-      }
-    };
-
-    fetchRankings();
-
-    return () => controller.abort();
-  }, [
-    clearRentIndexMapItems,
-    indexSelected,
-    optionTabIndex,
-    rentIndexPeriodType,
+  const isInfoTab = optionTabIndex === "INFO";
+  const isRentIndexActive = isInfoTab && indexSelected === "rent-index";
+  const isConsumerIndexActive =
+    isInfoTab && indexSelected === "consumer-index";
+  const rentIndex = useRentIndexRankings({
+    isActive: isRentIndexActive,
     residenceType,
-    setRentIndexMapItems,
-  ]);
-
-  useEffect(() => {
-    if (optionTabIndex !== "INFO" || indexSelected !== "consumer-index") {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const fetchIndex = async () => {
-      try {
-        setIsConsumerIndexLoading(true);
-        setConsumerIndexError("");
-
-        const selectedIndexPromise = fetchConsumerIndex(consumerIndexPeriodType);
-        const currentIndexPromise =
-          consumerIndexPeriodType === "CURRENT"
-            ? selectedIndexPromise
-            : fetchConsumerIndex("CURRENT");
-        const [data, currentData] = await Promise.all([
-          selectedIndexPromise,
-          currentIndexPromise,
-        ]);
-
-        if (!controller.signal.aborted) {
-          setConsumerIndexData(data);
-          setConsumerIndexMapItem({
-            year: currentData.year,
-            month: currentData.month,
-            value: currentData.value,
-          });
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setConsumerIndexError("소비자 심리지수 데이터를 불러오지 못했습니다.");
-          setConsumerIndexData(null);
-          clearConsumerIndexMapItem();
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsConsumerIndexLoading(false);
-        }
-      }
-    };
-
-    fetchIndex();
-
-    return () => controller.abort();
-  }, [
-    clearConsumerIndexMapItem,
-    consumerIndexPeriodType,
-    indexSelected,
-    optionTabIndex,
-    setConsumerIndexMapItem,
-  ]);
-
-  useEffect(() => {
-    if (optionTabIndex === "INFO" && indexSelected === "rent-index") return;
-
-    clearRentIndexMapItems();
-  }, [clearRentIndexMapItems, indexSelected, optionTabIndex]);
-
-  useEffect(() => {
-    if (optionTabIndex === "INFO" && indexSelected === "consumer-index") {
-      return;
-    }
-
-    clearConsumerIndexMapItem();
-  }, [clearConsumerIndexMapItem, indexSelected, optionTabIndex]);
-
-  useEffect(() => {
-    return () => {
-      clearRentIndexMapItems();
-      clearConsumerIndexMapItem();
-    };
-  }, [clearConsumerIndexMapItem, clearRentIndexMapItems]);
+    periodType: rentIndexPeriodType,
+  });
+  const consumerIndex = useConsumerIndex({
+    isActive: isConsumerIndexActive,
+    periodType: consumerIndexPeriodType,
+  });
 
   const indexItems = useMemo(() => {
-    const popoverItems = [
-      {
-        id: "rent-index",
-        label: "전월세 통합지수",
-        title: "전월세 통합지수란?",
-        description:
-          "특정 지역의 전세와 월세 가격 흐름을 하나로 묶어, 지금 그 지역의 임대 시장이 어느 정도 수준인지를 한눈에 보여주는 지표입니다.",
-      },
-      {
-        id: "consumer-index",
-        label: "소비자 심리지수",
-        title: "소비자 심리지수(Consumer Sentiment Index, CSI)란?",
-        description:
-          "소비자 심리지수는 소비자들이 현재와 미래의 경제 상황을 어떻게 인식하고 있는지를 수치로 나타낸 경기 체감 지표입니다. 소비·투자·주택·고용 등 경제 전반에 대한 심리 상태를 요약합니다.",
-      },
-      {
-        id: "station-index",
-        label: "지하철 역세권 지수",
-        title: "지하철 역세권 지수란?",
-        description:
-          "주요 지하철역과의 접근성 및 가치를 지수로 표현한 것입니다.",
-      },
-    ];
-
-    return popoverItems.map((item) => ({
+    return indexItemsBase.map((item) => ({
       ...item,
       showPopover: item.id === indexSelected,
     }));
   }, [indexSelected]);
 
-  const facilitiesItems = [
-    { id: "facility", label: "편의시설" },
-    { id: "transport", label: "교통" },
-    { id: "safety", label: "치안" },
-  ];
-
   return (
     <div className="w-full h-screen overflow-x-hidden overflow-y-auto no-scrollbar">
-      {/* 지수중심, 생활요소 탭 버튼 영역 */}
       <InfoSectionToggle value={optionTabIndex} onChange={setOptionTabIndex} />
 
-      {optionTabIndex === "INFO" && (
+      {isInfoTab && (
         <div className="flex flex-col items-start w-full ">
           <div className="flex items-center justify-center w-full pl-5">
             <CategoryToggle
               items={indexItems}
               value={indexSelected}
-              onChange={setIndexSelected}
+              onChange={(value) => setIndexSelected(value as InfoIndexId)}
             />
           </div>
           {indexSelected === "rent-index" && (
-            <>
-              <div className="pl-5 duration-300 mt-7 animate-in fade-in">
-                <ResidenceTypeToggle
-                  value={residenceType}
-                  onChange={setResidenceType}
-                />
-              </div>
-              <div className="flex flex-col w-full pt-5 pl-5">
-                <IndexSectionHeader
-                  title="전월세 통합지수"
-                  date={getIndexDateLabel(rentIndexPeriodType)}
-                  selectedIndex={IndexState.rentIndex}
-                  periodType={rentIndexPeriodType}
-                  onPeriodTypeChange={(value) => {
-                    setRentIndexPeriodType(value);
-                  }}
-                />
-              </div>
-              <div className="h-[56px]"></div>
-              <Divider />
-              <div className="h-[32px]"></div>
-              {rentIndexPeriodType === "CURRENT" ? (
-                <div className="flex flex-col gap-[18px]">
-                  <RankingList
-                    title="현재 전월세 통합지수"
-                    showDropDown
-                    items={currentRentIndexRankings}
-                    isLoading={isRentIndexRankingsLoading}
-                    errorMessage={rentIndexRankingsError}
-                    emptyMessage="표시할 전월세 통합지수 데이터가 없습니다."
-                    suffix=""
-                    fractionDigits={1}
-                    onItemClick={(item) =>
-                      selectRentIndexMapItem({ ...item, type: "CURRENT" })
-                    }
-                  />
-                </div>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-[18px]">
-                    <RankingList
-                      title="급상승 지역 확인하기"
-                      showDropDown
-                      items={rentIndexChangeRankings.rise}
-                      isLoading={isRentIndexRankingsLoading}
-                      errorMessage={rentIndexRankingsError}
-                      emptyMessage="표시할 급상승 데이터가 없습니다."
-                      suffix="%"
-                      fractionDigits={2}
-                      onItemClick={(item) =>
-                        selectRentIndexMapItem({ ...item, type: "RISE" })
-                      }
-                    />
-                  </div>
-                  <div className="h-[56px]"></div>
-                  <Divider />
-                  <div className="h-[32px]"></div>
-                  <div className="flex flex-col gap-[18px]">
-                    <RankingList
-                      title="급하락 지역 확인하기"
-                      showDropDown
-                      items={rentIndexChangeRankings.fall}
-                      isLoading={isRentIndexRankingsLoading}
-                      errorMessage={rentIndexRankingsError}
-                      emptyMessage="표시할 급하락 데이터가 없습니다."
-                      suffix="%"
-                      fractionDigits={2}
-                      onItemClick={(item) =>
-                        selectRentIndexMapItem({ ...item, type: "FALL" })
-                      }
-                    />
-                  </div>
-                </>
-              )}
-              <div className="h-[100px]"></div>
-            </>
+            <RentIndexPanel
+              residenceType={residenceType}
+              onResidenceTypeChange={setResidenceType}
+              periodType={rentIndexPeriodType}
+              onPeriodTypeChange={setRentIndexPeriodType}
+              currentRankings={rentIndex.currentRankings}
+              changeRankings={rentIndex.changeRankings}
+              isLoading={rentIndex.isLoading}
+              errorMessage={rentIndex.errorMessage}
+              onRankingItemClick={rentIndex.selectMapItem}
+            />
           )}
           {indexSelected === "consumer-index" && (
-            <>
-              <IndexSectionHeader
-                title="서울특별시 소비자 심리지수"
-                selectedIndex={IndexState.consumerIndex}
-                periodType={consumerIndexPeriodType}
-                onPeriodTypeChange={(value) => {
-                  setConsumerIndexPeriodType(value);
-                }}
-                consumerIndexData={consumerIndexData}
-                isLoading={isConsumerIndexLoading}
-                errorMessage={consumerIndexError}
-              />
-              <Divider />
-            </>
+            <ConsumerIndexPanel
+              periodType={consumerIndexPeriodType}
+              onPeriodTypeChange={setConsumerIndexPeriodType}
+              data={consumerIndex.data}
+              isLoading={consumerIndex.isLoading}
+              errorMessage={consumerIndex.errorMessage}
+            />
           )}
-          {indexSelected === "station-index" && (
-            <>
-              <IndexSectionHeader
-                title="서울 지하철 역세권 지수"
-                selectedIndex={IndexState.stationIndex}
-              />
-              <Divider />
-            </>
-          )}
+          {indexSelected === "station-index" && <StationIndexPanel />}
         </div>
       )}
+
       {optionTabIndex === "LIFESTYLE" && (
         <>
           <div className="flex flex-col gap-4 px-5 mt-3 h-[57px]">
             <CategoryToggle
               items={facilitiesItems}
               value={facilitiesSelected}
-              onChange={setFacilitiesSelected}
+              onChange={(value) => setFacilitiesSelected(value as InfoFacilityId)}
             />
           </div>
           {facilitiesSelected === "facility" && (
@@ -396,7 +111,7 @@ const InfoSection = () => {
               <div className="flex flex-col gap-[18px] pt-5">
                 <RankingList title="편의시설 상위 7곳" showDropDown={false} />
               </div>
-              <div className="h-[150px]"></div>
+              <div className="h-[150px]" />
             </>
           )}
         </>
