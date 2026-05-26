@@ -50,9 +50,9 @@ const InfoSection = () => {
     useState<InfoSectionToggleType>("INFO");
   const [residenceType, setResidenceType] = useState<HousingType>("APARTMENT");
   const [rentIndexPeriodType, setRentIndexPeriodType] =
-    useState<RentIndexPeriodType>("ONE_YEAR");
+    useState<RentIndexPeriodType>("CURRENT");
   const [consumerIndexPeriodType, setConsumerIndexPeriodType] =
-    useState<ConsumerIndexPeriodType>("ONE_YEAR");
+    useState<ConsumerIndexPeriodType>("CURRENT");
   const [indexSelected, setIndexSelected] = useState("rent-index");
   const [facilitiesSelected, setFacilitiesSelected] = useState("facility");
   const [rentIndexChangeRankings, setRentIndexChangeRankings] =

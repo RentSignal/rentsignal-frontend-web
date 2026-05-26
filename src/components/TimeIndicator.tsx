@@ -27,7 +27,7 @@ const TimeIndicator = ({
   ];
 
   const [internalValue, setInternalValue] =
-    useState<TimeIndicatorValue>("ONE_YEAR");
+    useState<TimeIndicatorValue>("CURRENT");
   const currentValue = value ?? internalValue;
 
   return (

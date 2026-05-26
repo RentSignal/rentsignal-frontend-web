@@ -69,7 +69,7 @@ const phases = [
 const RentIndexSection = ({
   title,
   date,
-  periodType = "ONE_YEAR",
+  periodType = "CURRENT",
   onPeriodTypeChange,
 }: Props) => {
   return (
@@ -94,7 +94,7 @@ const RentIndexSection = ({
 
 const ConsumerIndexSection = ({
   title,
-  periodType = "ONE_YEAR",
+  periodType = "CURRENT",
   onPeriodTypeChange,
   consumerIndexData,
   isLoading = false,
