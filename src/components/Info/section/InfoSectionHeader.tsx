@@ -47,10 +47,10 @@ const periodTypeLabels: Record<ConsumerIndexPeriodType, string> = {
 
 const phases = [
   {
-    label: "상승 국면 ▲",
+    label: "하강 국면 ▼",
     range: "0 ~ 94",
-    color: "text-trend-up",
-    desc: "소비자들의 주택시장 기대가 평균 이상으로 높습니다.",
+    color: "text-trend-down",
+    desc: "소비자들의 주택시장 기대가 평균보다 낮습니다.",
   },
   {
     label: "보합 국면 ―",
@@ -59,10 +59,10 @@ const phases = [
     desc: "소비자들의 주택시장 기대가 평균 수준입니다.",
   },
   {
-    label: "하락 국면 ▼",
+    label: "상승 국면 ▲",
     range: "115 ~ 200",
-    color: "text-trend-down",
-    desc: "소비자들의 주택시장 기대가 평균보다 낮습니다.",
+    color: "text-trend-up",
+    desc: "소비자들의 주택시장 기대가 평균 이상으로 높습니다.",
   },
 ];
 
@@ -102,20 +102,26 @@ const ConsumerIndexSection = ({
 }: Props) => {
   const [open, setOpen] = useState(false);
   const consumerPeriodType = periodType as ConsumerIndexPeriodType;
+  const hasData = Boolean(consumerIndexData);
   const value = consumerIndexData?.value ?? 0;
   const isCurrent = consumerPeriodType === "CURRENT";
   const isPositive = value > 0;
   const isNegative = value < 0;
-  const trendText = isCurrent
-    ? `${value.toFixed(1)}점`
-    : `${isPositive ? "▲" : isNegative ? "▼" : ""}${Math.abs(value).toFixed(
-        2,
-      )}% ${isPositive ? "증가" : isNegative ? "감소" : "변동 없음"}`;
-  const trendColor = isPositive
-    ? "text-trend-up"
-    : isNegative
-      ? "text-trend-down"
-      : "text-trend-neutral";
+  const trendText = !hasData
+    ? "데이터 없음"
+    : isCurrent
+      ? `${value.toFixed(1)}점`
+      : `${isPositive ? "▲" : isNegative ? "▼" : ""}${Math.abs(
+          value,
+        ).toFixed(2)}% ${isPositive ? "증가" : isNegative ? "감소" : "변동 없음"}`;
+  const trendColor =
+    !hasData || isCurrent
+      ? "text-trend-neutral"
+      : isPositive
+        ? "text-trend-up"
+        : isNegative
+          ? "text-trend-down"
+          : "text-trend-neutral";
   const date = consumerIndexData
     ? `${consumerIndexData.year}년 ${consumerIndexData.month}월`
     : "";
@@ -205,6 +211,10 @@ const ConsumerIndexSection = ({
         <div className="flex justify-center py-[50px]">
           {isLoading ? (
             <div className="w-8 h-8 border-[3px] border-coolNeutral-95 border-t-blue-60 rounded-full animate-spin" />
+          ) : !hasData ? (
+            <div className="flex items-center justify-center w-[140px] h-[140px] text-sm text-coolNeutral-50">
+              데이터 없음
+            </div>
           ) : (
             <CircularProgress
               value={isCurrent ? value : Math.abs(value)}
