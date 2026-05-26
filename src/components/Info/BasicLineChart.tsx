@@ -17,8 +17,8 @@ type ChartDataItem = {
 };
 
 type DotPos = {
-  x: number;
-  y: number;
+  left: number;
+  top: number;
 };
 
 type BasicLineChartProps = {
@@ -49,19 +49,17 @@ const BasicLineChart = ({ data = [] }: BasicLineChartProps) => {
   }, [data]);
 
   const tooltipNode = useMemo(() => {
-    if (!chartRef.current || !dotPos || activeIndex === null || !currentItem) {
+    if (!dotPos || activeIndex === null || !currentItem) {
       return null;
     }
-
-    const rect = chartRef.current.getBoundingClientRect();
 
     const bubbleHeight = 28;
     const tailHeight = 6;
     const gap = 6;
     const OFFSET_X = 40;
 
-    const left = rect.left + dotPos.x - OFFSET_X;
-    const top = rect.top + dotPos.y - bubbleHeight - tailHeight - gap;
+    const left = dotPos.left - OFFSET_X;
+    const top = dotPos.top - bubbleHeight - tailHeight - gap;
 
     return (
       <div
@@ -148,10 +146,12 @@ const BasicLineChart = ({ data = [] }: BasicLineChartProps) => {
 
               setActiveIndex(nextIndex);
 
-              if (dotRef.current) {
+              if (dotRef.current && chartRef.current) {
+                const rect = chartRef.current.getBoundingClientRect();
+
                 setDotPos({
-                  x: dotRef.current.x,
-                  y: dotRef.current.y,
+                  left: rect.left + dotRef.current.x,
+                  top: rect.top + dotRef.current.y,
                 });
               }
             } else {
