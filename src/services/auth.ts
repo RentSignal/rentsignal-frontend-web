@@ -45,3 +45,13 @@ export const reissueToken = async (): Promise<string | null> => {
     return null;
   }
 };
+
+export const ensureAccessToken = async (): Promise<string | null> => {
+  const accessToken = getAccessToken();
+
+  if (accessToken) {
+    return accessToken;
+  }
+
+  return reissueToken();
+};

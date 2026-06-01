@@ -1,28 +1,34 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { setAccessToken } from "@/services/auth";
+import { ensureAccessToken, setAccessToken } from "@/services/auth";
 
 const OAuthRedirect = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
+    const initializeAuth = async () => {
+      const params = new URLSearchParams(location.search);
 
-    const accessToken = params.get("accessToken");
-    const error = params.get("error");
+      const accessToken = params.get("accessToken");
+      const error = params.get("error");
 
-    if (error) {
-      console.error("OAuth 로그인 오류:", error);
+      if (error) {
+        console.error("OAuth 로그인 오류:", error);
+        navigate("/");
+        return;
+      }
+
+      if (accessToken) {
+        setAccessToken(accessToken);
+      } else {
+        await ensureAccessToken();
+      }
+
       navigate("/");
-      return;
-    }
+    };
 
-    if (accessToken) {
-      setAccessToken(accessToken);
-    }
-
-    navigate("/");
-  }, []);
+    initializeAuth();
+  }, [navigate]);
 
   return (
     <div className="flex items-center justify-center h-screen">
