@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CategoryToggle from "@/components/Info/CategoryToggle";
 import Divider from "../Divider";
 import RankingList from "../RankingList";
@@ -15,7 +15,9 @@ import {
   type InfoSectionToggleType,
 } from "@/constants/infoSection";
 import {
+  fetchConvenienceInfo,
   type ConsumerIndexPeriodType,
+  type ConvenienceRankingItem,
   type HousingType,
   type RentIndexPeriodType,
 } from "@/services/infoApi";
@@ -33,10 +35,17 @@ const InfoSection = () => {
   const [indexSelected, setIndexSelected] = useState<InfoIndexId>("rent-index");
   const [facilitiesSelected, setFacilitiesSelected] =
     useState<InfoFacilityId>("facility");
+  const [convenienceRankings, setConvenienceRankings] = useState<
+    ConvenienceRankingItem[]
+  >([]);
+  const [isConvenienceLoading, setIsConvenienceLoading] = useState(false);
+  const [convenienceErrorMessage, setConvenienceErrorMessage] = useState("");
 
   const isInfoTab = optionTabIndex === "INFO";
+  const isLifestyleTab = optionTabIndex === "LIFESTYLE";
   const isRentIndexActive = isInfoTab && indexSelected === "rent-index";
   const isConsumerIndexActive = isInfoTab && indexSelected === "consumer-index";
+  const isConvenienceActive = isLifestyleTab && facilitiesSelected === "facility";
   const rentIndex = useRentIndexRankings({
     isActive: isRentIndexActive,
     residenceType,
@@ -47,12 +56,56 @@ const InfoSection = () => {
     periodType: consumerIndexPeriodType,
   });
 
+  useEffect(() => {
+    if (!isConvenienceActive) {
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchRankings = async () => {
+      try {
+        setIsConvenienceLoading(true);
+        setConvenienceErrorMessage("");
+
+        const rankings = await fetchConvenienceInfo();
+
+        if (!controller.signal.aborted) {
+          setConvenienceRankings(rankings);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setConvenienceErrorMessage("편의시설 데이터를 불러오지 못했습니다.");
+          setConvenienceRankings([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsConvenienceLoading(false);
+        }
+      }
+    };
+
+    fetchRankings();
+
+    return () => controller.abort();
+  }, [isConvenienceActive]);
+
   const indexItems = useMemo(() => {
     return indexItemsBase.map((item) => ({
       ...item,
       showPopover: item.id === indexSelected,
     }));
   }, [indexSelected]);
+
+  const convenienceRankingItems = useMemo(
+    () =>
+      convenienceRankings.map((item) => ({
+        rank: item.rank,
+        name: item.name,
+        value: item.count,
+      })),
+    [convenienceRankings],
+  );
 
   return (
     <div className="w-full h-screen overflow-x-hidden overflow-y-auto no-scrollbar">
@@ -109,7 +162,16 @@ const InfoSection = () => {
               <InfoAmenities title={"노원구 공릉동"} />
               <Divider />
               <div className="flex flex-col gap-[18px] pt-5">
-                <RankingList title="편의시설 상위 7곳" showDropDown={false} />
+                <RankingList
+                  title="편의시설 상위 7곳"
+                  showDropDown={false}
+                  items={convenienceRankingItems}
+                  isLoading={isConvenienceLoading}
+                  errorMessage={convenienceErrorMessage}
+                  emptyMessage="표시할 편의시설 데이터가 없습니다."
+                  suffix="개"
+                  fractionDigits={0}
+                />
               </div>
               <div className="h-[150px]" />
             </>

@@ -19,4 +19,5 @@ export const API_URL = {
   RENT_INDEX_CHANGE: "/api/info/rent-index/change",
   CONSUMER_INDEX: "/api/info/consumer-sentiment",
   SUBWAY_INDEX: "/api/info/subway-accessibility",
+  CONVENIENCE_INFO: "/api/info/convenience",
 };

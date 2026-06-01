@@ -15,6 +15,13 @@ export type RentIndexRankingItem = {
   value: number;
 };
 
+export type ConvenienceRankingItem = {
+  rank: number;
+  id: number;
+  name: string;
+  count: number;
+};
+
 export type SubwayIndexDistrictItem = {
   id: number;
   name: string;
@@ -77,6 +84,15 @@ type SubwayIndexResponse = {
   data: SubwayIndexData;
 };
 
+type ConvenienceInfoResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: {
+    ranking: ConvenienceRankingItem[];
+  };
+};
+
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {
   return Array.isArray(res.data?.indexes) ? res.data.indexes : [];
 };
@@ -135,4 +151,12 @@ export const fetchSubwayIndex = async () => {
       ? res.data.districtIndexes
       : [],
   };
+};
+
+export const fetchConvenienceInfo = async () => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: API_URL.CONVENIENCE_INFO,
+  })) as ConvenienceInfoResponse;
+
+  return Array.isArray(res.data?.ranking) ? res.data.ranking : [];
 };
