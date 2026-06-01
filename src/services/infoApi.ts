@@ -22,6 +22,25 @@ export type ConvenienceRankingItem = {
   count: number;
 };
 
+export type ConveniencePlaceItem = {
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
+export type ConvenienceGroup = {
+  count: number;
+  conveniences: ConveniencePlaceItem[];
+};
+
+export type ConvenienceDetailData = {
+  name: string;
+  mart: ConvenienceGroup;
+  convenienceStore: ConvenienceGroup;
+  hospital: ConvenienceGroup;
+  cafe: ConvenienceGroup;
+};
+
 export type SubwayIndexDistrictItem = {
   id: number;
   name: string;
@@ -93,6 +112,13 @@ type ConvenienceInfoResponse = {
   };
 };
 
+type ConvenienceDetailResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: ConvenienceDetailData;
+};
+
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {
   return Array.isArray(res.data?.indexes) ? res.data.indexes : [];
 };
@@ -159,4 +185,12 @@ export const fetchConvenienceInfo = async () => {
   })) as ConvenienceInfoResponse;
 
   return Array.isArray(res.data?.ranking) ? res.data.ranking : [];
+};
+
+export const fetchConvenienceDetail = async (neighborhoodId: number) => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: `${API_URL.CONVENIENCE_INFO}/${neighborhoodId}`,
+  })) as ConvenienceDetailResponse;
+
+  return res.data;
 };

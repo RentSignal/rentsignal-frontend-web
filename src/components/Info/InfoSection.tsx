@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import CategoryToggle from "@/components/Info/CategoryToggle";
 import Divider from "../Divider";
-import RankingList from "../RankingList";
+import RankingList, { type RankingListItem } from "../RankingList";
 import InfoSectionToggle from "./section/InfoSectionToggle";
-import InfoAmenities from "./InfoAmenities";
+import InfoAmenities, { type InfoAmenityItem } from "./InfoAmenities";
 import ConsumerIndexPanel from "./ConsumerIndexPanel";
 import RentIndexPanel from "./RentIndexPanel";
 import StationIndexPanel from "./StationIndexPanel";
@@ -15,8 +15,10 @@ import {
   type InfoSectionToggleType,
 } from "@/constants/infoSection";
 import {
+  fetchConvenienceDetail,
   fetchConvenienceInfo,
   type ConsumerIndexPeriodType,
+  type ConvenienceDetailData,
   type ConvenienceRankingItem,
   type HousingType,
   type RentIndexPeriodType,
@@ -40,12 +42,22 @@ const InfoSection = () => {
   >([]);
   const [isConvenienceLoading, setIsConvenienceLoading] = useState(false);
   const [convenienceErrorMessage, setConvenienceErrorMessage] = useState("");
+  const [selectedConvenienceId, setSelectedConvenienceId] = useState<
+    number | null
+  >(null);
+  const [selectedConvenienceDetail, setSelectedConvenienceDetail] =
+    useState<ConvenienceDetailData | null>(null);
+  const [isConvenienceDetailLoading, setIsConvenienceDetailLoading] =
+    useState(false);
+  const [convenienceDetailErrorMessage, setConvenienceDetailErrorMessage] =
+    useState("");
 
   const isInfoTab = optionTabIndex === "INFO";
   const isLifestyleTab = optionTabIndex === "LIFESTYLE";
   const isRentIndexActive = isInfoTab && indexSelected === "rent-index";
   const isConsumerIndexActive = isInfoTab && indexSelected === "consumer-index";
-  const isConvenienceActive = isLifestyleTab && facilitiesSelected === "facility";
+  const isConvenienceActive =
+    isLifestyleTab && facilitiesSelected === "facility";
   const rentIndex = useRentIndexRankings({
     isActive: isRentIndexActive,
     residenceType,
@@ -90,6 +102,17 @@ const InfoSection = () => {
     return () => controller.abort();
   }, [isConvenienceActive]);
 
+  useEffect(() => {
+    if (isConvenienceActive) {
+      return;
+    }
+
+    setSelectedConvenienceId(null);
+    setSelectedConvenienceDetail(null);
+    setConvenienceDetailErrorMessage("");
+    setIsConvenienceDetailLoading(false);
+  }, [isConvenienceActive]);
+
   const indexItems = useMemo(() => {
     return indexItemsBase.map((item) => ({
       ...item,
@@ -101,11 +124,70 @@ const InfoSection = () => {
     () =>
       convenienceRankings.map((item) => ({
         rank: item.rank,
+        id: item.id,
         name: item.name,
         value: item.count,
       })),
     [convenienceRankings],
   );
+
+  const selectedConvenienceItems = useMemo<InfoAmenityItem[]>(() => {
+    if (!selectedConvenienceDetail) {
+      return [];
+    }
+
+    return [
+      {
+        title: "대형마트",
+        description: "대형 유통 매장 및 창고형 마트",
+        qty: selectedConvenienceDetail.mart?.count ?? 0,
+      },
+      {
+        title: "편의점",
+        description: "주변 24시간 운영 편의점",
+        qty: selectedConvenienceDetail.convenienceStore?.count ?? 0,
+      },
+      {
+        title: "병원",
+        description: "동네 병원, 의원 및 전문의원",
+        qty: selectedConvenienceDetail.hospital?.count ?? 0,
+      },
+      {
+        title: "카페",
+        description: "주변 카페 및 베이커리 디저트 매장",
+        qty: selectedConvenienceDetail.cafe?.count ?? 0,
+      },
+    ];
+  }, [selectedConvenienceDetail]);
+
+  const handleConvenienceRankingClick = async (item: RankingListItem) => {
+    const neighborhoodId = item.id ?? item.neighborhoodId;
+
+    if (!neighborhoodId) {
+      return;
+    }
+
+    if (isConvenienceDetailLoading && selectedConvenienceId === neighborhoodId) {
+      return;
+    }
+
+    try {
+      setSelectedConvenienceId(neighborhoodId);
+      setSelectedConvenienceDetail(null);
+      setConvenienceDetailErrorMessage("");
+      setIsConvenienceDetailLoading(true);
+
+      const detail = await fetchConvenienceDetail(neighborhoodId);
+      setSelectedConvenienceDetail(detail);
+    } catch {
+      setSelectedConvenienceDetail(null);
+      setConvenienceDetailErrorMessage(
+        "편의시설 상세 데이터를 불러오지 못했습니다.",
+      );
+    } finally {
+      setIsConvenienceDetailLoading(false);
+    }
+  };
 
   return (
     <div className="w-full h-screen overflow-x-hidden overflow-y-auto no-scrollbar">
@@ -159,8 +241,25 @@ const InfoSection = () => {
           </div>
           {facilitiesSelected === "facility" && (
             <>
-              <InfoAmenities title={"노원구 공릉동"} />
-              <Divider />
+              {isConvenienceDetailLoading && (
+                <div className="px-5 py-[10px] text-sm text-coolNeutral-50">
+                  편의시설 상세 데이터를 불러오는 중입니다.
+                </div>
+              )}
+              {!isConvenienceDetailLoading && convenienceDetailErrorMessage && (
+                <div className="px-5 py-[10px] text-sm text-coolNeutral-50">
+                  {convenienceDetailErrorMessage}
+                </div>
+              )}
+              {selectedConvenienceDetail && (
+                <>
+                  <InfoAmenities
+                    title={selectedConvenienceDetail.name}
+                    items={selectedConvenienceItems}
+                  />
+                  <Divider />
+                </>
+              )}
               <div className="flex flex-col gap-[18px] pt-5">
                 <RankingList
                   title="편의시설 상위 7곳"
@@ -171,6 +270,7 @@ const InfoSection = () => {
                   emptyMessage="표시할 편의시설 데이터가 없습니다."
                   suffix="개"
                   fractionDigits={0}
+                  onItemClick={handleConvenienceRankingClick}
                 />
               </div>
               <div className="h-[150px]" />

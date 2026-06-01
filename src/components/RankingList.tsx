@@ -1,23 +1,30 @@
 import { useState } from "react";
 import RankingItem from "./RankingItem";
 import DropDown from "./DropDown";
-import type { RentIndexRankingItem } from "@/services/infoApi";
 
 const dropdownItems = [{ value: "seoul", label: "서울특별시" }];
 
-type RankingListProps = {
+export type RankingListItem = {
+  rank: number;
+  id?: number;
+  neighborhoodId?: number;
+  name: string;
+  value: number;
+};
+
+type RankingListProps<T extends RankingListItem> = {
   title: string;
   showDropDown?: boolean;
-  items?: RentIndexRankingItem[];
+  items?: T[];
   isLoading?: boolean;
   errorMessage?: string;
   emptyMessage?: string;
   suffix?: string;
   fractionDigits?: number;
-  onItemClick?: (item: RentIndexRankingItem) => void;
+  onItemClick?: (item: T) => void;
 };
 
-const RankingList = ({
+const RankingList = <T extends RankingListItem>({
   title,
   showDropDown = true,
   items,
@@ -27,7 +34,7 @@ const RankingList = ({
   suffix = "%",
   fractionDigits = 2,
   onItemClick,
-}: RankingListProps) => {
+}: RankingListProps<T>) => {
   const [value, setValue] = useState("seoul");
   const rankingItems = items ?? [];
   const isEmpty = rankingItems.length === 0;
