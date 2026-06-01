@@ -40,7 +40,6 @@ export default function Step2({
   const rentOption = ["월세", "전세"];
 
   const isValid = value.houseType && value.rentType;
-  // TODO: 동적 배열에 우선순위 5가지 validation check 부분 추가
 
   return (
     <div className="flex flex-col min-h-screen gap-6 px-6">

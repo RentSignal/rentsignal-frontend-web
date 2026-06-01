@@ -15,6 +15,12 @@ export type RentIndexRankingItem = {
   value: number;
 };
 
+export type SubwayIndexDistrictItem = {
+  id: number;
+  name: string;
+  value: number;
+};
+
 type RentIndexCurrentResponse = {
   success: boolean;
   code: string;
@@ -56,6 +62,19 @@ type ConsumerIndexResponse = {
   code: string;
   message: string;
   data: ConsumerIndexData;
+};
+
+export type SubwayIndexData = {
+  high: RentIndexRankingItem[];
+  changeRate: RentIndexRankingItem[];
+  districtIndexes: SubwayIndexDistrictItem[];
+};
+
+type SubwayIndexResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: SubwayIndexData;
 };
 
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {
@@ -100,4 +119,20 @@ export const fetchConsumerIndex = async (
   })) as ConsumerIndexResponse;
 
   return res.data;
+};
+
+export const fetchSubwayIndex = async () => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: API_URL.SUBWAY_INDEX,
+  })) as SubwayIndexResponse;
+
+  return {
+    high: Array.isArray(res.data?.high) ? res.data.high : [],
+    changeRate: Array.isArray(res.data?.changeRate)
+      ? res.data.changeRate
+      : [],
+    districtIndexes: Array.isArray(res.data?.districtIndexes)
+      ? res.data.districtIndexes
+      : [],
+  };
 };

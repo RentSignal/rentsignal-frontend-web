@@ -11,6 +11,7 @@ import {
 import type {
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
+  SubwayIndexMapOverlayItem,
 } from "@/store/mapOverlayStore";
 
 declare global {
@@ -45,6 +46,13 @@ const getOverlayValueLabel = (item: RentIndexMapOverlayItem) => {
   return `${prefix}${item.value.toFixed(0)}%`;
 };
 
+const getSubwayIndexOverlayColor = (value: number) => {
+  if (value >= 100.8) return "#FF0000";
+  if (value >= 100.6) return "#FF8000";
+  if (value >= 100.4) return "#66D575";
+  return "#005EFF";
+};
+
 const getGeoJsonLngLatPoints = (geometry: any) => {
   const points: number[][] = [];
 
@@ -63,6 +71,55 @@ const getGeoJsonLngLatPoints = (geometry: any) => {
   }
 
   return points;
+};
+
+const getCenterFromLngLatPoints = (points: number[][]) => {
+  if (points.length === 0) return null;
+
+  const bounds = points.reduce(
+    (
+      acc: {
+        minLat: number;
+        maxLat: number;
+        minLng: number;
+        maxLng: number;
+      },
+      [lng, lat]: number[],
+    ) => ({
+      minLat: Math.min(acc.minLat, lat),
+      maxLat: Math.max(acc.maxLat, lat),
+      minLng: Math.min(acc.minLng, lng),
+      maxLng: Math.max(acc.maxLng, lng),
+    }),
+    {
+      minLat: Number.POSITIVE_INFINITY,
+      maxLat: Number.NEGATIVE_INFINITY,
+      minLng: Number.POSITIVE_INFINITY,
+      maxLng: Number.NEGATIVE_INFINITY,
+    },
+  );
+
+  return {
+    lat: (bounds.minLat + bounds.maxLat) / 2,
+    lng: (bounds.minLng + bounds.maxLng) / 2,
+  };
+};
+
+const getDistrictCenters = () => {
+  const centers = new globalThis.Map<string, { lat: number; lng: number }>();
+
+  seoulGeoJson.features.forEach((feature: any) => {
+    const guName = feature.properties.SIG_KOR_NM;
+    const center = getCenterFromLngLatPoints(
+      getGeoJsonLngLatPoints(feature.geometry),
+    );
+
+    if (!center) return;
+
+    centers.set(guName, center);
+  });
+
+  return centers;
 };
 
 const getRegionCenters = () => {
@@ -85,39 +142,18 @@ const getRegionCenters = () => {
   regionPoints.forEach((points: number[][], region: string) => {
     if (points.length === 0) return;
 
-    const bounds = points.reduce(
-      (
-        acc: {
-          minLat: number;
-          maxLat: number;
-          minLng: number;
-          maxLng: number;
-        },
-        [lng, lat]: number[],
-      ) => ({
-        minLat: Math.min(acc.minLat, lat),
-        maxLat: Math.max(acc.maxLat, lat),
-        minLng: Math.min(acc.minLng, lng),
-        maxLng: Math.max(acc.maxLng, lng),
-      }),
-      {
-        minLat: Number.POSITIVE_INFINITY,
-        maxLat: Number.NEGATIVE_INFINITY,
-        minLng: Number.POSITIVE_INFINITY,
-        maxLng: Number.NEGATIVE_INFINITY,
-      },
-    );
+    const center = getCenterFromLngLatPoints(points);
 
-    centers.set(region, {
-      lat: (bounds.minLat + bounds.maxLat) / 2,
-      lng: (bounds.minLng + bounds.maxLng) / 2,
-    });
+    if (!center) return;
+
+    centers.set(region, center);
   });
 
   return centers;
 };
 
 const regionCenters = getRegionCenters();
+const districtCenters = getDistrictCenters();
 
 const Map = ({ enableOverlay = true }: Props) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -125,6 +161,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   const overlayRef = useRef<any>(null);
   const basicPolygonsRef = useRef<any[]>([]);
   const rentIndexOverlaysRef = useRef<any[]>([]);
+  const subwayIndexOverlaysRef = useRef<any[]>([]);
   const selectedRegionPolygonsRef = useRef<any[]>([]);
   const consumerIndexPolygonsRef = useRef<any[]>([]);
   const rentIndexItems = useMapOverlayStore((state) => state.rentIndexItems);
@@ -133,6 +170,9 @@ const Map = ({ enableOverlay = true }: Props) => {
   );
   const consumerIndexItem = useMapOverlayStore(
     (state) => state.consumerIndexItem,
+  );
+  const subwayIndexItems = useMapOverlayStore(
+    (state) => state.subwayIndexItems,
   );
 
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
@@ -297,6 +337,13 @@ const Map = ({ enableOverlay = true }: Props) => {
     rentIndexOverlaysRef.current = [];
   };
 
+  const clearSubwayIndexOverlays = () => {
+    subwayIndexOverlaysRef.current.forEach((overlay) => {
+      overlay.setMap(null);
+    });
+    subwayIndexOverlaysRef.current = [];
+  };
+
   const clearSelectedRegionPolygons = () => {
     selectedRegionPolygonsRef.current.forEach((polygon) => {
       polygon.setMap(null);
@@ -320,7 +367,9 @@ const Map = ({ enableOverlay = true }: Props) => {
 
       const { geometry } = feature;
       const polygons =
-        geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
+        geometry.type === "Polygon"
+          ? [geometry.coordinates]
+          : geometry.coordinates;
 
       polygons.forEach((rings: number[][][]) => {
         const polygon = new window.kakao.maps.Polygon({
@@ -398,6 +447,67 @@ const Map = ({ enableOverlay = true }: Props) => {
       });
 
       rentIndexOverlaysRef.current.push(overlay);
+    });
+  };
+
+  const createSubwayIndexOverlayContent = (
+    item: SubwayIndexMapOverlayItem,
+    color: string,
+  ) => {
+    const container = document.createElement("div");
+    container.style.width = "97px";
+    container.style.height = "73px";
+    container.style.background = color;
+    container.style.display = "flex";
+    container.style.flexDirection = "column";
+    container.style.alignItems = "center";
+    container.style.justifyContent = "center";
+    container.style.color = "white";
+    container.style.fontFamily = "'Pretendard', sans-serif";
+    container.style.fontWeight = "700";
+    container.style.boxShadow = "0 3px 8px rgba(0,0,0,0.16)";
+    container.style.textShadow = "0 1px 2px rgba(0,0,0,0.2)";
+
+    const name = document.createElement("div");
+    name.style.fontSize = "15px";
+    name.style.fontWeight = "700";
+    name.style.lineHeight = "1.2";
+    name.textContent = getRegionName(item.name);
+
+    const value = document.createElement("div");
+    value.style.fontSize = "15px";
+    value.style.fontWeight = "700";
+    value.style.lineHeight = "1.2";
+    value.textContent = `${item.value.toFixed(1)}점`;
+
+    container.append(name, value);
+
+    return container;
+  };
+
+  const drawSubwayIndexOverlays = (
+    map: any,
+    items: SubwayIndexMapOverlayItem[],
+  ) => {
+    clearSubwayIndexOverlays();
+
+    items.forEach((item) => {
+      const district = getRegionName(item.name);
+      const center = districtCenters.get(district);
+
+      if (!center) return;
+
+      const overlay = new window.kakao.maps.CustomOverlay({
+        map,
+        position: new window.kakao.maps.LatLng(center.lat, center.lng),
+        zIndex: 6,
+        content: createSubwayIndexOverlayContent(
+          item,
+          getSubwayIndexOverlayColor(item.value),
+        ),
+      });
+
+      subwayIndexOverlaysRef.current.push(overlay);
     });
   };
 
@@ -506,11 +616,20 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
+    drawSubwayIndexOverlays(mapRefInstance.current, subwayIndexItems);
+
+    return () => {
+      clearSubwayIndexOverlays();
+    };
+  }, [isMapReady, subwayIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
     drawConsumerIndexPolygons({
       map: mapRefInstance.current,
       item: consumerIndexItem,
       overlay: overlayRef.current,
-      enableOverlay,
       createPolygonPaths,
       polygonRefs: consumerIndexPolygonsRef.current,
     });
@@ -518,7 +637,7 @@ const Map = ({ enableOverlay = true }: Props) => {
     return () => {
       clearConsumerIndexPolygons(consumerIndexPolygonsRef.current);
     };
-  }, [consumerIndexItem, enableOverlay, isMapReady]);
+  }, [consumerIndexItem, isMapReady]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current || !selectedRentIndexItem) {

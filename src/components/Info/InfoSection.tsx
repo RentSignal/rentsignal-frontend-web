@@ -30,15 +30,13 @@ const InfoSection = () => {
     useState<RentIndexPeriodType>("CURRENT");
   const [consumerIndexPeriodType, setConsumerIndexPeriodType] =
     useState<ConsumerIndexPeriodType>("CURRENT");
-  const [indexSelected, setIndexSelected] =
-    useState<InfoIndexId>("rent-index");
+  const [indexSelected, setIndexSelected] = useState<InfoIndexId>("rent-index");
   const [facilitiesSelected, setFacilitiesSelected] =
     useState<InfoFacilityId>("facility");
 
   const isInfoTab = optionTabIndex === "INFO";
   const isRentIndexActive = isInfoTab && indexSelected === "rent-index";
-  const isConsumerIndexActive =
-    isInfoTab && indexSelected === "consumer-index";
+  const isConsumerIndexActive = isInfoTab && indexSelected === "consumer-index";
   const rentIndex = useRentIndexRankings({
     isActive: isRentIndexActive,
     residenceType,
@@ -101,7 +99,9 @@ const InfoSection = () => {
             <CategoryToggle
               items={facilitiesItems}
               value={facilitiesSelected}
-              onChange={(value) => setFacilitiesSelected(value as InfoFacilityId)}
+              onChange={(value) =>
+                setFacilitiesSelected(value as InfoFacilityId)
+              }
             />
           </div>
           {facilitiesSelected === "facility" && (

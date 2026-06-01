@@ -1,4 +1,5 @@
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
+import { regionMap } from "@/constants/regionMap";
 import type { ConsumerIndexMapOverlayItem } from "@/store/mapOverlayStore";
 import { getConsumerIndexPhase } from "@/utils/consumerIndexPhase";
 
@@ -30,7 +31,6 @@ type DrawConsumerIndexPolygonsParams = {
   map: KakaoMap;
   item: ConsumerIndexMapOverlayItem | null;
   overlay: KakaoOverlay | null;
-  enableOverlay: boolean;
   createPolygonPaths: (rings: number[][][]) => unknown[];
   polygonRefs: KakaoPolygon[];
 };
@@ -46,7 +46,6 @@ export const drawConsumerIndexPolygons = ({
   map,
   item,
   overlay,
-  enableOverlay,
   createPolygonPaths,
   polygonRefs,
 }: DrawConsumerIndexPolygonsParams) => {
@@ -60,6 +59,7 @@ export const drawConsumerIndexPolygons = ({
   (seoulGeoJson.features as GeoJsonFeature[]).forEach((feature) => {
     const { geometry, properties } = feature;
     const guName = properties.SIG_KOR_NM;
+    const region = regionMap[guName];
     const polygons =
       geometry.type === "Polygon"
         ? [geometry.coordinates as number[][][]]
@@ -73,7 +73,7 @@ export const drawConsumerIndexPolygons = ({
         strokeColor: fillColor,
         strokeOpacity: 0.95,
         fillColor,
-        fillOpacity: 0.34,
+        fillOpacity: 0.3,
         zIndex: 3,
       });
 
@@ -85,7 +85,7 @@ export const drawConsumerIndexPolygons = ({
             fillOpacity: 0.52,
           });
 
-          if (!overlay || !enableOverlay) return;
+          if (!overlay) return;
 
           overlay.setContent(`
             <div style="
@@ -98,9 +98,10 @@ export const drawConsumerIndexPolygons = ({
               font-family:'Pretendard', sans-serif;
               box-shadow:0 2px 6px rgba(0,0,0,0.2);
             ">
+              ${region}<br/>
               <strong>${guName}</strong><br/>
-              서울 소비자 심리지수<br/>
-              ${item.year}년 ${item.month}월 ${item.value.toFixed(1)}점<br/>
+              현재 지수 ${item.value.toFixed(1)}점<br/>
+              <span style="font-size:12px;color:#6B7280;">${item.year}년 ${item.month}월 기준</span><br/>
               <span style="color:${fillColor}; font-weight:700;">${phase.label}</span>
             </div>
           `);
@@ -112,7 +113,7 @@ export const drawConsumerIndexPolygons = ({
 
       window.kakao.maps.event.addListener(polygon, "mouseout", () => {
         polygon.setOptions({
-          fillOpacity: 0.34,
+          fillOpacity: 0.3,
         });
 
         if (overlay) {

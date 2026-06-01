@@ -15,25 +15,37 @@ export type ConsumerIndexMapOverlayItem = {
   value: number;
 };
 
+export type SubwayIndexMapOverlayItem = {
+  id: number;
+  name: string;
+  value: number;
+};
+
 type MapOverlayStore = {
   rentIndexItems: RentIndexMapOverlayItem[];
   selectedRentIndexItem: RentIndexMapOverlayItem | null;
   consumerIndexItem: ConsumerIndexMapOverlayItem | null;
+  subwayIndexItems: SubwayIndexMapOverlayItem[];
   setRentIndexItems: (items: RentIndexMapOverlayItem[]) => void;
   selectRentIndexItem: (item: RentIndexMapOverlayItem) => void;
   clearRentIndexItems: () => void;
   setConsumerIndexItem: (item: ConsumerIndexMapOverlayItem) => void;
   clearConsumerIndexItem: () => void;
+  setSubwayIndexItems: (items: SubwayIndexMapOverlayItem[]) => void;
+  clearSubwayIndexItems: () => void;
 };
 
 export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   rentIndexItems: [],
   selectedRentIndexItem: null,
   consumerIndexItem: null,
+  subwayIndexItems: [],
   setRentIndexItems: (items) => set({ rentIndexItems: items }),
   selectRentIndexItem: (item) => set({ selectedRentIndexItem: item }),
   clearRentIndexItems: () =>
     set({ rentIndexItems: [], selectedRentIndexItem: null }),
   setConsumerIndexItem: (item) => set({ consumerIndexItem: item }),
   clearConsumerIndexItem: () => set({ consumerIndexItem: null }),
+  setSubwayIndexItems: (items) => set({ subwayIndexItems: items }),
+  clearSubwayIndexItems: () => set({ subwayIndexItems: [] }),
 }));
