@@ -12,9 +12,6 @@ const REASONS = [
 ];
 
 const DeleteAccount = () => {
-<<<<<<< HEAD
-  return <div> DeleteAccount </div>;
-=======
   const navigate = useNavigate();
   const clearUser = useUserStore((s) => s.clearUser);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -31,7 +28,7 @@ const DeleteAccount = () => {
     if (selected.size === 0) return;
     try {
       const reasons = [...selected].map((i) => REASONS[i]);
-      // await deleteAccount(reasons);
+      await deleteAccount(reasons);
       clearUser();
       navigate("/");
     } catch (e) {
@@ -40,23 +37,25 @@ const DeleteAccount = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      <div className="flex items-center px-4 py-4 border-b border-gray-100">
-        <button onClick={() => navigate(-1)} className="p-1 text-gray-500">
+    <div className="flex flex-col h-screen bg-white font-pretendard">
+      <div className="flex items-center justify-center py-4 border-b border-coolNeutral-95 -mx-5">
+        <button onClick={() => navigate(-1)} className="absolute left-4 p-1 text-coolNeutral-70">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="flex-1 text-center text-base font-semibold">탈퇴하기</h1>
+        <h1 className="text-base font-semibold text-coolNeutral-30">
+          탈퇴하기
+        </h1>
         <div className="w-7" />
       </div>
 
-      <p className="text-sm text-blue-500 leading-relaxed px-4 py-4">
+      <p className="text-sm font-semibold text-blue-60 leading-relaxed px-1 py-4">
         탈퇴 시 계정 및 개인정보가 삭제되며 복구할 수 없습니다.<br />
         정말 탈퇴하시겠습니까?
       </p>
 
-      <p className="text-sm font-semibold text-gray-800 px-4 pb-3">
+      <p className="text-sm font-semibold text-black mt-4 px-1 pb-4">
         탈퇴 하시는 이유를 선택해주세요.
       </p>
 
@@ -65,12 +64,13 @@ const DeleteAccount = () => {
           <button
             key={i}
             onClick={() => toggle(i)}
-            className="flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 px-1 py-2.5 text-left hover:bg-gray-50 transition-colors"
           >
             <span
               className={`w-5 h-5 rounded flex-shrink-0 border flex items-center justify-center transition-colors ${
-                selected.has(i) ? "bg-blue-500 border-blue-500" : "border-gray-300 bg-white"
+                selected.has(i) ? "bg-blue-60" : "bg-white"
               }`}
+              style={{ borderColor : "#D1D1D6"}}
             >
               {selected.has(i) && (
                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,17 +78,17 @@ const DeleteAccount = () => {
                 </svg>
               )}
             </span>
-            <span className="text-sm text-gray-700">{reason}</span>
+            <span className="text-sm font-Pretendard" style={{ color: "#2C2C2E" }}>{reason}</span>
           </button>
         ))}
       </div>
 
-      <div className="mt-auto flex justify-end px-4 pb-6">
+      <div className="mt-20 flex justify-end px-4 pb-6">
         <button
           onClick={handleWithdraw}
           disabled={selected.size === 0}
-          className={`px-7 py-3 rounded-xl text-sm font-semibold transition-colors ${
-            selected.size > 0 ? "bg-blue-500 text-white" : "bg-gray-300 text-white cursor-not-allowed"
+          className={`px-7 py-2 rounded-xl text-sm font-semibold transition-colors ${
+            selected.size > 0 ? "bg-blue-60 text-white" : "bg-coolNeutral-70 text-white cursor-not-allowed"
           }`}
         >
           탈퇴하기
@@ -96,7 +96,6 @@ const DeleteAccount = () => {
       </div>
     </div>
   );
->>>>>>> f2bcc65 (feat:탈퇴하기 구현)
 };
 
 export default DeleteAccount;

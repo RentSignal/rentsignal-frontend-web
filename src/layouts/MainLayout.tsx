@@ -12,7 +12,7 @@ const MainLayout = () => {
   const isHome = location.pathname === "/";
 
   //로고 헤더 숨길 경로들
-  const noHeaderPaths = ["/profile/name", "/profile/phone", "/profile/delete"];
+  const noHeaderPaths = ["/profile/name", "/profile/phone", "/profile/delete", "/profile/posts", "/profile/comments", "/profile/likes",];
   const hideHeader = noHeaderPaths.includes(location.pathname);
 
   const [isOpen, setIsOpen] = useState(true);
