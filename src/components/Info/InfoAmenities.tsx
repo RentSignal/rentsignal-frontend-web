@@ -132,7 +132,7 @@ const AmenityItem = ({
         <div className="text-xs text-coolNeutral-70">{description}</div>
       </div>
 
-      <div className={`text-lg font-bold text-coolNeutral-25`}>{qty}</div>
+      <div className={`text-base font-bold text-coolNeutral-25`}>{qty}</div>
     </button>
   );
 };

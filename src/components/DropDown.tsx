@@ -12,6 +12,7 @@ interface DropDownProps {
   items: SelectItem[];
   value: string;
   onChange: (value: string) => void;
+  onItemSelect?: (value: string) => void;
   placeholder?: string;
   size?: DropDownSize;
   width?: string; // Tailwind width class
@@ -38,6 +39,7 @@ const DropDown = ({
   items,
   value,
   onChange,
+  onItemSelect,
   placeholder = "선택",
   size = "sm",
   width = "",
@@ -76,6 +78,12 @@ const DropDown = ({
               <Select.Item
                 key={item.value}
                 value={item.value}
+                onPointerDown={() => onItemSelect?.(item.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    onItemSelect?.(item.value);
+                  }
+                }}
                 className={`block w-full gap-[14px] text-left font-semibold text-coolNeutral-30 cursor-pointer hover:text-blue-60 ${sizeClass.item}`}
               >
                 <Select.ItemText>{item.label}</Select.ItemText>

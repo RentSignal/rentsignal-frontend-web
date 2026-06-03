@@ -21,4 +21,5 @@ export const API_URL = {
   SUBWAY_INDEX: "/api/info/subway-accessibility",
   CONVENIENCE_INFO: "/api/info/convenience",
   TRANSPORT_INFO: "/api/info/transport",
+  SAFETY_INFO: "/api/info/safety",
 };

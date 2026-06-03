@@ -50,6 +50,22 @@ export type SubwayIndexDistrictItem = {
   value: number;
 };
 
+export type SafetyRankingItem = {
+  rank: number;
+  name: string;
+  value: number;
+};
+
+export type SafetyDistrictScoreItem = {
+  name: string;
+  value: number;
+};
+
+export type SafetyInfoData = {
+  ranking: SafetyRankingItem[];
+  districtSafetyScores: SafetyDistrictScoreItem[];
+};
+
 export type BusinessDistrictType =
   | "GBD_GANGNAM"
   | "GBD_YEOKSAM"
@@ -73,6 +89,25 @@ export type TransportRecommendedNeighborhood = {
   id: number;
   name: string;
   stations: TransportStationItem[];
+};
+
+export type TransportType = "BUS_STOP" | "SUBWAY_STATION";
+
+export type TransportNearbySubwayStation = {
+  lineName: string;
+  stationName: string;
+};
+
+export type TransportCountItem = {
+  transportType: TransportType;
+  count: number;
+  ratioToAverage: number;
+};
+
+export type TransportDetail = {
+  name: string;
+  subwayStations: TransportNearbySubwayStation[];
+  counts: TransportCountItem[];
 };
 
 type RentIndexCurrentResponse = {
@@ -131,6 +166,13 @@ type SubwayIndexResponse = {
   data: SubwayIndexData;
 };
 
+type SafetyInfoResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: SafetyInfoData;
+};
+
 type ConvenienceInfoResponse = {
   success: boolean;
   code: string;
@@ -152,6 +194,13 @@ type TransportListResponse = {
   code: string;
   message: string;
   data: TransportRecommendedNeighborhood[];
+};
+
+type TransportDetailResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: TransportDetail;
 };
 
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {
@@ -212,6 +261,19 @@ export const fetchSubwayIndex = async () => {
   };
 };
 
+export const fetchSafetyInfo = async () => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: API_URL.SAFETY_INFO,
+  })) as SafetyInfoResponse;
+
+  return {
+    ranking: Array.isArray(res.data?.ranking) ? res.data.ranking : [],
+    districtSafetyScores: Array.isArray(res.data?.districtSafetyScores)
+      ? res.data.districtSafetyScores
+      : [],
+  };
+};
+
 export const fetchConvenienceInfo = async () => {
   const res = (await fetchDataFromApiGet({
     apiUrl: API_URL.CONVENIENCE_INFO,
@@ -235,4 +297,12 @@ export const fetchTransportInfo = async (type: BusinessDistrictType) => {
   })) as TransportListResponse;
 
   return Array.isArray(res.data) ? res.data : [];
+};
+
+export const fetchTransportDetail = async (neighborhoodId: number) => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: `${API_URL.TRANSPORT_INFO}/${neighborhoodId}`,
+  })) as TransportDetailResponse;
+
+  return res.data;
 };
