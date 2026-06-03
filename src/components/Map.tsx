@@ -9,6 +9,7 @@ import {
   drawConsumerIndexPolygons,
 } from "@/components/mapOverlays/consumerIndexOverlay";
 import type {
+  ConvenienceMapPin,
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
   SubwayIndexMapOverlayItem,
@@ -52,6 +53,14 @@ const getSubwayIndexOverlayColor = (value: number) => {
   if (value >= 100.4) return "#66D575";
   return "#005EFF";
 };
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 
 const getGeoJsonLngLatPoints = (geometry: any) => {
   const points: number[][] = [];
@@ -162,6 +171,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   const basicPolygonsRef = useRef<any[]>([]);
   const rentIndexOverlaysRef = useRef<any[]>([]);
   const subwayIndexOverlaysRef = useRef<any[]>([]);
+  const convenienceMarkersRef = useRef<any[]>([]);
   const selectedRegionPolygonsRef = useRef<any[]>([]);
   const consumerIndexPolygonsRef = useRef<any[]>([]);
   const rentIndexItems = useMapOverlayStore((state) => state.rentIndexItems);
@@ -174,6 +184,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   const subwayIndexItems = useMapOverlayStore(
     (state) => state.subwayIndexItems,
   );
+  const conveniencePins = useMapOverlayStore((state) => state.conveniencePins);
 
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
   const [isMapReady, setIsMapReady] = useState(false);
@@ -344,6 +355,13 @@ const Map = ({ enableOverlay = true }: Props) => {
     subwayIndexOverlaysRef.current = [];
   };
 
+  const clearConvenienceMarkers = () => {
+    convenienceMarkersRef.current.forEach((marker) => {
+      marker.setMap(null);
+    });
+    convenienceMarkersRef.current = [];
+  };
+
   const clearSelectedRegionPolygons = () => {
     selectedRegionPolygonsRef.current.forEach((polygon) => {
       polygon.setMap(null);
@@ -511,6 +529,52 @@ const Map = ({ enableOverlay = true }: Props) => {
     });
   };
 
+  const drawConvenienceMarkers = (map: any, pins: ConvenienceMapPin[]) => {
+    clearConvenienceMarkers();
+
+    if (pins.length === 0) {
+      return;
+    }
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+
+    pins.forEach((pin) => {
+      const position = new window.kakao.maps.LatLng(
+        pin.latitude,
+        pin.longitude,
+      );
+      const marker = new window.kakao.maps.Marker({
+        map,
+        position,
+        title: pin.name,
+      });
+
+      const infoWindow = new window.kakao.maps.InfoWindow({
+        content: `<div style="padding:6px 10px;font-size:12px;white-space:nowrap;">${escapeHtml(pin.name)}</div>`,
+      });
+
+      window.kakao.maps.event.addListener(marker, "mouseover", () => {
+        infoWindow.open(map, marker);
+      });
+      window.kakao.maps.event.addListener(marker, "mouseout", () => {
+        infoWindow.close();
+      });
+
+      convenienceMarkersRef.current.push(marker);
+      bounds.extend(position);
+    });
+
+    if (pins.length === 1) {
+      map.panTo(
+        new window.kakao.maps.LatLng(pins[0].latitude, pins[0].longitude),
+      );
+      map.setLevel(4);
+      return;
+    }
+
+    map.setBounds(bounds);
+  };
+
   const selectRentIndexItemOnMap = (
     map: any,
     item: RentIndexMapOverlayItem,
@@ -622,6 +686,16 @@ const Map = ({ enableOverlay = true }: Props) => {
       clearSubwayIndexOverlays();
     };
   }, [isMapReady, subwayIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawConvenienceMarkers(mapRefInstance.current, conveniencePins);
+
+    return () => {
+      clearConvenienceMarkers();
+    };
+  }, [conveniencePins, isMapReady]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;

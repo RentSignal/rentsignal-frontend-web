@@ -21,11 +21,18 @@ export type SubwayIndexMapOverlayItem = {
   value: number;
 };
 
+export type ConvenienceMapPin = {
+  name: string;
+  latitude: number;
+  longitude: number;
+};
+
 type MapOverlayStore = {
   rentIndexItems: RentIndexMapOverlayItem[];
   selectedRentIndexItem: RentIndexMapOverlayItem | null;
   consumerIndexItem: ConsumerIndexMapOverlayItem | null;
   subwayIndexItems: SubwayIndexMapOverlayItem[];
+  conveniencePins: ConvenienceMapPin[];
   setRentIndexItems: (items: RentIndexMapOverlayItem[]) => void;
   selectRentIndexItem: (item: RentIndexMapOverlayItem) => void;
   clearRentIndexItems: () => void;
@@ -33,6 +40,8 @@ type MapOverlayStore = {
   clearConsumerIndexItem: () => void;
   setSubwayIndexItems: (items: SubwayIndexMapOverlayItem[]) => void;
   clearSubwayIndexItems: () => void;
+  setConveniencePins: (pins: ConvenienceMapPin[]) => void;
+  clearConveniencePins: () => void;
 };
 
 export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
@@ -40,6 +49,7 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   selectedRentIndexItem: null,
   consumerIndexItem: null,
   subwayIndexItems: [],
+  conveniencePins: [],
   setRentIndexItems: (items) => set({ rentIndexItems: items }),
   selectRentIndexItem: (item) => set({ selectedRentIndexItem: item }),
   clearRentIndexItems: () =>
@@ -48,4 +58,6 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   clearConsumerIndexItem: () => set({ consumerIndexItem: null }),
   setSubwayIndexItems: (items) => set({ subwayIndexItems: items }),
   clearSubwayIndexItems: () => set({ subwayIndexItems: [] }),
+  setConveniencePins: (pins) => set({ conveniencePins: pins }),
+  clearConveniencePins: () => set({ conveniencePins: [] }),
 }));

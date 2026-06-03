@@ -18,13 +18,15 @@ import {
   fetchConvenienceDetail,
   fetchConvenienceInfo,
   type ConsumerIndexPeriodType,
-  type ConvenienceDetailData,
+  type ConvenienceCategoryKey,
+  type ConvenienceDetail,
   type ConvenienceRankingItem,
   type HousingType,
   type RentIndexPeriodType,
 } from "@/services/infoApi";
 import { useConsumerIndex } from "@/hooks/useConsumerIndex";
 import { useRentIndexRankings } from "@/hooks/useRentIndexRankings";
+import { useMapOverlayStore } from "@/store/mapOverlayStore";
 
 const InfoSection = () => {
   const [optionTabIndex, setOptionTabIndex] =
@@ -46,11 +48,19 @@ const InfoSection = () => {
     number | null
   >(null);
   const [selectedConvenienceDetail, setSelectedConvenienceDetail] =
-    useState<ConvenienceDetailData | null>(null);
+    useState<ConvenienceDetail | null>(null);
+  const [selectedConvenienceCategoryKey, setSelectedConvenienceCategoryKey] =
+    useState<ConvenienceCategoryKey | null>(null);
   const [isConvenienceDetailLoading, setIsConvenienceDetailLoading] =
     useState(false);
   const [convenienceDetailErrorMessage, setConvenienceDetailErrorMessage] =
     useState("");
+  const setConvenienceMapPins = useMapOverlayStore(
+    (state) => state.setConveniencePins,
+  );
+  const clearConvenienceMapPins = useMapOverlayStore(
+    (state) => state.clearConveniencePins,
+  );
 
   const isInfoTab = optionTabIndex === "INFO";
   const isLifestyleTab = optionTabIndex === "LIFESTYLE";
@@ -109,9 +119,11 @@ const InfoSection = () => {
 
     setSelectedConvenienceId(null);
     setSelectedConvenienceDetail(null);
+    setSelectedConvenienceCategoryKey(null);
     setConvenienceDetailErrorMessage("");
     setIsConvenienceDetailLoading(false);
-  }, [isConvenienceActive]);
+    clearConvenienceMapPins();
+  }, [clearConvenienceMapPins, isConvenienceActive]);
 
   const indexItems = useMemo(() => {
     return indexItemsBase.map((item) => ({
@@ -138,27 +150,41 @@ const InfoSection = () => {
 
     return [
       {
+        key: "mart",
         title: "대형마트",
         description: "대형 유통 매장 및 창고형 마트",
         qty: selectedConvenienceDetail.mart?.count ?? 0,
+        conveniences: selectedConvenienceDetail.mart?.conveniences ?? [],
       },
       {
+        key: "convenienceStore",
         title: "편의점",
         description: "주변 24시간 운영 편의점",
         qty: selectedConvenienceDetail.convenienceStore?.count ?? 0,
+        conveniences:
+          selectedConvenienceDetail.convenienceStore?.conveniences ?? [],
       },
       {
+        key: "hospital",
         title: "병원",
         description: "동네 병원, 의원 및 전문의원",
         qty: selectedConvenienceDetail.hospital?.count ?? 0,
+        conveniences: selectedConvenienceDetail.hospital?.conveniences ?? [],
       },
       {
+        key: "cafe",
         title: "카페",
         description: "주변 카페 및 베이커리 디저트 매장",
         qty: selectedConvenienceDetail.cafe?.count ?? 0,
+        conveniences: selectedConvenienceDetail.cafe?.conveniences ?? [],
       },
     ];
   }, [selectedConvenienceDetail]);
+
+  const handleAmenityItemClick = (item: InfoAmenityItem) => {
+    setSelectedConvenienceCategoryKey(item.key);
+    setConvenienceMapPins(item.conveniences);
+  };
 
   const handleConvenienceRankingClick = async (item: RankingListItem) => {
     const neighborhoodId = item.id ?? item.neighborhoodId;
@@ -174,6 +200,8 @@ const InfoSection = () => {
     try {
       setSelectedConvenienceId(neighborhoodId);
       setSelectedConvenienceDetail(null);
+      setSelectedConvenienceCategoryKey(null);
+      clearConvenienceMapPins();
       setConvenienceDetailErrorMessage("");
       setIsConvenienceDetailLoading(true);
 
@@ -181,6 +209,8 @@ const InfoSection = () => {
       setSelectedConvenienceDetail(detail);
     } catch {
       setSelectedConvenienceDetail(null);
+      setSelectedConvenienceCategoryKey(null);
+      clearConvenienceMapPins();
       setConvenienceDetailErrorMessage(
         "편의시설 상세 데이터를 불러오지 못했습니다.",
       );
@@ -256,6 +286,8 @@ const InfoSection = () => {
                   <InfoAmenities
                     title={selectedConvenienceDetail.name}
                     items={selectedConvenienceItems}
+                    selectedCategoryKey={selectedConvenienceCategoryKey}
+                    onAmenityItemClick={handleAmenityItemClick}
                   />
                   <Divider />
                 </>

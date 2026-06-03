@@ -22,23 +22,29 @@ export type ConvenienceRankingItem = {
   count: number;
 };
 
-export type ConveniencePlaceItem = {
+export type ConvenienceCategoryKey =
+  | "mart"
+  | "convenienceStore"
+  | "hospital"
+  | "cafe";
+
+export type ConveniencePlace = {
   name: string;
   latitude: number;
   longitude: number;
 };
 
-export type ConvenienceGroup = {
+export type ConvenienceCategory = {
   count: number;
-  conveniences: ConveniencePlaceItem[];
+  conveniences: ConveniencePlace[];
 };
 
-export type ConvenienceDetailData = {
+export type ConvenienceDetail = {
   name: string;
-  mart: ConvenienceGroup;
-  convenienceStore: ConvenienceGroup;
-  hospital: ConvenienceGroup;
-  cafe: ConvenienceGroup;
+  mart: ConvenienceCategory;
+  convenienceStore: ConvenienceCategory;
+  hospital: ConvenienceCategory;
+  cafe: ConvenienceCategory;
 };
 
 export type SubwayIndexDistrictItem = {
@@ -116,7 +122,7 @@ type ConvenienceDetailResponse = {
   success: boolean;
   code: string;
   message: string;
-  data: ConvenienceDetailData;
+  data: ConvenienceDetail;
 };
 
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {

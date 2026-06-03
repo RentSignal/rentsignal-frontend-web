@@ -7,17 +7,24 @@ import {
   Store,
 } from "lucide-react";
 import { Fragment } from "react";
+import type {
+  ConvenienceCategoryKey,
+  ConveniencePlace,
+} from "@/services/infoApi";
 
 export type InfoAmenityItem = {
+  key: ConvenienceCategoryKey;
   title: string;
   description: string;
   qty: number;
-  type?: string;
+  conveniences: ConveniencePlace[];
 };
 
 type AmenitiesProps = {
   title: string;
   items: InfoAmenityItem[];
+  selectedCategoryKey?: ConvenienceCategoryKey | null;
+  onAmenityItemClick?: (item: InfoAmenityItem) => void;
 };
 
 type AmenityItemProps = InfoAmenityItem & {
@@ -64,7 +71,12 @@ const amenityStyleMap: Record<
 
 const defaultAmenityStyle = amenityStyleMap["편의점"];
 
-const InfoAmenities = ({ title, items }: AmenitiesProps) => {
+const InfoAmenities = ({
+  title,
+  items,
+  selectedCategoryKey,
+  onAmenityItemClick,
+}: AmenitiesProps) => {
   return (
     <section className="px-5">
       <div className="mb-5">
@@ -73,7 +85,11 @@ const InfoAmenities = ({ title, items }: AmenitiesProps) => {
         </h2>
       </div>
 
-      <AmenityList items={items} />
+      <AmenityList
+        items={items}
+        selectedCategoryKey={selectedCategoryKey}
+        onAmenityItemClick={onAmenityItemClick}
+      />
       <div className="h-[41px]"></div>
     </section>
   );
@@ -86,9 +102,21 @@ const AmenityItem = ({
   icon,
   bgColor,
   textColor,
-}: AmenityItemProps) => {
+  isSelected,
+  onClick,
+}: AmenityItemProps & {
+  isSelected: boolean;
+  onClick?: () => void;
+}) => {
   return (
-    <div className="flex items-center gap-[15px] bg-white px-[18px] py-[15px]">
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full items-center gap-[15px] bg-white px-[18px] py-[15px] text-left transition-colors hover:bg-coolNeutral-99 disabled:hover:bg-white ${
+        isSelected ? "bg-coolNeutral-99" : ""
+      }`}
+      disabled={!onClick}
+    >
       <div
         className={`flex h-[43px] w-[43px] shrink-0 items-center justify-center rounded-[10px] ${bgColor} ${textColor}`}
       >
@@ -105,27 +133,41 @@ const AmenityItem = ({
       </div>
 
       <div className={`text-lg font-bold text-coolNeutral-25`}>{qty}</div>
-    </div>
+    </button>
   );
 };
 
-const AmenityList = ({ items }: { items: InfoAmenityItem[] }) => {
+const AmenityList = ({
+  items,
+  selectedCategoryKey,
+  onAmenityItemClick,
+}: {
+  items: InfoAmenityItem[];
+  selectedCategoryKey?: ConvenienceCategoryKey | null;
+  onAmenityItemClick?: (item: InfoAmenityItem) => void;
+}) => {
   return (
     <div className="flex flex-col">
       {items.map((amenity, index) => {
-        const style =
-          amenityStyleMap[amenity.type ?? amenity.title] ?? defaultAmenityStyle;
+        const style = amenityStyleMap[amenity.title] ?? defaultAmenityStyle;
 
         return (
-          <Fragment key={amenity.type ?? amenity.title}>
+          <Fragment key={amenity.key}>
             <AmenityItem
+              key={amenity.key}
               title={amenity.title}
               description={amenity.description}
               qty={amenity.qty}
-              type={amenity.type}
+              conveniences={amenity.conveniences}
               icon={style.icon}
               bgColor={style.bgColor}
               textColor={style.textColor}
+              isSelected={selectedCategoryKey === amenity.key}
+              onClick={
+                onAmenityItemClick
+                  ? () => onAmenityItemClick(amenity)
+                  : undefined
+              }
             />
 
             {index !== items.length - 1 && (
