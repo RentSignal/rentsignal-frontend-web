@@ -2,10 +2,7 @@ import { fetchDataFromApiGet } from "./api";
 import { API_URL } from "./url";
 
 export type HousingType = "APARTMENT" | "MULTI_FAMILY_HOUSE";
-export type RentIndexChangePeriodType =
-  | "ONE_YEAR"
-  | "SIX_MONTH"
-  | "ONE_MONTH";
+export type RentIndexChangePeriodType = "ONE_YEAR" | "SIX_MONTH" | "ONE_MONTH";
 export type RentIndexPeriodType = RentIndexChangePeriodType | "CURRENT";
 export type ConsumerIndexPeriodType = RentIndexPeriodType;
 
@@ -51,6 +48,31 @@ export type SubwayIndexDistrictItem = {
   id: number;
   name: string;
   value: number;
+};
+
+export type BusinessDistrictType =
+  | "GBD_GANGNAM"
+  | "GBD_YEOKSAM"
+  | "GBD_SAMSEONG"
+  | "GBD_JAMSIL"
+  | "YBD_YEOUIDO"
+  | "YBD_YEOUINARU"
+  | "YBD_DANGSAN"
+  | "CBD_GWANGHWAMUN"
+  | "CBD_CITYHALL"
+  | "CBD_JONGGAK";
+
+export type TransportStationItem = {
+  lineName: string;
+  stationName: string;
+  travelTimeMinutes: number;
+  travelTimeSeconds: number;
+};
+
+export type TransportRecommendedNeighborhood = {
+  id: number;
+  name: string;
+  stations: TransportStationItem[];
 };
 
 type RentIndexCurrentResponse = {
@@ -125,6 +147,13 @@ type ConvenienceDetailResponse = {
   data: ConvenienceDetail;
 };
 
+type TransportListResponse = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: TransportRecommendedNeighborhood[];
+};
+
 const getCurrentRentIndexItems = (res: RentIndexCurrentResponse) => {
   return Array.isArray(res.data?.indexes) ? res.data.indexes : [];
 };
@@ -176,9 +205,7 @@ export const fetchSubwayIndex = async () => {
 
   return {
     high: Array.isArray(res.data?.high) ? res.data.high : [],
-    changeRate: Array.isArray(res.data?.changeRate)
-      ? res.data.changeRate
-      : [],
+    changeRate: Array.isArray(res.data?.changeRate) ? res.data.changeRate : [],
     districtIndexes: Array.isArray(res.data?.districtIndexes)
       ? res.data.districtIndexes
       : [],
@@ -199,4 +226,13 @@ export const fetchConvenienceDetail = async (neighborhoodId: number) => {
   })) as ConvenienceDetailResponse;
 
   return res.data;
+};
+
+export const fetchTransportInfo = async (type: BusinessDistrictType) => {
+  const res = (await fetchDataFromApiGet({
+    apiUrl: API_URL.TRANSPORT_INFO,
+    params: { type },
+  })) as TransportListResponse;
+
+  return Array.isArray(res.data) ? res.data : [];
 };

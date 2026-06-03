@@ -20,4 +20,5 @@ export const API_URL = {
   CONSUMER_INDEX: "/api/info/consumer-sentiment",
   SUBWAY_INDEX: "/api/info/subway-accessibility",
   CONVENIENCE_INFO: "/api/info/convenience",
+  TRANSPORT_INFO: "/api/info/transport",
 };

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import CategoryToggle from "@/components/Info/CategoryToggle";
 import Divider from "../Divider";
+import DropDown from "../DropDown";
 import RankingList, { type RankingListItem } from "../RankingList";
 import InfoSectionToggle from "./section/InfoSectionToggle";
 import InfoAmenities, { type InfoAmenityItem } from "./InfoAmenities";
@@ -17,16 +18,48 @@ import {
 import {
   fetchConvenienceDetail,
   fetchConvenienceInfo,
+  fetchTransportInfo,
+  type BusinessDistrictType,
   type ConsumerIndexPeriodType,
   type ConvenienceCategoryKey,
   type ConvenienceDetail,
   type ConvenienceRankingItem,
   type HousingType,
   type RentIndexPeriodType,
+  type TransportRecommendedNeighborhood,
+  type TransportStationItem,
 } from "@/services/infoApi";
 import { useConsumerIndex } from "@/hooks/useConsumerIndex";
 import { useRentIndexRankings } from "@/hooks/useRentIndexRankings";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
+
+const businessDistrictItems = [
+  { value: "GBD_GANGNAM", label: "강남역 출퇴근 추천 동네" },
+  { value: "GBD_YEOKSAM", label: "역삼역 출퇴근 추천 동네" },
+  { value: "GBD_SAMSEONG", label: "삼성역 출퇴근 추천 동네" },
+  { value: "GBD_JAMSIL", label: "잠실역 출퇴근 추천 동네" },
+  { value: "YBD_YEOUIDO", label: "여의도역 출퇴근 추천 동네" },
+  { value: "YBD_YEOUINARU", label: "여의나루역 출퇴근 추천 동네" },
+  { value: "YBD_DANGSAN", label: "당산역 출퇴근 추천 동네" },
+  { value: "CBD_GWANGHWAMUN", label: "광화문역 출퇴근 추천 동네" },
+  { value: "CBD_CITYHALL", label: "시청역 출퇴근 추천 동네" },
+  { value: "CBD_JONGGAK", label: "종각역 출퇴근 추천 동네" },
+] satisfies { value: BusinessDistrictType; label: string }[];
+
+const getTravelTimeLabel = (station?: TransportStationItem) => {
+  if (!station) {
+    return "소요 시간 정보 없음";
+  }
+
+  const minutes = station.travelTimeMinutes;
+  const seconds = station.travelTimeSeconds;
+
+  if (seconds === 0) {
+    return `약 ${minutes}분`;
+  }
+
+  return `약 ${minutes}분 ${seconds}초`;
+};
 
 const InfoSection = () => {
   const [optionTabIndex, setOptionTabIndex] =
@@ -39,6 +72,13 @@ const InfoSection = () => {
   const [indexSelected, setIndexSelected] = useState<InfoIndexId>("rent-index");
   const [facilitiesSelected, setFacilitiesSelected] =
     useState<InfoFacilityId>("facility");
+  const [businessDistrictType, setBusinessDistrictType] =
+    useState<BusinessDistrictType>("GBD_GANGNAM");
+  const [transportNeighborhoods, setTransportNeighborhoods] = useState<
+    TransportRecommendedNeighborhood[]
+  >([]);
+  const [isTransportLoading, setIsTransportLoading] = useState(false);
+  const [transportErrorMessage, setTransportErrorMessage] = useState("");
   const [convenienceRankings, setConvenienceRankings] = useState<
     ConvenienceRankingItem[]
   >([]);
@@ -68,6 +108,8 @@ const InfoSection = () => {
   const isConsumerIndexActive = isInfoTab && indexSelected === "consumer-index";
   const isConvenienceActive =
     isLifestyleTab && facilitiesSelected === "facility";
+  const isTransportActive =
+    isLifestyleTab && facilitiesSelected === "transport";
   const rentIndex = useRentIndexRankings({
     isActive: isRentIndexActive,
     residenceType,
@@ -124,6 +166,44 @@ const InfoSection = () => {
     setIsConvenienceDetailLoading(false);
     clearConvenienceMapPins();
   }, [clearConvenienceMapPins, isConvenienceActive]);
+
+  useEffect(() => {
+    if (!isTransportActive) {
+      setTransportNeighborhoods([]);
+      setTransportErrorMessage("");
+      setIsTransportLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const fetchNeighborhoods = async () => {
+      try {
+        setIsTransportLoading(true);
+        setTransportErrorMessage("");
+
+        const neighborhoods = await fetchTransportInfo(businessDistrictType);
+        console.log(neighborhoods);
+
+        if (!controller.signal.aborted) {
+          setTransportNeighborhoods(neighborhoods);
+        }
+      } catch {
+        if (!controller.signal.aborted) {
+          setTransportNeighborhoods([]);
+          setTransportErrorMessage("교통 추천 동네를 불러오지 못했습니다.");
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsTransportLoading(false);
+        }
+      }
+    };
+
+    fetchNeighborhoods();
+
+    return () => controller.abort();
+  }, [businessDistrictType, isTransportActive]);
 
   const indexItems = useMemo(() => {
     return indexItemsBase.map((item) => ({
@@ -193,7 +273,10 @@ const InfoSection = () => {
       return;
     }
 
-    if (isConvenienceDetailLoading && selectedConvenienceId === neighborhoodId) {
+    if (
+      isConvenienceDetailLoading &&
+      selectedConvenienceId === neighborhoodId
+    ) {
       return;
     }
 
@@ -292,7 +375,7 @@ const InfoSection = () => {
                   <Divider />
                 </>
               )}
-              <div className="flex flex-col gap-[18px] pt-5">
+              <div className="flex flex-col gap-[18px]">
                 <RankingList
                   title="편의시설 상위 7곳"
                   showDropDown={false}
@@ -306,6 +389,73 @@ const InfoSection = () => {
                 />
               </div>
               <div className="h-[150px]" />
+            </>
+          )}
+          {facilitiesSelected == "transport" && (
+            <>
+              <div className="flex flex-col gap-[23px] px-5">
+                <h2 className="text-xl font-semibold text-coolNeutral-10">
+                  주요 업무지구 평균 접근 추천 동네
+                </h2>
+                <DropDown
+                  items={businessDistrictItems}
+                  value={businessDistrictType}
+                  onChange={(value) =>
+                    setBusinessDistrictType(value as BusinessDistrictType)
+                  }
+                  placeholder="업무지구 선택"
+                  size="lg"
+                  width="w-full"
+                />
+                <div className="flex flex-col gap-5 mb-20">
+                  {isTransportLoading && (
+                    <div className="flex items-center justify-center py-[28px]">
+                      <div className="w-6 h-6 border-[3px] border-coolNeutral-95 border-t-blue-60 rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {!isTransportLoading && transportErrorMessage && (
+                    <div className="py-[10px] text-sm text-coolNeutral-50">
+                      {transportErrorMessage}
+                    </div>
+                  )}
+                  {!isTransportLoading &&
+                    !transportErrorMessage &&
+                    transportNeighborhoods.length === 0 && (
+                      <div className="py-[10px] text-sm text-coolNeutral-50">
+                        표시할 교통 추천 동네가 없습니다.
+                      </div>
+                    )}
+                  {!isTransportLoading &&
+                    !transportErrorMessage &&
+                    transportNeighborhoods.map((neighborhood) => {
+                      const primaryStation = neighborhood.stations[0];
+
+                      return (
+                        <div
+                          key={neighborhood.id}
+                          className="rounded-[12px] border-[1px] border-coolNeutral-95 bg-white px-[18px] py-[18px] shadow-[0_1px_2px_rgba(0,0,0,0.12)]"
+                        >
+                          <h4 className="text-lg font-semibold text-coolNeutral-25">
+                            {neighborhood.name}
+                          </h4>
+                          <div className="flex flex-wrap gap-2 mt-[5px]">
+                            <span className="rounded-full border border-blue-70 px-[10px] py-[6px] text-sm font-medium text-coolNeutral-30">
+                              {primaryStation?.stationName ?? "역 정보 없음"}
+                            </span>
+                            <span className="rounded-full border border-blue-70 px-[10px] py-[6px] text-sm font-medium text-coolNeutral-30">
+                              {getTravelTimeLabel(primaryStation)}
+                            </span>
+                            {primaryStation && (
+                              <span className="rounded-full border border-blue-70 px-[10px] py-[6px] text-sm font-medium text-coolNeutral-30">
+                                {primaryStation.lineName}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
             </>
           )}
         </>
