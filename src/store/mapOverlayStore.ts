@@ -32,6 +32,27 @@ export type ConvenienceMapPin = {
   longitude: number;
 };
 
+export type SubwayLinePathPoint = {
+  latitude: number;
+  longitude: number;
+};
+
+export type SubwayLinePolyline = {
+  lineName: string;
+  color?: string;
+  path: SubwayLinePathPoint[];
+};
+
+export type SubwayStationMarker = {
+  stationName: string;
+  lineName: string;
+  sourceStationName?: string;
+  sourceLineName?: string;
+  latitude: number;
+  longitude: number;
+  color?: string;
+};
+
 export type ConvenienceMarkerType =
   | "mart"
   | "convenienceStore"
@@ -44,6 +65,10 @@ type MapOverlayStore = {
   consumerIndexItem: ConsumerIndexMapOverlayItem | null;
   subwayIndexItems: SubwayIndexMapOverlayItem[];
   safetyIndexItems: SafetyIndexMapOverlayItem[];
+  selectedTransportNeighborhoodName: string | null;
+  subwayLinePolylines: SubwayLinePolyline[];
+  subwayStationMarkers: SubwayStationMarker[];
+  selectedSubwayStationMarker: SubwayStationMarker | null;
   conveniencePins: ConvenienceMapPin[];
   convenienceMarkerType: ConvenienceMarkerType | null;
   setRentIndexItems: (items: RentIndexMapOverlayItem[]) => void;
@@ -55,6 +80,14 @@ type MapOverlayStore = {
   clearSubwayIndexItems: () => void;
   setSafetyIndexItems: (items: SafetyIndexMapOverlayItem[]) => void;
   clearSafetyIndexItems: () => void;
+  selectTransportNeighborhood: (name: string) => void;
+  clearSelectedTransportNeighborhood: () => void;
+  setSubwayLinePolylines: (polylines: SubwayLinePolyline[]) => void;
+  setSubwayStationMarkers: (markers: SubwayStationMarker[]) => void;
+  selectSubwayStationMarker: (marker: SubwayStationMarker) => void;
+  clearSubwayLinePolylines: () => void;
+  clearSubwayStationMarkers: () => void;
+  clearSelectedSubwayStationMarker: () => void;
   setConveniencePins: (
     pins: ConvenienceMapPin[],
     markerType: ConvenienceMarkerType,
@@ -68,6 +101,10 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   consumerIndexItem: null,
   subwayIndexItems: [],
   safetyIndexItems: [],
+  selectedTransportNeighborhoodName: null,
+  subwayLinePolylines: [],
+  subwayStationMarkers: [],
+  selectedSubwayStationMarker: null,
   conveniencePins: [],
   convenienceMarkerType: null,
   setRentIndexItems: (items) => set({ rentIndexItems: items }),
@@ -80,6 +117,20 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   clearSubwayIndexItems: () => set({ subwayIndexItems: [] }),
   setSafetyIndexItems: (items) => set({ safetyIndexItems: items }),
   clearSafetyIndexItems: () => set({ safetyIndexItems: [] }),
+  selectTransportNeighborhood: (name) =>
+    set({ selectedTransportNeighborhoodName: name }),
+  clearSelectedTransportNeighborhood: () =>
+    set({ selectedTransportNeighborhoodName: null }),
+  setSubwayLinePolylines: (polylines) =>
+    set({ subwayLinePolylines: polylines }),
+  setSubwayStationMarkers: (markers) => set({ subwayStationMarkers: markers }),
+  selectSubwayStationMarker: (marker) =>
+    set({ selectedSubwayStationMarker: marker }),
+  clearSubwayLinePolylines: () => set({ subwayLinePolylines: [] }),
+  clearSubwayStationMarkers: () =>
+    set({ subwayStationMarkers: [], selectedSubwayStationMarker: null }),
+  clearSelectedSubwayStationMarker: () =>
+    set({ selectedSubwayStationMarker: null }),
   setConveniencePins: (pins, markerType) =>
     set({ conveniencePins: pins, convenienceMarkerType: markerType }),
   clearConveniencePins: () =>

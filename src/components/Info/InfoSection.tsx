@@ -31,12 +31,14 @@ import {
   type SafetyInfoData,
   type TransportCountItem,
   type TransportDetail,
+  type TransportNearbySubwayStation,
   type TransportRecommendedNeighborhood,
   type TransportStationItem,
 } from "@/services/infoApi";
 import { useConsumerIndex } from "@/hooks/useConsumerIndex";
 import { useRentIndexRankings } from "@/hooks/useRentIndexRankings";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
+import { getSubwayLineOverlayData } from "@/utils/subwayLines";
 import SafetyIndexBar from "@/assets/icons/safety_phrase.svg?react";
 
 const businessDistrictItems = [
@@ -248,6 +250,27 @@ const InfoSection = () => {
   const clearSafetyIndexMapItems = useMapOverlayStore(
     (state) => state.clearSafetyIndexItems,
   );
+  const selectTransportNeighborhoodOnMap = useMapOverlayStore(
+    (state) => state.selectTransportNeighborhood,
+  );
+  const clearSelectedTransportNeighborhoodOnMap = useMapOverlayStore(
+    (state) => state.clearSelectedTransportNeighborhood,
+  );
+  const setSubwayLinePolylines = useMapOverlayStore(
+    (state) => state.setSubwayLinePolylines,
+  );
+  const setSubwayStationMarkers = useMapOverlayStore(
+    (state) => state.setSubwayStationMarkers,
+  );
+  const selectSubwayStationMarker = useMapOverlayStore(
+    (state) => state.selectSubwayStationMarker,
+  );
+  const clearSubwayLinePolylines = useMapOverlayStore(
+    (state) => state.clearSubwayLinePolylines,
+  );
+  const clearSubwayStationMarkers = useMapOverlayStore(
+    (state) => state.clearSubwayStationMarkers,
+  );
 
   const isInfoTab = optionTabIndex === "INFO";
   const isLifestyleTab = optionTabIndex === "LIFESTYLE";
@@ -267,6 +290,13 @@ const InfoSection = () => {
     isActive: isConsumerIndexActive,
     periodType: consumerIndexPeriodType,
   });
+  const selectedSubwayLineOverlayData = useMemo(() => {
+    if (!isTransportActive || !selectedTransportDetail?.subwayStations.length) {
+      return { polylines: [], stationMarkers: [] };
+    }
+
+    return getSubwayLineOverlayData(selectedTransportDetail.subwayStations);
+  }, [isTransportActive, selectedTransportDetail?.subwayStations]);
 
   useEffect(() => {
     if (!isConvenienceActive) {
@@ -323,6 +353,9 @@ const InfoSection = () => {
       setSelectedTransportDetail(null);
       setTransportDetailErrorMessage("");
       setIsTransportDetailLoading(false);
+      clearSelectedTransportNeighborhoodOnMap();
+      clearSubwayLinePolylines();
+      clearSubwayStationMarkers();
       return;
     }
 
@@ -334,6 +367,9 @@ const InfoSection = () => {
         setTransportErrorMessage("");
         setSelectedTransportDetail(null);
         setTransportDetailErrorMessage("");
+        clearSelectedTransportNeighborhoodOnMap();
+        clearSubwayLinePolylines();
+        clearSubwayStationMarkers();
 
         const neighborhoods = await fetchTransportInfo(businessDistrictType);
 
@@ -355,7 +391,40 @@ const InfoSection = () => {
     fetchNeighborhoods();
 
     return () => controller.abort();
-  }, [businessDistrictSelectKey, businessDistrictType, isTransportActive]);
+  }, [
+    businessDistrictSelectKey,
+    businessDistrictType,
+    clearSelectedTransportNeighborhoodOnMap,
+    clearSubwayLinePolylines,
+    clearSubwayStationMarkers,
+    isTransportActive,
+  ]);
+
+  useEffect(() => {
+    if (!isTransportActive || !selectedTransportDetail?.subwayStations.length) {
+      clearSubwayLinePolylines();
+      clearSubwayStationMarkers();
+      return;
+    }
+
+    const { polylines, stationMarkers } = selectedSubwayLineOverlayData;
+
+    setSubwayLinePolylines(polylines);
+    setSubwayStationMarkers(stationMarkers);
+
+    return () => {
+      clearSubwayLinePolylines();
+      clearSubwayStationMarkers();
+    };
+  }, [
+    clearSubwayLinePolylines,
+    clearSubwayStationMarkers,
+    isTransportActive,
+    selectedTransportDetail?.subwayStations,
+    selectedSubwayLineOverlayData,
+    setSubwayLinePolylines,
+    setSubwayStationMarkers,
+  ]);
 
   useEffect(() => {
     if (!isSafetyActive) {
@@ -509,6 +578,7 @@ const InfoSection = () => {
       setSelectedTransportDetail(null);
       setTransportDetailErrorMessage("");
       setIsTransportDetailLoading(true);
+      selectTransportNeighborhoodOnMap(neighborhood.name);
 
       const detail = await fetchTransportDetail(neighborhood.id);
 
@@ -519,6 +589,26 @@ const InfoSection = () => {
     } finally {
       setIsTransportDetailLoading(false);
     }
+  };
+
+  const handleSubwayStationClick = (station: TransportNearbySubwayStation) => {
+    const stationMarker =
+      selectedSubwayLineOverlayData.stationMarkers.find(
+        (marker) =>
+          marker.sourceStationName === station.stationName &&
+          marker.sourceLineName === station.lineName,
+      ) ??
+      selectedSubwayLineOverlayData.stationMarkers.find(
+        (marker) =>
+          marker.sourceStationName === station.stationName ||
+          marker.stationName === station.stationName,
+      );
+
+    if (!stationMarker) {
+      return;
+    }
+
+    selectSubwayStationMarker(stationMarker);
   };
 
   const handleSafetyRankingClick = (item: RankingListItem) => {
@@ -680,9 +770,13 @@ const InfoSection = () => {
                                   isNumberLineLabel(lineLabel);
 
                                 return (
-                                  <div
+                                  <button
+                                    type="button"
                                     key={`${station.lineName}-${station.stationName}`}
-                                    className="flex items-center gap-2"
+                                    onClick={() =>
+                                      handleSubwayStationClick(station)
+                                    }
+                                    className="flex items-center gap-2 rounded-[6px] py-1 text-left transition-colors hover:bg-coolNeutral-99"
                                   >
                                     <span
                                       className={`flex h-6 items-center justify-center whitespace-nowrap rounded-full text-xs font-bold text-white ${
@@ -701,7 +795,7 @@ const InfoSection = () => {
                                     <span className="text-sm font-medium text-coolNeutral-25">
                                       {station.stationName}
                                     </span>
-                                  </div>
+                                  </button>
                                 );
                               },
                             )}

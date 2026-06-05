@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 // import seoulGeoJson from "@/assets/geojson/seoul-gu.json";
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
+import seoulDongGeoJson from "@/assets/geojson/seoul_dong_geo.json";
 import { regionMap } from "@/constants/regionMap";
 import { regionColor, regionBoundaryColor } from "@/constants/regionColor";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
@@ -19,6 +20,8 @@ import type {
   RentIndexMapOverlayType,
   SafetyIndexMapOverlayItem,
   SubwayIndexMapOverlayItem,
+  SubwayLinePolyline,
+  SubwayStationMarker,
 } from "@/store/mapOverlayStore";
 
 declare global {
@@ -35,6 +38,15 @@ const KAKAO_SDK_ID = "kakao-map-sdk";
 
 const getRegionName = (name: string) => {
   return name.split(" ").at(-1) ?? name;
+};
+
+const getTransportNeighborhoodParts = (name: string) => {
+  const parts = name.split(" ").filter(Boolean);
+
+  return {
+    districtName: parts[0] ?? "",
+    dongName: parts.at(-1) ?? name,
+  };
 };
 
 const getOverlayColor = (type: RentIndexMapOverlayType) => {
@@ -65,6 +77,43 @@ const getSafetyIndexOverlayColor = (value: number) => {
   if (value >= 35) return "#FF8000";
   if (value >= 25) return "#66D575";
   return "#005EFF";
+};
+
+const getSubwayLineLabel = (lineName: string) => {
+  const match = lineName.match(/\d+/);
+  return match?.[0] ?? lineName;
+};
+
+const subwayLineColorMap: Record<string, string> = {
+  "1": "#2955A4",
+  "2": "#00BA00",
+  "3": "#D2683D",
+  "4": "#3B66B6",
+  "5": "#794B97",
+  "6": "#96572A",
+  "7": "#555D10",
+  "8": "#B43667",
+  "9": "#C6AF5B",
+  신림선: "#3385FF",
+  신분당선: "#D4003B",
+  경부선: "#2955A4",
+};
+
+const getSubwayLineColor = (lineName: string) => {
+  const lineLabel = getSubwayLineLabel(lineName);
+
+  return subwayLineColorMap[lineLabel] ?? "#3385FF";
+};
+
+const getSubwayStationMarkerImage = (color: string) => {
+  const markerSvg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+      <circle cx="14" cy="14" r="10" fill="${color}" stroke="white" stroke-width="4"/>
+      <circle cx="14" cy="14" r="4" fill="white"/>
+    </svg>
+  `;
+
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(markerSvg)}`;
 };
 
 const convenienceMarkerImageMap: Record<ConvenienceMarkerType, string> = {
@@ -151,6 +200,16 @@ const getDistrictCenters = () => {
   return centers;
 };
 
+const getDistrictCodeMap = () => {
+  const codes = new globalThis.Map<string, string>();
+
+  seoulGeoJson.features.forEach((feature: any) => {
+    codes.set(feature.properties.SIG_KOR_NM, feature.properties.SIG_CD);
+  });
+
+  return codes;
+};
+
 const getRegionCenters = () => {
   const regionPoints = new globalThis.Map<string, number[][]>();
 
@@ -183,6 +242,7 @@ const getRegionCenters = () => {
 
 const regionCenters = getRegionCenters();
 const districtCenters = getDistrictCenters();
+const districtCodeMap = getDistrictCodeMap();
 
 const Map = ({ enableOverlay = true }: Props) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -193,6 +253,9 @@ const Map = ({ enableOverlay = true }: Props) => {
   const subwayIndexOverlaysRef = useRef<any[]>([]);
   const safetyIndexOverlaysRef = useRef<any[]>([]);
   const selectedSafetyDistrictPolygonsRef = useRef<any[]>([]);
+  const selectedTransportDongPolygonsRef = useRef<any[]>([]);
+  const subwayLinePolylineRefs = useRef<any[]>([]);
+  const subwayStationMarkerRefs = useRef<any[]>([]);
   const convenienceMarkersRef = useRef<any[]>([]);
   const selectedRegionPolygonsRef = useRef<any[]>([]);
   const consumerIndexPolygonsRef = useRef<any[]>([]);
@@ -208,6 +271,18 @@ const Map = ({ enableOverlay = true }: Props) => {
   );
   const safetyIndexItems = useMapOverlayStore(
     (state) => state.safetyIndexItems,
+  );
+  const selectedTransportNeighborhoodName = useMapOverlayStore(
+    (state) => state.selectedTransportNeighborhoodName,
+  );
+  const subwayLinePolylines = useMapOverlayStore(
+    (state) => state.subwayLinePolylines,
+  );
+  const subwayStationMarkers = useMapOverlayStore(
+    (state) => state.subwayStationMarkers,
+  );
+  const selectedSubwayStationMarker = useMapOverlayStore(
+    (state) => state.selectedSubwayStationMarker,
   );
   const conveniencePins = useMapOverlayStore((state) => state.conveniencePins);
   const convenienceMarkerType = useMapOverlayStore(
@@ -395,6 +470,27 @@ const Map = ({ enableOverlay = true }: Props) => {
       polygon.setMap(null);
     });
     selectedSafetyDistrictPolygonsRef.current = [];
+  };
+
+  const clearSelectedTransportDongPolygons = () => {
+    selectedTransportDongPolygonsRef.current.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    selectedTransportDongPolygonsRef.current = [];
+  };
+
+  const clearSubwayLinePolylineOverlays = () => {
+    subwayLinePolylineRefs.current.forEach((polyline) => {
+      polyline.setMap(null);
+    });
+    subwayLinePolylineRefs.current = [];
+  };
+
+  const clearSubwayStationMarkers = () => {
+    subwayStationMarkerRefs.current.forEach((marker) => {
+      marker.setMap(null);
+    });
+    subwayStationMarkerRefs.current = [];
   };
 
   const clearConvenienceMarkers = () => {
@@ -691,6 +787,72 @@ const Map = ({ enableOverlay = true }: Props) => {
     });
   };
 
+  const drawSelectedTransportDongPolygon = (
+    map: any,
+    neighborhoodName: string | null,
+  ) => {
+    clearSelectedTransportDongPolygons();
+
+    if (!neighborhoodName) {
+      return;
+    }
+
+    const { districtName, dongName } =
+      getTransportNeighborhoodParts(neighborhoodName);
+    const districtCode = districtCodeMap.get(districtName);
+
+    if (!districtCode) {
+      return;
+    }
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+    let hasPolygon = false;
+
+    seoulDongGeoJson.features.forEach((feature: any) => {
+      const properties = feature.properties;
+
+      if (
+        properties.COL_ADM_SE !== districtCode ||
+        properties.EMD_NM !== dongName
+      ) {
+        return;
+      }
+
+      const { geometry } = feature;
+      const polygons =
+        geometry.type === "Polygon"
+          ? [geometry.coordinates]
+          : geometry.coordinates;
+
+      polygons.forEach((rings: number[][][]) => {
+        const polygon = new window.kakao.maps.Polygon({
+          map,
+          path: createPolygonPaths(rings),
+          strokeWeight: 3,
+          strokeColor: "#3385FF",
+          strokeOpacity: 1,
+          fillColor: "#3385FF",
+          fillOpacity: 0.24,
+          zIndex: 7,
+        });
+
+        getGeoJsonLngLatPoints({
+          type: "Polygon",
+          coordinates: rings,
+        }).forEach(([lng, lat]) => {
+          bounds.extend(new window.kakao.maps.LatLng(lat, lng));
+        });
+
+        selectedTransportDongPolygonsRef.current.push(polygon);
+        hasPolygon = true;
+      });
+    });
+
+    if (hasPolygon) {
+      map.setBounds(bounds);
+    }
+  };
+
   const drawConvenienceMarkers = (
     map: any,
     pins: ConvenienceMapPin[],
@@ -749,6 +911,72 @@ const Map = ({ enableOverlay = true }: Props) => {
     }
 
     map.setBounds(bounds);
+  };
+
+  const drawSubwayLinePolylines = (
+    map: any,
+    polylines: SubwayLinePolyline[],
+  ) => {
+    clearSubwayLinePolylineOverlays();
+
+    polylines.forEach((polyline) => {
+      const path = polyline.path.map(
+        (point) => new window.kakao.maps.LatLng(point.latitude, point.longitude),
+      );
+
+      const subwayLinePolyline = new window.kakao.maps.Polyline({
+        map,
+        path,
+        strokeWeight: 5,
+        strokeColor: polyline.color ?? getSubwayLineColor(polyline.lineName),
+        strokeOpacity: 0.88,
+        strokeStyle: "solid",
+        zIndex: 8,
+      });
+
+      subwayLinePolylineRefs.current.push(subwayLinePolyline);
+    });
+  };
+
+  const drawSubwayStationMarkers = (
+    map: any,
+    markers: SubwayStationMarker[],
+  ) => {
+    clearSubwayStationMarkers();
+
+    markers.forEach((marker) => {
+      const color = marker.color ?? getSubwayLineColor(marker.lineName);
+      const position = new window.kakao.maps.LatLng(
+        marker.latitude,
+        marker.longitude,
+      );
+      const markerImage = new window.kakao.maps.MarkerImage(
+        getSubwayStationMarkerImage(color),
+        new window.kakao.maps.Size(28, 28),
+        {
+          offset: new window.kakao.maps.Point(14, 14),
+        },
+      );
+      const subwayStationMarker = new window.kakao.maps.Marker({
+        map,
+        position,
+        title: marker.stationName,
+        image: markerImage,
+        zIndex: 9,
+      });
+      const infoWindow = new window.kakao.maps.InfoWindow({
+        content: `<div style="padding:6px 10px;font-size:12px;white-space:nowrap;">${escapeHtml(marker.stationName)} · ${escapeHtml(marker.lineName)}</div>`,
+      });
+
+      window.kakao.maps.event.addListener(subwayStationMarker, "mouseover", () => {
+        infoWindow.open(map, subwayStationMarker);
+      });
+      window.kakao.maps.event.addListener(subwayStationMarker, "mouseout", () => {
+        infoWindow.close();
+      });
+
+      subwayStationMarkerRefs.current.push(subwayStationMarker);
+    });
   };
 
   const selectRentIndexItemOnMap = (
@@ -873,6 +1101,57 @@ const Map = ({ enableOverlay = true }: Props) => {
       clearSelectedSafetyDistrictPolygons();
     };
   }, [isMapReady, safetyIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawSelectedTransportDongPolygon(
+      mapRefInstance.current,
+      selectedTransportNeighborhoodName,
+    );
+
+    return () => {
+      clearSelectedTransportDongPolygons();
+    };
+  }, [isMapReady, selectedTransportNeighborhoodName]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawSubwayLinePolylines(mapRefInstance.current, subwayLinePolylines);
+
+    return () => {
+      clearSubwayLinePolylineOverlays();
+    };
+  }, [isMapReady, subwayLinePolylines]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawSubwayStationMarkers(mapRefInstance.current, subwayStationMarkers);
+
+    return () => {
+      clearSubwayStationMarkers();
+    };
+  }, [isMapReady, subwayStationMarkers]);
+
+  useEffect(() => {
+    if (
+      !isMapReady ||
+      !mapRefInstance.current ||
+      !selectedSubwayStationMarker
+    ) {
+      return;
+    }
+
+    const position = new window.kakao.maps.LatLng(
+      selectedSubwayStationMarker.latitude,
+      selectedSubwayStationMarker.longitude,
+    );
+
+    mapRefInstance.current.setLevel(4);
+    mapRefInstance.current.panTo(position);
+  }, [isMapReady, selectedSubwayStationMarker]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
