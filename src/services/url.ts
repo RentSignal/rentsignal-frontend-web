@@ -8,6 +8,11 @@ export const OAUTH_URL = {
 };
 
 export const API_URL = {
+  /* 홈 */
+  TODAY_RECOMMENDATIONS: "/api/home/today-recommendations",
+  SUBWAY_RANKING: "/api/home/subway-accessibility-ranking",
+  REVIEW: "/api/home/reviews",
+
   /* 내 정보 조회 */
   MYPAGE_ME: "/api/mypage/me",
 
