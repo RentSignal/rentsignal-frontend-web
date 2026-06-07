@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Map from "@/components/Map";
 import PanelHeader from "@/components/Panel/PanelHeader";
@@ -8,8 +8,6 @@ import PhoneModal from "@/components/phoneModal";
 import RecommnedationResultPanel from "@/components/recommend/RecommendationResultPanel";
 
 const MainLayout = () => {
-  const location = useLocation();
-  const isHome = location.pathname === "/";
   const [isOpen, setIsOpen] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false); //로그인 모달 상태
   const [phoneOpen, setPhoneOpen] = useState(false); //전화번호 입력 모달 상태
@@ -28,7 +26,7 @@ const MainLayout = () => {
       {/* Map, Overlay 영역 */}
       <div className="relative flex-1">
         {/* 지도 */}
-        <Map enableOverlay={isHome} />
+        <Map enableOverlay={false} />
         <RecommnedationResultPanel
           open={recommendResultOpen}
           onClose={() => setRecommendResultOpen(false)}

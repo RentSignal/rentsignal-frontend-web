@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import RisingIcon from "@/assets/icons/home/home_rising.png";
 import RecommendationIcon from "@/assets/icons/home/home_recommendation.png";
 import LineChartIcon from "@/assets/icons/home/home_linechart.png";
@@ -8,9 +9,12 @@ import LocationIcon from "@/assets/icons/home/location_pin.svg?react";
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
 import seoulDongGeoJson from "@/assets/geojson/seoul_dong_geo.json";
 import {
+  fetchSubwayAccessibilityRankings,
   fetchTodayRecommendations,
+  type SubwayAccessibilityRanking,
   type TodayRecommendation,
 } from "@/services/homeApi";
+import { useMapOverlayStore } from "@/store/mapOverlayStore";
 
 declare global {
   interface Window {
@@ -151,11 +155,22 @@ type IconButtonProps = {
   label: string;
   iconWidth: string;
   iconHeight: string;
+  onClick?: () => void;
 };
 
-function IconButton({ icon, label, iconWidth, iconHeight }: IconButtonProps) {
+function IconButton({
+  icon,
+  label,
+  iconWidth,
+  iconHeight,
+  onClick,
+}: IconButtonProps) {
   return (
-    <div className="flex flex-col items-center">
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col items-center"
+    >
       <div className="relative w-[54px] h-[52px] bg-blue-95 border border-blue-99 rounded-[14px] mb-[10px]">
         <img
           src={icon}
@@ -170,7 +185,7 @@ function IconButton({ icon, label, iconWidth, iconHeight }: IconButtonProps) {
       <h4 className="w-[76px] whitespace-normal break-keep text-center text-xs font-semibold leading-[16px]">
         {label}
       </h4>
-    </div>
+    </button>
   );
 }
 
@@ -180,6 +195,7 @@ type RecommendationCardProps = {
   transportScore: number;
   latitude: number;
   longitude: number;
+  onClick: () => void;
 };
 
 function RecommendationCard({
@@ -188,9 +204,21 @@ function RecommendationCard({
   transportScore,
   latitude,
   longitude,
+  onClick,
 }: RecommendationCardProps) {
   return (
-    <div className="h-[92px] w-[129px] shrink-0 overflow-hidden rounded-[12px] bg-coolNeutral-99">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
+      className="h-[92px] w-[129px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-coolNeutral-99 transition-shadow hover:shadow-md"
+    >
       <RecommendationMap latitude={latitude} longitude={longitude} />
 
       <div className="px-[10px] pb-[8px] pt-[7px]">
@@ -267,9 +295,15 @@ function RecommendationMap({ latitude, longitude }: RecommendationMapProps) {
   return <div ref={mapRef} className="h-[52px] w-full bg-slate-100" />;
 }
 function RecommendationList() {
-  const [recommendations, setRecommendations] = useState<
-    TodayRecommendation[]
-  >([]);
+  const [recommendations, setRecommendations] = useState<TodayRecommendation[]>(
+    [],
+  );
+  const selectHomeRecommendation = useMapOverlayStore(
+    (state) => state.selectHomeRecommendation,
+  );
+  const clearSelectedHomeRecommendation = useMapOverlayStore(
+    (state) => state.clearSelectedHomeRecommendation,
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -292,8 +326,9 @@ function RecommendationList() {
 
     return () => {
       isMounted = false;
+      clearSelectedHomeRecommendation();
     };
-  }, []);
+  }, [clearSelectedHomeRecommendation]);
 
   return (
     <section className="flex w-full min-w-0 flex-col gap-[14px]">
@@ -319,6 +354,9 @@ function RecommendationList() {
                 transportScore={recommendation.transport}
                 latitude={latitude}
                 longitude={longitude}
+                onClick={() =>
+                  selectHomeRecommendation(recommendation.dongName)
+                }
               />
             );
           })}
@@ -329,6 +367,8 @@ function RecommendationList() {
 }
 
 function HeaderSection() {
+  const navigate = useNavigate();
+
   return (
     <div className="flex  justify-between  px-5 mt-4 mb-[30px]">
       <IconButton
@@ -342,24 +382,62 @@ function HeaderSection() {
         label="AI 추천 지역"
         iconWidth="30"
         iconHeight="42"
+        onClick={() => navigate("/recommend")}
       />
       <IconButton
         icon={LineChartIcon}
         label="전월세 통합지수"
         iconWidth="36"
         iconHeight="30"
+        onClick={() => navigate("/info")}
       />
       <IconButton
         icon={ReviewIcon}
         label="거주 리뷰"
         iconWidth="28"
         iconHeight="28"
+        onClick={() => navigate("/community")}
       />
     </div>
   );
 }
 
 function SubwayList() {
+  const [subwayRankings, setSubwayRankings] = useState<
+    SubwayAccessibilityRanking[]
+  >([]);
+  const selectHomeSubwayRanking = useMapOverlayStore(
+    (state) => state.selectHomeSubwayRanking,
+  );
+  const clearSelectedHomeSubwayRanking = useMapOverlayStore(
+    (state) => state.clearSelectedHomeSubwayRanking,
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadSubwayRankings = async () => {
+      try {
+        const data = await fetchSubwayAccessibilityRankings();
+
+        if (isMounted) {
+          setSubwayRankings(data.slice(0, 5));
+        }
+      } catch {
+        if (isMounted) {
+          setSubwayRankings([]);
+        }
+      }
+    };
+
+    loadSubwayRankings();
+
+    return () => {
+      isMounted = false;
+      clearSelectedHomeSubwayRanking();
+    };
+  }, [clearSelectedHomeSubwayRanking]);
+
   return (
     <>
       <div className="flex items-center justify-between px-[24px] mt-[50px]">
@@ -367,12 +445,13 @@ function SubwayList() {
           지하철 접근성이 높은 지역 TOP5
         </h3>
       </div>
-      {subwayItems.map((item) => (
+      {subwayRankings.map((item) => (
         <SubwayItem
           key={item.rank}
           rank={item.rank}
           name={item.name}
           value={item.value}
+          onClick={() => selectHomeSubwayRanking(item)}
         />
       ))}
     </>
@@ -383,22 +462,19 @@ type SubwayItemProps = {
   rank: number;
   name: string;
   value: number;
+  onClick: () => void;
 };
 
-const subwayItems = [
-  { rank: 1, name: "양천구", value: 100.5 },
-  { rank: 1, name: "양천구", value: 100.5 },
-  { rank: 1, name: "양천구", value: 100.5 },
-];
-
-function SubwayItem({ rank, name, value }: SubwayItemProps) {
+function SubwayItem({ rank, name, value, onClick }: SubwayItemProps) {
   return (
-    <>
-      <div className="flex justify-between px-[36px] py-[5px] mb-[11px]">
-        <h4 className="text-base font-medium text-coolNeutral-50">{rank}</h4>
-        <h4 className="text-base font-medium text-coolNeutral-50">{name}</h4>
-        <h4 className="text-base font-medium text-blue-50">{value}점</h4>
-      </div>
-    </>
+    <button
+      type="button"
+      onClick={onClick}
+      className="mb-[11px] flex w-full cursor-pointer justify-between px-[36px] py-[5px] text-left transition-colors hover:bg-blue-99"
+    >
+      <h4 className="text-base font-medium text-coolNeutral-50">{rank}</h4>
+      <h4 className="text-base font-medium text-coolNeutral-50">{name}</h4>
+      <h4 className="text-base font-medium text-blue-50">{value}점</h4>
+    </button>
   );
 }
