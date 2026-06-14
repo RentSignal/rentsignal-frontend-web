@@ -9,6 +9,7 @@ import {
   clearConsumerIndexPolygons,
   drawConsumerIndexPolygons,
 } from "@/components/mapOverlays/consumerIndexOverlay";
+import { getSubwayLineColor } from "@/utils/subwayLineStyle";
 import cafeMarkerUrl from "@/assets/icons/maker/cafe_marker.svg";
 import convenienceMarkerUrl from "@/assets/icons/maker/conv_marker.svg";
 import hospitalMarkerUrl from "@/assets/icons/maker/hospital_marker.svg";
@@ -78,32 +79,6 @@ const getSafetyIndexOverlayColor = (value: number) => {
   if (value >= 35) return "#FF8000";
   if (value >= 25) return "#66D575";
   return "#005EFF";
-};
-
-const getSubwayLineLabel = (lineName: string) => {
-  const match = lineName.match(/\d+/);
-  return match?.[0] ?? lineName;
-};
-
-const subwayLineColorMap: Record<string, string> = {
-  "1": "#2955A4",
-  "2": "#00BA00",
-  "3": "#D2683D",
-  "4": "#3B66B6",
-  "5": "#794B97",
-  "6": "#96572A",
-  "7": "#555D10",
-  "8": "#B43667",
-  "9": "#C6AF5B",
-  신림선: "#3385FF",
-  신분당선: "#D4003B",
-  경부선: "#2955A4",
-};
-
-const getSubwayLineColor = (lineName: string) => {
-  const lineLabel = getSubwayLineLabel(lineName);
-
-  return subwayLineColorMap[lineLabel] ?? "#3385FF";
 };
 
 const getSubwayStationMarkerImage = (color: string) => {

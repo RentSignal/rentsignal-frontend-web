@@ -39,6 +39,11 @@ import { useConsumerIndex } from "@/hooks/useConsumerIndex";
 import { useRentIndexRankings } from "@/hooks/useRentIndexRankings";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
 import { getSubwayLineOverlayData } from "@/utils/subwayLines";
+import {
+  getSubwayLineColor,
+  getSubwayLineLabel,
+  isNumberSubwayLine,
+} from "@/utils/subwayLineStyle";
 import SafetyIndexBar from "@/assets/icons/safety_phrase.svg?react";
 
 const businessDistrictItems = [
@@ -72,34 +77,6 @@ const getTravelTimeLabel = (station?: TransportStationItem) => {
   }
 
   return `약 ${minutes}분 ${seconds}초`;
-};
-
-const getSubwayLineLabel = (lineName: string) => {
-  const match = lineName.match(/\d+/);
-  return match?.[0] ?? lineName;
-};
-
-const isNumberLineLabel = (lineLabel: string) => /^\d+$/.test(lineLabel);
-
-const subwayLineColorMap: Record<string, string> = {
-  "1": "#2955A4",
-  "2": "#00BA00",
-  "3": "#D2683D",
-  "4": "#3B66B6",
-  "5": "#794B97",
-  "6": "#96572A",
-  "7": "#555D10",
-  "8": "#B43667",
-  "9": "#C6AF5B",
-  신림선: "#3385FF",
-  신분당선: "#D4003B",
-  경부선: "#2955A4",
-};
-
-const getSubwayLineColor = (lineName: string) => {
-  const lineLabel = getSubwayLineLabel(lineName);
-
-  return subwayLineColorMap[lineLabel] ?? "#3385FF";
 };
 
 const transportCountMeta: Record<
@@ -766,8 +743,9 @@ const InfoSection = () => {
                                 const lineLabel = getSubwayLineLabel(
                                   station.lineName,
                                 );
-                                const isNumberLine =
-                                  isNumberLineLabel(lineLabel);
+                                const isNumberLine = isNumberSubwayLine(
+                                  station.lineName,
+                                );
 
                                 return (
                                   <button

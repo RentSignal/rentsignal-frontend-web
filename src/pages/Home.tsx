@@ -9,12 +9,20 @@ import LocationIcon from "@/assets/icons/home/location_pin.svg?react";
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
 import seoulDongGeoJson from "@/assets/geojson/seoul_dong_geo.json";
 import {
+  fetchDistrictSubwayDetail,
   fetchSubwayAccessibilityRankings,
   fetchTodayRecommendations,
+  type DistrictSubwayStation,
   type SubwayAccessibilityRanking,
   type TodayRecommendation,
 } from "@/services/homeApi";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
+import { getSubwayLineOverlayData } from "@/utils/subwayLines";
+import {
+  getSubwayLineColor,
+  getSubwayLineLabel,
+  isNumberSubwayLine,
+} from "@/utils/subwayLineStyle";
 
 declare global {
   interface Window {
@@ -100,6 +108,8 @@ const getAccessibilityScore = (recommendation: TodayRecommendation) => {
 
 const getDisplayNeighborhoodName = (neighborhoodName: string) =>
   neighborhoodName.replace(/^서울특별시\s*/, "");
+
+const MAX_VISIBLE_SUBWAY_LINES = 3;
 
 const loadKakaoSdk = () =>
   new Promise<void>((resolve) => {
@@ -404,13 +414,24 @@ function HeaderSection() {
 
 function SubwayList() {
   const [subwayRankings, setSubwayRankings] = useState<
-    SubwayAccessibilityRanking[]
+    Array<
+      SubwayAccessibilityRanking & {
+        subwayLines: string[];
+        subwayStations: DistrictSubwayStation[];
+      }
+    >
   >([]);
   const selectHomeSubwayRanking = useMapOverlayStore(
     (state) => state.selectHomeSubwayRanking,
   );
   const clearSelectedHomeSubwayRanking = useMapOverlayStore(
     (state) => state.clearSelectedHomeSubwayRanking,
+  );
+  const setSubwayLinePolylines = useMapOverlayStore(
+    (state) => state.setSubwayLinePolylines,
+  );
+  const setSubwayStationMarkers = useMapOverlayStore(
+    (state) => state.setSubwayStationMarkers,
   );
 
   useEffect(() => {
@@ -419,9 +440,22 @@ function SubwayList() {
     const loadSubwayRankings = async () => {
       try {
         const data = await fetchSubwayAccessibilityRankings();
+        const rankingsWithLines = await Promise.all(
+          data.slice(0, 5).map(async (item) => {
+            try {
+              const subwayDetail = await fetchDistrictSubwayDetail(
+                item.districtId,
+              );
+
+              return { ...item, ...subwayDetail };
+            } catch {
+              return { ...item, subwayLines: [], subwayStations: [] };
+            }
+          }),
+        );
 
         if (isMounted) {
-          setSubwayRankings(data.slice(0, 5));
+          setSubwayRankings(rankingsWithLines);
         }
       } catch {
         if (isMounted) {
@@ -451,7 +485,16 @@ function SubwayList() {
           rank={item.rank}
           name={item.name}
           value={item.value}
-          onClick={() => selectHomeSubwayRanking(item)}
+          subwayLines={item.subwayLines}
+          onClick={() => {
+            const { polylines, stationMarkers } = getSubwayLineOverlayData(
+              item.subwayStations,
+            );
+
+            selectHomeSubwayRanking(item);
+            setSubwayLinePolylines(polylines);
+            setSubwayStationMarkers(stationMarkers);
+          }}
         />
       ))}
     </>
@@ -462,19 +505,100 @@ type SubwayItemProps = {
   rank: number;
   name: string;
   value: number;
+  subwayLines: string[];
   onClick: () => void;
 };
 
-function SubwayItem({ rank, name, value, onClick }: SubwayItemProps) {
+function SubwayItem({
+  rank,
+  name,
+  value,
+  subwayLines,
+  onClick,
+}: SubwayItemProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const visibleSubwayLines = subwayLines.slice(0, MAX_VISIBLE_SUBWAY_LINES);
+  const hiddenSubwayLines = subwayLines.slice(MAX_VISIBLE_SUBWAY_LINES);
+  const hiddenSubwayLineCount = Math.max(
+    subwayLines.length - MAX_VISIBLE_SUBWAY_LINES,
+    0,
+  );
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="mb-[11px] flex w-full cursor-pointer justify-between px-[36px] py-[5px] text-left transition-colors hover:bg-blue-99"
+    <div className="mb-[6px]">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onClick}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        }}
+        className="grid min-h-[40px] w-full cursor-pointer grid-cols-[24px_64px_minmax(0,1fr)_auto] items-center gap-2 px-[28px] py-2 text-left transition-colors hover:bg-blue-99"
+      >
+        <h4 className="text-base font-medium text-coolNeutral-50">{rank}</h4>
+        <h4 className="text-sm font-medium truncate text-coolNeutral-50">
+          {name}
+        </h4>
+        <div
+          className="flex items-center min-w-0 gap-1 overflow-hidden"
+          aria-label={
+            subwayLines.length > 0
+              ? `운행 노선: ${subwayLines.map(getSubwayLineLabel).join(", ")}`
+              : "운행 노선 정보 없음"
+          }
+        >
+          {visibleSubwayLines.map((lineName) => (
+            <SubwayLineBadge key={lineName} lineName={lineName} />
+          ))}
+          {hiddenSubwayLineCount > 0 && (
+            <button
+              type="button"
+              aria-expanded={isExpanded}
+              aria-label={`숨겨진 노선 ${hiddenSubwayLineCount}개 ${
+                isExpanded ? "접기" : "펼치기"
+              }`}
+              onClick={(event) => {
+                event.stopPropagation();
+                setIsExpanded((prev) => !prev);
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+              className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-coolNeutral-95 px-1 text-[9px] text-coolNeutral-25 font-bold text-coolNeutral-40"
+            >
+              {isExpanded ? "접기" : `+${hiddenSubwayLineCount}`}
+            </button>
+          )}
+        </div>
+        <h4 className="text-sm font-semibold whitespace-nowrap text-blue-50">
+          {value}점
+        </h4>
+      </div>
+
+      {isExpanded && hiddenSubwayLines.length > 0 && (
+        <div className="flex flex-wrap gap-1 rounded-b-lg bg-blue-99 py-2 pl-[132px] pr-2">
+          {hiddenSubwayLines.map((lineName) => (
+            <SubwayLineBadge key={lineName} lineName={lineName} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubwayLineBadge({ lineName }: { lineName: string }) {
+  const lineLabel = getSubwayLineLabel(lineName);
+  const isNumberLine = isNumberSubwayLine(lineName);
+
+  return (
+    <span
+      className={`flex h-5 shrink-0 items-center justify-center whitespace-nowrap rounded-full text-[9px] font-bold text-white ${
+        isNumberLine ? "w-5" : "max-w-[46px] px-1.5"
+      }`}
+      style={{ backgroundColor: getSubwayLineColor(lineName) }}
     >
-      <h4 className="text-base font-medium text-coolNeutral-50">{rank}</h4>
-      <h4 className="text-base font-medium text-coolNeutral-50">{name}</h4>
-      <h4 className="text-base font-medium text-blue-50">{value}점</h4>
-    </button>
+      <span className="truncate">{lineLabel}</span>
+    </span>
   );
 }

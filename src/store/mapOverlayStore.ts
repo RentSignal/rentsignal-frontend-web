@@ -134,6 +134,9 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
     set({
       selectedHomeRecommendationName: name,
       selectedHomeSubwayRanking: null,
+      subwayLinePolylines: [],
+      subwayStationMarkers: [],
+      selectedSubwayStationMarker: null,
     }),
   clearSelectedHomeRecommendation: () =>
     set({ selectedHomeRecommendationName: null }),
@@ -143,7 +146,12 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
       selectedHomeRecommendationName: null,
     }),
   clearSelectedHomeSubwayRanking: () =>
-    set({ selectedHomeSubwayRanking: null }),
+    set({
+      selectedHomeSubwayRanking: null,
+      subwayLinePolylines: [],
+      subwayStationMarkers: [],
+      selectedSubwayStationMarker: null,
+    }),
   selectTransportNeighborhood: (name) =>
     set({ selectedTransportNeighborhoodName: name }),
   clearSelectedTransportNeighborhood: () =>
