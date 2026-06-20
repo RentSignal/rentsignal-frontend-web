@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { getMyProfile } from "@/services/userApi";
 
 interface User {
+  userId: number;
   name: string;
   imageUrl: string;
   role: string;
