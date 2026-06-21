@@ -10,6 +10,7 @@ import RecommnedationResultPanel from "@/components/recommend/RecommendationResu
 const MainLayout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isCommunity = location.pathname.startsWith("/community");
 
   //로고 헤더 숨길 경로들
   const noHeaderPaths = ["/profile/name", "/profile/phone", "/profile/delete", "/profile/posts", "/profile/comments", "/profile/likes",];
@@ -43,13 +44,15 @@ const MainLayout = () => {
         {/* 패널 */}
         <div
           className={`
-              absolute left-0 top-0 h-full w-[377px]
+              absolute left-0 top-0 h-full ${isCommunity ? "w-fit" : "w-[377px]"}
               bg-white border-r border-divider_grey
               z-40
               transition-transform duration-300 ease-in-out
               ${isOpen ? "translate-x-0" : "translate-x-[-315px]"}
             `}
         >
+          {/* 헤더 */}
+          {!isCommunity && (
           {/* 해당 경로에서만 헤더 숨김 */}
           {!hideHeader && (
             <PanelHeader onToggle={() => setIsOpen((prev) => !prev)} />
@@ -60,6 +63,7 @@ const MainLayout = () => {
               openPhoneModal: () => setPhoneOpen(true),
               openResultPanel: () => setRecommendResultOpen(true),
               setRecommendResult,
+              onToggle: () => setIsOpen((prev) => !prev)
             }}
           />
         </div>
