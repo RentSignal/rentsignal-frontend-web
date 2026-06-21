@@ -11,6 +11,11 @@ const MainLayout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
   const isCommunity = location.pathname.startsWith("/community");
+
+  //로고 헤더 숨길 경로들
+  const noHeaderPaths = ["/profile/name", "/profile/phone", "/profile/delete", "/profile/posts", "/profile/comments", "/profile/likes",];
+  const hideHeader = noHeaderPaths.includes(location.pathname);
+
   const [isOpen, setIsOpen] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false); //로그인 모달 상태
   const [phoneOpen, setPhoneOpen] = useState(false); //전화번호 입력 모달 상태
@@ -48,6 +53,8 @@ const MainLayout = () => {
         >
           {/* 헤더 */}
           {!isCommunity && (
+          {/* 해당 경로에서만 헤더 숨김 */}
+          {!hideHeader && (
             <PanelHeader onToggle={() => setIsOpen((prev) => !prev)} />
           )}
           <Outlet

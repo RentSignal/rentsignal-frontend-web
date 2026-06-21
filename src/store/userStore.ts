@@ -6,6 +6,7 @@ interface User {
   name: string;
   imageUrl: string;
   role: string;
+  phoneNum: string;
 }
 
 interface UserStore {

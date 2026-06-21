@@ -38,4 +38,9 @@ export const COMMUNITY_URL = {
 
 export const NEIGHBORHOOD_URL = {
   SEARCH: "/api/community/neighborhoods/search",
+
+export const PROFILE_URL = {
+  MY_COMMENTED_POSTS: "/api/community/mypage/comments",
+   MY_LIKED_POSTS: "/api/community/mypage/likes",
+   MY_POSTS: "/api/community/mypage/posts",
 };
