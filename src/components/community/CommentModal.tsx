@@ -39,20 +39,20 @@ const CommentModal = ({ postId, userName, onClose, onSubmit }: CommentModalProps
   };
 
   return (
-    <div className="absolute inset-0 bg-black/40 flex items-center justify-center px-4 z-50" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-sm p-5 shadow-lg" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 mb-4">
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center px-4 z-50" onClick={onClose}>
+      <div className="bg-white rounded-md w-full h-[300px] max-w-sm p-5 shadow-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 mb-3">
+          <svg className="w-5 h-5 text-coolNeutral-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          <span className="text-sm font-semibold text-gray-800">댓글 작성</span>
+          <span className="text-md font-bold text-coolNeutral-25">댓글 작성</span>
         </div>
 
         <textarea
           value={content}
           onChange={(e) => { setContent(e.target.value); if (error) setError(""); }}
           placeholder={`@${userName}으로 댓글 남기기`}
-          className="w-full h-32 text-sm text-gray-700 placeholder-gray-300 outline-none resize-none border border-gray-100 rounded-xl p-3 mb-2 focus:border-blue-300 transition-colors"
+          className="w-full h-[180px] text-sm text-coolNeutral-25 placeholder:text-coolNeutral-90 outline-none resize-none border border-blue-90 rounded-md p-3 mb-2focus:border-blue-300 transition-colors"
         />
 
         {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
@@ -60,8 +60,8 @@ const CommentModal = ({ postId, userName, onClose, onSubmit }: CommentModalProps
         <button
           onClick={handleSubmit}
           disabled={!content.trim() || loading}
-          className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-            content.trim() && !loading ? "bg-blue-500 text-white hover:bg-blue-600" : "bg-gray-100 text-gray-400 cursor-not-allowed"
+          className={`w-full py-2 mt-2 rounded-md text-sm font-semibold transition-colors ${
+            content.trim() && !loading ? "bg-blue-60 text-white hover:bg-blue-600" : "bg-gray-100 text-gray-400 cursor-not-allowed"
           }`}
         >
           {loading ? "등록 중..." : "댓글 남기기"}
