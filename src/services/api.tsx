@@ -84,3 +84,31 @@ export const fetchDataFromApiPost = async ({
     responseType,
   });
 };
+
+export const fetchDataFromApiPatch = async ({
+  apiUrl,
+  body,
+  params,
+  responseType,
+}: ApiParams) => {
+  return request({
+    apiUrl,
+    body,
+    params,
+    method: "PATCH",
+    responseType,
+  });
+};
+
+export const fetchDataFromApiDelete = async ({
+  apiUrl,
+  params,
+  responseType,
+}: ApiParams) => {
+  return request({
+    apiUrl,
+    params,
+    method: "DELETE",
+    responseType,
+  });
+};
