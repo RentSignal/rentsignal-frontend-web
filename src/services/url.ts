@@ -35,3 +35,7 @@ export const COMMUNITY_URL = {
   COMMENT_LIKE: (commentId: number) =>
     `/api/community/comments/${commentId}/likes`, 
 };
+
+export const NEIGHBORHOOD_URL = {
+  SEARCH: "/api/community/neighborhoods/search",
+};

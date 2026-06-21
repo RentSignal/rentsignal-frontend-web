@@ -4,7 +4,10 @@ import {
   fetchDataFromApiPatch,
   fetchDataFromApiDelete,
 } from "./api";
-import { COMMUNITY_URL } from "./url";
+import { 
+    COMMUNITY_URL,
+    NEIGHBORHOOD_URL,
+} from "./url";
 import type {
   ApiResponse,
   PagedContent,
@@ -52,6 +55,17 @@ export const createPost = async (
   return res;
 };
 
+/* 동네 검색 */
+export const searchNeighborhood = async (
+  keyword: string,
+): Promise<{ neighborhoodId: number; neighborhoodName: string; districtName: string }[]> => {
+  const res = await fetchDataFromApiGet({
+    apiUrl: NEIGHBORHOOD_URL.SEARCH,
+    params: { keyword },
+  });
+  return res.data ?? [];
+};
+
 /* 게시글 수정 */
 export const updatePost = async (
   postId: string | number,
@@ -91,7 +105,7 @@ export const togglePostLike = async (
 export const fetchComments = async (
   postId: string | number,
   page = 0,
-  size = 20, // ← 문서에 명시된 기본값
+  size = 20, 
 ): Promise<ApiResponse<PagedContent<Comment>>> => {
   const res = await fetchDataFromApiGet({
     apiUrl: COMMUNITY_URL.COMMENTS(postId),

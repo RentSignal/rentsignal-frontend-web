@@ -42,7 +42,7 @@ export type CreatePostRequest = {
   category: string;
   title: string;
   content: string;
-  neighborhoodId: number;
+  neighborhoodId: number | null;
 };
 
 export type UpdatePostRequest = {

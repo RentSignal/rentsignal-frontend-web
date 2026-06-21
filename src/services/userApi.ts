@@ -5,7 +5,7 @@ export const getMyProfile = async () => {
   const res = await fetchDataFromApiGet({
     apiUrl: API_URL.MYPAGE_ME,
   });
-
+  
   return res.data;
 };
 
