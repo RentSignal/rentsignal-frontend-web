@@ -8,7 +8,10 @@ interface ApiParams {
   responseType?: "json" | "blob" | "text";
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "").replace(
+  /\/+$/,
+  "",
+);
 
 const request = async (
   { apiUrl, method = "GET", params, body, responseType = "json" }: ApiParams,
