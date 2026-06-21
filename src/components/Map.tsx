@@ -9,6 +9,7 @@ import {
   clearConsumerIndexPolygons,
   drawConsumerIndexPolygons,
 } from "@/components/mapOverlays/consumerIndexOverlay";
+import { getSubwayLineColor } from "@/utils/subwayLineStyle";
 import cafeMarkerUrl from "@/assets/icons/maker/cafe_marker.svg";
 import convenienceMarkerUrl from "@/assets/icons/maker/conv_marker.svg";
 import hospitalMarkerUrl from "@/assets/icons/maker/hospital_marker.svg";
@@ -16,6 +17,7 @@ import martMarkerUrl from "@/assets/icons/maker/mart_marker.svg";
 import type {
   ConvenienceMapPin,
   ConvenienceMarkerType,
+  HomeSubwayRankingMapItem,
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
   SafetyIndexMapOverlayItem,
@@ -77,32 +79,6 @@ const getSafetyIndexOverlayColor = (value: number) => {
   if (value >= 35) return "#FF8000";
   if (value >= 25) return "#66D575";
   return "#005EFF";
-};
-
-const getSubwayLineLabel = (lineName: string) => {
-  const match = lineName.match(/\d+/);
-  return match?.[0] ?? lineName;
-};
-
-const subwayLineColorMap: Record<string, string> = {
-  "1": "#2955A4",
-  "2": "#00BA00",
-  "3": "#D2683D",
-  "4": "#3B66B6",
-  "5": "#794B97",
-  "6": "#96572A",
-  "7": "#555D10",
-  "8": "#B43667",
-  "9": "#C6AF5B",
-  신림선: "#3385FF",
-  신분당선: "#D4003B",
-  경부선: "#2955A4",
-};
-
-const getSubwayLineColor = (lineName: string) => {
-  const lineLabel = getSubwayLineLabel(lineName);
-
-  return subwayLineColorMap[lineLabel] ?? "#3385FF";
 };
 
 const getSubwayStationMarkerImage = (color: string) => {
@@ -253,6 +229,8 @@ const Map = ({ enableOverlay = true }: Props) => {
   const subwayIndexOverlaysRef = useRef<any[]>([]);
   const safetyIndexOverlaysRef = useRef<any[]>([]);
   const selectedSafetyDistrictPolygonsRef = useRef<any[]>([]);
+  const selectedHomeRecommendationPolygonsRef = useRef<any[]>([]);
+  const selectedHomeSubwayDistrictPolygonsRef = useRef<any[]>([]);
   const selectedTransportDongPolygonsRef = useRef<any[]>([]);
   const subwayLinePolylineRefs = useRef<any[]>([]);
   const subwayStationMarkerRefs = useRef<any[]>([]);
@@ -271,6 +249,12 @@ const Map = ({ enableOverlay = true }: Props) => {
   );
   const safetyIndexItems = useMapOverlayStore(
     (state) => state.safetyIndexItems,
+  );
+  const selectedHomeSubwayRanking = useMapOverlayStore(
+    (state) => state.selectedHomeSubwayRanking,
+  );
+  const selectedHomeRecommendationName = useMapOverlayStore(
+    (state) => state.selectedHomeRecommendationName,
   );
   const selectedTransportNeighborhoodName = useMapOverlayStore(
     (state) => state.selectedTransportNeighborhoodName,
@@ -470,6 +454,20 @@ const Map = ({ enableOverlay = true }: Props) => {
       polygon.setMap(null);
     });
     selectedSafetyDistrictPolygonsRef.current = [];
+  };
+
+  const clearSelectedHomeSubwayDistrictPolygons = () => {
+    selectedHomeSubwayDistrictPolygonsRef.current.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    selectedHomeSubwayDistrictPolygonsRef.current = [];
+  };
+
+  const clearSelectedHomeRecommendationPolygons = () => {
+    selectedHomeRecommendationPolygonsRef.current.forEach((polygon) => {
+      polygon.setMap(null);
+    });
+    selectedHomeRecommendationPolygonsRef.current = [];
   };
 
   const clearSelectedTransportDongPolygons = () => {
@@ -787,6 +785,122 @@ const Map = ({ enableOverlay = true }: Props) => {
     });
   };
 
+  const drawSelectedHomeSubwayDistrictPolygon = (
+    map: any,
+    item: HomeSubwayRankingMapItem | null,
+  ) => {
+    clearSelectedHomeSubwayDistrictPolygons();
+
+    if (!item) {
+      return;
+    }
+
+    const districtName = getRegionName(item.name);
+    const center = districtCenters.get(districtName);
+    const color = "#3385FF";
+
+    if (!center) {
+      return;
+    }
+
+    seoulGeoJson.features.forEach((feature: any) => {
+      if (feature.properties.SIG_KOR_NM !== districtName) {
+        return;
+      }
+
+      const { geometry } = feature;
+      const polygons =
+        geometry.type === "Polygon"
+          ? [geometry.coordinates]
+          : geometry.coordinates;
+
+      polygons.forEach((rings: number[][][]) => {
+        const polygon = new window.kakao.maps.Polygon({
+          map,
+          path: createPolygonPaths(rings),
+          strokeWeight: 3,
+          strokeColor: color,
+          strokeOpacity: 1,
+          fillColor: color,
+          fillOpacity: 0.28,
+          zIndex: 7,
+        });
+
+        selectedHomeSubwayDistrictPolygonsRef.current.push(polygon);
+      });
+    });
+
+    map.setLevel(6);
+    map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
+  };
+
+  const drawSelectedHomeRecommendationPolygon = (
+    map: any,
+    neighborhoodName: string | null,
+  ) => {
+    clearSelectedHomeRecommendationPolygons();
+
+    if (!neighborhoodName) {
+      return;
+    }
+
+    const nameParts = neighborhoodName.split(" ").filter(Boolean);
+    const districtName = nameParts.at(-2) ?? "";
+    const dongName = nameParts.at(-1) ?? "";
+    const districtCode = districtCodeMap.get(districtName);
+
+    if (!districtCode) {
+      return;
+    }
+
+    const bounds = new window.kakao.maps.LatLngBounds();
+    let hasPolygon = false;
+
+    seoulDongGeoJson.features.forEach((feature: any) => {
+      const properties = feature.properties;
+
+      if (
+        properties.COL_ADM_SE !== districtCode ||
+        properties.EMD_NM !== dongName
+      ) {
+        return;
+      }
+
+      const { geometry } = feature;
+      const polygons =
+        geometry.type === "Polygon"
+          ? [geometry.coordinates]
+          : geometry.coordinates;
+
+      polygons.forEach((rings: number[][][]) => {
+        const polygon = new window.kakao.maps.Polygon({
+          map,
+          path: createPolygonPaths(rings),
+          strokeWeight: 3,
+          strokeColor: "#3385FF",
+          strokeOpacity: 1,
+          fillColor: "#3385FF",
+          fillOpacity: 0.28,
+          zIndex: 7,
+        });
+
+        getGeoJsonLngLatPoints({
+          type: "Polygon",
+          coordinates: rings,
+        }).forEach(([lng, lat]) => {
+          bounds.extend(new window.kakao.maps.LatLng(lat, lng));
+        });
+
+        selectedHomeRecommendationPolygonsRef.current.push(polygon);
+        hasPolygon = true;
+      });
+    });
+
+    if (hasPolygon) {
+      map.setBounds(bounds);
+    }
+  };
+
   const drawSelectedTransportDongPolygon = (
     map: any,
     neighborhoodName: string | null,
@@ -1101,6 +1215,32 @@ const Map = ({ enableOverlay = true }: Props) => {
       clearSelectedSafetyDistrictPolygons();
     };
   }, [isMapReady, safetyIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawSelectedHomeRecommendationPolygon(
+      mapRefInstance.current,
+      selectedHomeRecommendationName,
+    );
+
+    return () => {
+      clearSelectedHomeRecommendationPolygons();
+    };
+  }, [isMapReady, selectedHomeRecommendationName]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    drawSelectedHomeSubwayDistrictPolygon(
+      mapRefInstance.current,
+      selectedHomeSubwayRanking,
+    );
+
+    return () => {
+      clearSelectedHomeSubwayDistrictPolygons();
+    };
+  }, [isMapReady, selectedHomeSubwayRanking]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;

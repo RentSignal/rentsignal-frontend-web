@@ -26,6 +26,11 @@ export type SafetyIndexMapOverlayItem = {
   value: number;
 };
 
+export type HomeSubwayRankingMapItem = {
+  name: string;
+  value: number;
+};
+
 export type ConvenienceMapPin = {
   name: string;
   latitude: number;
@@ -65,6 +70,8 @@ type MapOverlayStore = {
   consumerIndexItem: ConsumerIndexMapOverlayItem | null;
   subwayIndexItems: SubwayIndexMapOverlayItem[];
   safetyIndexItems: SafetyIndexMapOverlayItem[];
+  selectedHomeRecommendationName: string | null;
+  selectedHomeSubwayRanking: HomeSubwayRankingMapItem | null;
   selectedTransportNeighborhoodName: string | null;
   subwayLinePolylines: SubwayLinePolyline[];
   subwayStationMarkers: SubwayStationMarker[];
@@ -80,6 +87,10 @@ type MapOverlayStore = {
   clearSubwayIndexItems: () => void;
   setSafetyIndexItems: (items: SafetyIndexMapOverlayItem[]) => void;
   clearSafetyIndexItems: () => void;
+  selectHomeRecommendation: (name: string) => void;
+  clearSelectedHomeRecommendation: () => void;
+  selectHomeSubwayRanking: (item: HomeSubwayRankingMapItem) => void;
+  clearSelectedHomeSubwayRanking: () => void;
   selectTransportNeighborhood: (name: string) => void;
   clearSelectedTransportNeighborhood: () => void;
   setSubwayLinePolylines: (polylines: SubwayLinePolyline[]) => void;
@@ -101,6 +112,8 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   consumerIndexItem: null,
   subwayIndexItems: [],
   safetyIndexItems: [],
+  selectedHomeRecommendationName: null,
+  selectedHomeSubwayRanking: null,
   selectedTransportNeighborhoodName: null,
   subwayLinePolylines: [],
   subwayStationMarkers: [],
@@ -117,6 +130,28 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   clearSubwayIndexItems: () => set({ subwayIndexItems: [] }),
   setSafetyIndexItems: (items) => set({ safetyIndexItems: items }),
   clearSafetyIndexItems: () => set({ safetyIndexItems: [] }),
+  selectHomeRecommendation: (name) =>
+    set({
+      selectedHomeRecommendationName: name,
+      selectedHomeSubwayRanking: null,
+      subwayLinePolylines: [],
+      subwayStationMarkers: [],
+      selectedSubwayStationMarker: null,
+    }),
+  clearSelectedHomeRecommendation: () =>
+    set({ selectedHomeRecommendationName: null }),
+  selectHomeSubwayRanking: (item) =>
+    set({
+      selectedHomeSubwayRanking: item,
+      selectedHomeRecommendationName: null,
+    }),
+  clearSelectedHomeSubwayRanking: () =>
+    set({
+      selectedHomeSubwayRanking: null,
+      subwayLinePolylines: [],
+      subwayStationMarkers: [],
+      selectedSubwayStationMarker: null,
+    }),
   selectTransportNeighborhood: (name) =>
     set({ selectedTransportNeighborhoodName: name }),
   clearSelectedTransportNeighborhood: () =>
