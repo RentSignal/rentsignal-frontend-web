@@ -94,8 +94,6 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
   console.log("currentUserId:", currentUserId);
   console.log("post.userId:", post.userId);
 
-  const isAuthor = currentUserId !== undefined && currentUserId === post.userId;
-
   return (
     <div className="flex flex-col h-full bg-white">
       {/* 본문 */}
