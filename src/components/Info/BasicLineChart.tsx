@@ -11,22 +11,21 @@ import {
   ReferenceLine,
 } from "recharts";
 
-const data = [
-  { date: "2025.02", value: 124 },
-  { date: "2025.03", value: 118 },
-  { date: "2025.04", value: 105 },
-  { date: "2025.05", value: 110 },
-  { date: "2025.06", value: 115 },
-  { date: "2025.07", value: 116 },
-  { date: "2025.08", value: 122 },
-];
-
-type DotPos = {
-  x: number;
-  y: number;
+type ChartDataItem = {
+  date: string;
+  value: number;
 };
 
-const BasicLineChart = () => {
+type DotPos = {
+  left: number;
+  top: number;
+};
+
+type BasicLineChartProps = {
+  data?: ChartDataItem[];
+};
+
+const BasicLineChart = ({ data = [] }: BasicLineChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const dotRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -35,19 +34,32 @@ const BasicLineChart = () => {
 
   const currentIndex = activeIndex ?? data.length - 1;
   const currentItem = data[currentIndex];
+  const yAxisDomain = useMemo(() => {
+    if (data.length === 0) return [90, 130];
+
+    const values = data.map((item) => item.value);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const padding = Math.max((max - min) * 0.2, 5);
+
+    return [
+      Math.floor((min - padding) / 5) * 5,
+      Math.ceil((max + padding) / 5) * 5,
+    ];
+  }, [data]);
 
   const tooltipNode = useMemo(() => {
-    if (!chartRef.current || !dotPos || activeIndex === null) return null;
-
-    const rect = chartRef.current.getBoundingClientRect();
+    if (!dotPos || activeIndex === null || !currentItem) {
+      return null;
+    }
 
     const bubbleHeight = 28;
     const tailHeight = 6;
     const gap = 6;
     const OFFSET_X = 40;
 
-    const left = rect.left + dotPos.x - OFFSET_X;
-    const top = rect.top + dotPos.y - bubbleHeight - tailHeight - gap;
+    const left = dotPos.left - OFFSET_X;
+    const top = dotPos.top - bubbleHeight - tailHeight - gap;
 
     return (
       <div
@@ -90,7 +102,15 @@ const BasicLineChart = () => {
         />
       </div>
     );
-  }, [activeIndex, currentItem.date, currentItem.value, dotPos]);
+  }, [activeIndex, currentItem, dotPos]);
+
+  if (data.length === 0) {
+    return (
+      <div className="flex items-center justify-center w-full h-full text-sm text-coolNeutral-50">
+        표시할 추이 데이터가 없습니다.
+      </div>
+    );
+  }
 
   return (
     <div
@@ -126,10 +146,12 @@ const BasicLineChart = () => {
 
               setActiveIndex(nextIndex);
 
-              if (dotRef.current) {
+              if (dotRef.current && chartRef.current) {
+                const rect = chartRef.current.getBoundingClientRect();
+
                 setDotPos({
-                  x: dotRef.current.x,
-                  y: dotRef.current.y,
+                  left: rect.left + dotRef.current.x,
+                  top: rect.top + dotRef.current.y,
                 });
               }
             } else {
@@ -162,7 +184,7 @@ const BasicLineChart = () => {
           />
 
           <YAxis
-            domain={[90, 130]}
+            domain={yAxisDomain}
             tick={{
               fontSize: 9,
               fontWeight: 400,

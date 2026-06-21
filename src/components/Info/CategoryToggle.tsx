@@ -22,7 +22,7 @@ type CategoryItem = {
 };
 
 type CategoryToggleProps = {
-  items: CategoryItem[];
+  items: readonly CategoryItem[];
   value: string;
   onChange: (value: string) => void;
 };

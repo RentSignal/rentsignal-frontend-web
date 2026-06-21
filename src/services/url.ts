@@ -13,6 +13,15 @@ export const API_URL = {
 
   /* 추천 탭 */
   RECOMMEND: "/api/recommend",
+
+  /* 정보 탭 */
+  RENT_INDEX_RANKINGS: "/api/info/rent-index/current",
+  RENT_INDEX_CHANGE: "/api/info/rent-index/change",
+  CONSUMER_INDEX: "/api/info/consumer-sentiment",
+  SUBWAY_INDEX: "/api/info/subway-accessibility",
+  CONVENIENCE_INFO: "/api/info/convenience",
+  TRANSPORT_INFO: "/api/info/transport",
+  SAFETY_INFO: "/api/info/safety",
 };
 
 /* 커뮤니티 탭 */
