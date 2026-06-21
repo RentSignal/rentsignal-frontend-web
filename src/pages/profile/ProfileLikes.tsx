@@ -1,33 +1,22 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-interface Post {
-  id: number;
-  title: string;
-  content: string;
-  category: string;
-  userId: number;
-  userName: string;
-  neighborhoodName: string;
-  likeCount: number;
-  commentCount: number;
-  viewCount: number;
-  createdAt: string;
-}
+import { fetchMyLikedPosts } from "@/services/profileApi";
+import type { ProfilePost } from "@/types/profile";
 
 const ProfileLikes = () => {
   const navigate = useNavigate();
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<ProfilePost[]>([]);
 
   useEffect(() => {
-    const fetchLikes = async () => {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/community/mypage/likes?page=0&size=20`, {
-        credentials: "include",
-      });
-      const data = await res.json();
-      setPosts(data.data.content);
+    const loadPosts = async () => {
+      try {
+        const res = await fetchMyLikedPosts();
+        setPosts(res.data.content);
+      } catch (e) {
+        console.error("공감한 글 조회 실패:", e);
+      }
     };
-    fetchLikes();
+    loadPosts();
   }, []);
 
   return (
