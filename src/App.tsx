@@ -12,10 +12,6 @@ import ProfilePosts from "./pages/profile/ProfilePosts";
 import ProfileName from "./pages/profile/UpdateName";
 import ProfilePhone from "./pages/profile/UpdatePhone";
 import ProfileDelete from "./pages/profile/DeleteAccount";
-import PostDetailPage from "./pages/community/PostDetail";
-import WritePostPage from "./pages/community/WritePost";
-import EditPostPage from "./pages/community/EditPost";
-import CommunityList from "./components/community/CommunityList";
 
 function App() {
   return (
@@ -25,12 +21,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/info" element={<Info />} />
         <Route path="/recommend" element={<Recommend />} />
-        <Route path="/community" element={<Community />}>
-          <Route index element={<CommunityList />} />
-          <Route path=":postId" element={<PostDetailPage />} />
-          <Route path="write" element={<WritePostPage />} />
-          <Route path=":postId/edit" element={<EditPostPage />} />
-        </Route>
+        <Route path="/community" element={<Community />} />
         <Route path="/profile" element={<Profile />}>
           <Route path="posts" element={<ProfilePosts />} />
           <Route path="comments" element={<ProfileComments />} />

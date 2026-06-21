@@ -10,6 +10,7 @@ import RecommnedationResultPanel from "@/components/recommend/RecommendationResu
 const MainLayout = () => {
   const location = useLocation();
   const isHome = location.pathname === "/";
+  const isCommunity = location.pathname.startsWith("/community");
   const [isOpen, setIsOpen] = useState(true);
   const [loginOpen, setLoginOpen] = useState(false); //로그인 모달 상태
   const [phoneOpen, setPhoneOpen] = useState(false); //전화번호 입력 모달 상태
@@ -38,7 +39,7 @@ const MainLayout = () => {
         {/* 패널 */}
         <div
           className={`
-              absolute left-0 top-0 h-full w-[377px]
+              absolute left-0 top-0 h-full ${isCommunity ? "w-fit" : "w-[377px]"}
               bg-white border-r border-divider_grey
               z-40
               transition-transform duration-300 ease-in-out
@@ -46,13 +47,16 @@ const MainLayout = () => {
             `}
         >
           {/* 헤더 */}
-          <PanelHeader onToggle={() => setIsOpen((prev) => !prev)} />
+          {!isCommunity && (
+            <PanelHeader onToggle={() => setIsOpen((prev) => !prev)} />
+          )}
           <Outlet
             context={{
               openLoginModal: () => setLoginOpen(true),
               openPhoneModal: () => setPhoneOpen(true),
               openResultPanel: () => setRecommendResultOpen(true),
               setRecommendResult,
+              onToggle: () => setIsOpen((prev) => !prev)
             }}
           />
         </div>
