@@ -1,4 +1,4 @@
-import { ensureAccessToken, reissueToken, clearAccessToken } from "./auth";
+import { getAccessToken, reissueToken, clearAccessToken } from "./auth";
 
 interface ApiParams {
   apiUrl: string;
@@ -24,7 +24,7 @@ const request = async (
     url += `?${query}`;
   }
 
-  const accessToken = await ensureAccessToken();
+  const accessToken = getAccessToken();
 
   const response = await fetch(url, {
     method,

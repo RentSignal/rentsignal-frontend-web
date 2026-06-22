@@ -16,8 +16,8 @@ import ProfileDelete from "./pages/profile/DeleteAccount";
 function App() {
   return (
     <Routes>
+      <Route path="/oauth2/redirect" element={<OAuthRedirect />} />
       <Route element={<MainLayout />}>
-        <Route path="/oauth2/redirect" element={<OAuthRedirect />} />
         <Route path="/" element={<Home />} />
         <Route path="/info" element={<Info />} />
         <Route path="/recommend" element={<Recommend />} />
