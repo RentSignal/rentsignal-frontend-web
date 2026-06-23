@@ -72,7 +72,7 @@ const SubwayItem = ({
         </h4>
       </div>
       {isExpanded && hiddenSubwayLines.length > 0 && (
-        <div className="flex flex-wrap gap-1 rounded-b-lg bg-blue-99 py-2 pl-[132px] pr-2">
+        <div className="flex flex-wrap gap-1 rounded-b-lg bg-coolNeutral-99 py-2 pl-[132px] pr-2">
           {hiddenSubwayLines.map((lineName) => (
             <SubwayLineBadge key={lineName} lineName={lineName} />
           ))}
