@@ -1,5 +1,27 @@
 import { fetchDataFromApiGet } from "./api";
 import { API_URL } from "./url";
+import type { ResidenceReviewItem } from "@/types/home";
+
+export type ApiResponse<T> = {
+  success: boolean;
+  code: string;
+  message: string;
+  data: T;
+};
+
+export type Pageable = {
+  pageNumber: number;
+  pageSize: number;
+};
+
+export type PagedContent<T> = {
+  content: T[];
+  pageable?: Pageable;
+  number?: number;
+  size?: number;
+  totalPages: number;
+  totalElements: number;
+};
 
 export type FacilityCountItem = {
   count: number;
@@ -163,4 +185,14 @@ export const fetchDistrictSubwayDetail = async (districtId: number) => {
         ) === index,
     ),
   };
+};
+
+export const fetchResidenceReview = async (): Promise<
+  ApiResponse<PagedContent<ResidenceReviewItem>>
+> => {
+  const res = await fetchDataFromApiGet({
+    apiUrl: API_URL.REVIEW,
+  });
+
+  return res;
 };
