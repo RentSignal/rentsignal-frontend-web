@@ -10,12 +10,16 @@ import {
 } from "@/services/communityApi";
 import { useUserStore } from "@/store/userStore";
 import type { PostDetail, Comment } from "@/types/community";
+import { formatDateTime } from "@/utils/date";
 
 interface PostDetailPageProps {
   postId: number;
   onClose: () => void;
   onEditClick: (postId: number) => void;
 }
+
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
 
 const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) => {
   const currentUserId = useUserStore((s) => s.user?.userId);  
@@ -32,8 +36,8 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
       try {
         const res = await fetchPostDetail(postId);
         setPost(res.data);
-      } catch (e: any) {
-        setError(e.message ?? "게시글을 불러올 수 없습니다.");
+      } catch (e: unknown) {
+        setError(getErrorMessage(e, "게시글을 불러올 수 없습니다."));
       }
     };
 
@@ -54,8 +58,8 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
     try {
       await togglePostLike(postId);
       setLiked((prev) => !prev);
-    } catch (e: any) {
-      console.error("공감 실패:", e.message);
+    } catch (e: unknown) {
+      console.error("공감 실패:", getErrorMessage(e, "공감에 실패했습니다."));
     }
   };
 
@@ -64,19 +68,9 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
     try {
       await deletePost(postId);
       onClose();
-    } catch (e: any) {
-      alert(e.message ?? "삭제에 실패했습니다.");
+    } catch (e: unknown) {
+      alert(getErrorMessage(e, "삭제에 실패했습니다."));
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   if (error) {
@@ -108,7 +102,7 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-black">{post.userName}</p>
-                    <p className="text-xs text-coolNeutral-70">{formatDate(post.createdAt)}</p>
+                    <p className="text-xs text-coolNeutral-70">{formatDateTime(post.createdAt)}</p>
                 </div>
             </div>
 
@@ -187,8 +181,8 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                                 try {
                                     await deleteComment(comment.id);
                                     setComments((prev) => prev.filter((c) => c.id !== comment.id));
-                                } catch (e: any) {
-                                    alert(e.message ?? "삭제에 실패했습니다.");
+                                } catch (e: unknown) {
+                                    alert(getErrorMessage(e, "삭제에 실패했습니다."));
                                 }
                             }}
                             className="flex items-center gap-1.5 text-xs text-coolNeutral-25 bg-blue-99 border border-blue-95 rounded-lg px-2.5 py-1 transition-colors"
@@ -198,7 +192,7 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                     </div>
                 </div>
                   <p className="text-sm text-gray-600 leading-relaxed">{comment.content}</p>
-                  <p className="text-xs text-gray-400 mt-2">{formatDate(comment.createdAt)}</p>
+                  <p className="text-xs text-gray-400 mt-2">{formatDateTime(comment.createdAt)}</p>
                 </div>
               ))}
             </div>

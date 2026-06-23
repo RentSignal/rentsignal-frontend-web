@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMyLikedPosts } from "@/services/profileApi";
 import type { ProfilePost } from "@/types/profile";
+import { formatDateTime } from "@/utils/date";
 
 const ProfileLikes = () => {
   const navigate = useNavigate();
@@ -44,7 +45,7 @@ const ProfileLikes = () => {
             </div>
             <p className="text-md font-medium text-black opacity-80 mb-1">{post.title}</p>
             <p className="text-sm text-coolNeutral-50 mb-1">{post.content}</p>
-            <p className="text-xs text-coolNeutral-70">@{post.userName} · {post.createdAt}</p>
+            <p className="text-xs text-coolNeutral-70">@{post.userName} · {formatDateTime(post.createdAt)}</p>
           </div>
         ))}
         {posts.length === 0 && (
