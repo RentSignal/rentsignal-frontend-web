@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import CommentModal from "@/components/community/CommentModal";
 import {
@@ -29,29 +29,48 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [error, setError] = useState("");
 
+  const loadComments = useCallback(async () => {
+    try {
+      const res = await fetchComments(postId);
+      setComments(res.data.content);
+    } catch (e) {
+      console.error("댓글 조회 실패:", e);
+    }
+  }, [postId]);
+
   useEffect(() => {
     if (!postId) return;
+
+    let ignore = false;
 
     const loadPost = async () => {
       try {
         const res = await fetchPostDetail(postId);
+        if (ignore) return;
         setPost(res.data);
       } catch (e: unknown) {
+        if (ignore) return;
         setError(getErrorMessage(e, "게시글을 불러올 수 없습니다."));
       }
     };
 
-    const loadComments = async () => {
+    const loadInitialComments = async () => {
       try {
         const res = await fetchComments(postId);
+        if (ignore) return;
         setComments(res.data.content);
       } catch (e) {
+        if (ignore) return;
         console.error("댓글 조회 실패:", e);
       }
     };
 
     loadPost();
-    loadComments();
+    loadInitialComments();
+
+    return () => {
+      ignore = true;
+    };
   }, [postId]);
 
   const handleLike = async () => {
@@ -206,8 +225,8 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
           postId={String(postId)}
           userName={post.userName}
           onClose={() => setShowCommentModal(false)}
-          onSubmit={(newComment) => {
-            setComments((prev) => [...prev, newComment]);
+          onSubmit={async () => {
+            await loadComments();
             setShowCommentModal(false);
           }}
         />,
