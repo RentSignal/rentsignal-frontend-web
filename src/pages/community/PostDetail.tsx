@@ -16,12 +16,13 @@ interface PostDetailPageProps {
   postId: number;
   onClose: () => void;
   onEditClick: (postId: number) => void;
+  onDeleteSuccess?: () => void;
 }
 
 const getErrorMessage = (error: unknown, fallback: string) =>
   error instanceof Error ? error.message : fallback;
 
-const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) => {
+const PostDetailPage = ({ postId, onClose, onEditClick, onDeleteSuccess }: PostDetailPageProps) => {
   const currentUserId = useUserStore((s) => s.user?.userId);  
   const [post, setPost] = useState<PostDetail | null>(null);
   const [liked, setLiked] = useState(false);
@@ -86,7 +87,11 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
     if (!window.confirm("게시글을 삭제하시겠습니까?")) return;
     try {
       await deletePost(postId);
-      onClose();
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
+      } else {
+        onClose();
+      }
     } catch (e: unknown) {
       alert(getErrorMessage(e, "삭제에 실패했습니다."));
     }
