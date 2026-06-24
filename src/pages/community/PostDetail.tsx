@@ -18,12 +18,12 @@ interface PostDetailPageProps {
 }
 
 const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) => {
-  const currentUserId = useUserStore((s) => s.user?.userId);  
   const [post, setPost] = useState<PostDetail | null>(null);
   const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [error, setError] = useState("");
+  const currentUser = useUserStore((s) => s.user);
 
   useEffect(() => {
     if (!postId) return;
@@ -91,8 +91,6 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
   }
 
   if (!post) return null;
-  console.log("currentUserId:", currentUserId);
-  console.log("post.userId:", post.userId);
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -113,7 +111,6 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
             </div>
 
             {/* 수정/삭제 버튼 */}
-            {/* {isAuthor && ( */}
                 <div className="flex justify-end gap-3 px-3 -mt-5">
                     <button
                         onClick={() => onEditClick(postId)}
@@ -128,7 +125,6 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                         삭제
                     </button>
                 </div>
-            {/* )} */}
         </div>
 
 
@@ -210,7 +206,7 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
       {showCommentModal && createPortal(
         <CommentModal
           postId={String(postId)}
-          userName={post.userName}
+          userName={currentUser?.name ?? ""}
           onClose={() => setShowCommentModal(false)}
           onSubmit={(newComment) => {
             setComments((prev) => [...prev, newComment]);
