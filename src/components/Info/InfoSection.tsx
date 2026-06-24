@@ -733,11 +733,11 @@ const InfoSection = () => {
                           </h3>
                         </div>
 
-                        <section className="flex flex-col gap-4 px-5 pt-3">
-                          <h4 className="text-base font-bold text-coolNeutral-10">
+                        <section className="flex flex-col gap-4 ">
+                          <h4 className="px-5 pt-3 text-base font-bold text-coolNeutral-10">
                             주변 지하철
                           </h4>
-                          <div className="flex flex-col gap-3">
+                          <div className="flex flex-col">
                             {selectedTransportDetail.subwayStations.map(
                               (station) => {
                                 const lineLabel = getSubwayLineLabel(
@@ -754,7 +754,7 @@ const InfoSection = () => {
                                     onClick={() =>
                                       handleSubwayStationClick(station)
                                     }
-                                    className="flex items-center gap-2 rounded-[6px] py-1 text-left transition-colors hover:bg-coolNeutral-99"
+                                    className="flex items-center gap-2 rounded-[6px] text-left transition-colors hover:bg-coolNeutral-99 px-5 py-2"
                                   >
                                     <span
                                       className={`flex h-6 items-center justify-center whitespace-nowrap rounded-full text-xs font-bold text-white ${

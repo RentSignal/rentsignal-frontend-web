@@ -67,6 +67,10 @@ const Community = () => {
           <PostDetailPage
             postId={selectedPostId}
             onClose={() => setSelectedPostId(null)}
+            onDeleteSuccess={() => {
+              setSelectedPostId(null);
+              setListKey((prev) => prev + 1);
+            }}
             onEditClick={(postId) => {
               setEditPostId(postId);
               setSelectedPostId(null);
