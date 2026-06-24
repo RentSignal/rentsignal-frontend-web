@@ -104,7 +104,7 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-10">
         <button
           onClick={onWriteClick}
-          className="flex items-center gap-2 px-6 py-2 rounded-full bg-blue-95 border border-blue-90 shadow-md text-sm text-black hover:bg-gray-50 transition-colors"
+          className="flex items-center gap-2 px-6 py-2 rounded-full bg-blue-95 border border-blue-90 text-sm text-coolNeutral-30 font-semibold hover:bg-gray-50 transition-colors"
         >
           <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
