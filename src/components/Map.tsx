@@ -54,6 +54,7 @@ import {
   getGeoJsonLngLatPoints,
   type GeoJsonLngLatGeometry,
 } from "@/components/mapOverlays/geoJson";
+import { useKakaoMap } from "@/hooks/useKakaoMap";
 declare global {
   interface Window {
     kakao: any;
@@ -63,8 +64,6 @@ declare global {
 type Props = {
   enableOverlay?: boolean;
 };
-
-const KAKAO_SDK_ID = "kakao-map-sdk";
 
 const getDistrictCenters = () => {
   const centers = new globalThis.Map<string, { lat: number; lng: number }>();
@@ -130,9 +129,7 @@ const districtCenters = getDistrictCenters();
 const districtCodeMap = getDistrictCodeMap();
 
 const Map = ({ enableOverlay = true }: Props) => {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapRefInstance = useRef<any>(null);
-  const overlayRef = useRef<any>(null);
+  const { mapRef, mapRefInstance, overlayRef, isMapReady } = useKakaoMap();
   const basicPolygonsRef = useRef<any[]>([]);
   const rentIndexOverlaysRef = useRef<any[]>([]);
   const subwayIndexOverlaysRef = useRef<any[]>([]);
@@ -184,61 +181,6 @@ const Map = ({ enableOverlay = true }: Props) => {
   );
 
   const [mapType, setMapType] = useState<"roadmap" | "skyview">("roadmap");
-  const [isMapReady, setIsMapReady] = useState(false);
-
-  /* ------------------------- SDK Load ------------------------- */
-
-  const loadKakaoSdk = () =>
-    new Promise<void>((resolve) => {
-      if (window.kakao?.maps) {
-        resolve();
-        return;
-      }
-
-      const existingScript = document.getElementById(
-        KAKAO_SDK_ID,
-      ) as HTMLScriptElement | null;
-
-      if (existingScript) {
-        existingScript.onload = () => {
-          window.kakao.maps.load(() => resolve());
-        };
-        return;
-      }
-
-      const script = document.createElement("script");
-      script.id = KAKAO_SDK_ID;
-      script.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${import.meta.env.VITE_KAKAO_JS_KEY}&autoload=false`;
-      script.async = true;
-
-      script.onload = () => {
-        window.kakao.maps.load(() => resolve());
-      };
-
-      document.head.appendChild(script);
-    });
-
-  /* ------------------------- Map Init ------------------------- */
-
-  const initMap = () => {
-    if (!mapRef.current) return;
-
-    const map = new window.kakao.maps.Map(mapRef.current, {
-      center: new window.kakao.maps.LatLng(37.5665, 126.978),
-      level: 8,
-    });
-
-    mapRefInstance.current = map;
-
-    overlayRef.current = new window.kakao.maps.CustomOverlay({
-      zIndex: 2,
-      yAnchor: 1,
-    });
-
-    setIsMapReady(true);
-
-    // setCurrentLocation(map);
-  };
 
   const clearBasicPolygons = () => {
     clearBasicDistrictPolygons(basicPolygonsRef.current);
@@ -331,12 +273,6 @@ const Map = ({ enableOverlay = true }: Props) => {
   /* ------------------------- Current Location ------------------------- */
 
   /* ------------------------- Effect ------------------------- */
-
-  useEffect(() => {
-    loadKakaoSdk().then(() => {
-      initMap();
-    });
-  }, []);
 
   useEffect(() => {
     if (!mapRefInstance.current) return;
