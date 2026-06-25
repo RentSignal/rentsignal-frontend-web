@@ -42,15 +42,15 @@ import {
   selectRentIndexItemOnMap,
 } from "@/components/mapOverlays/rentIndexOverlay";
 import {
+  clearSubwayIndexOverlays as clearSubwayIndexOverlayRefs,
+  drawSubwayIndexOverlays,
+} from "@/components/mapOverlays/subwayIndexOverlay";
+import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
   getGeoJsonLngLatPoints,
   type GeoJsonLngLatGeometry,
 } from "@/components/mapOverlays/geoJson";
-import type {
-  SubwayIndexMapOverlayItem,
-} from "@/store/mapOverlayStore";
-
 declare global {
   interface Window {
     kakao: any;
@@ -62,17 +62,6 @@ type Props = {
 };
 
 const KAKAO_SDK_ID = "kakao-map-sdk";
-
-const getRegionName = (name: string) => {
-  return name.split(" ").at(-1) ?? name;
-};
-
-const getSubwayIndexOverlayColor = (value: number) => {
-  if (value >= 100.8) return "#FF0000";
-  if (value >= 100.6) return "#FF8000";
-  if (value >= 100.4) return "#66D575";
-  return "#005EFF";
-};
 
 const getDistrictCenters = () => {
   const centers = new globalThis.Map<string, { lat: number; lng: number }>();
@@ -345,10 +334,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearSubwayIndexOverlays = () => {
-    subwayIndexOverlaysRef.current.forEach((overlay) => {
-      overlay.setMap(null);
-    });
-    subwayIndexOverlaysRef.current = [];
+    clearSubwayIndexOverlayRefs(subwayIndexOverlaysRef.current);
   };
 
   const clearSafetyIndexOverlays = () => {
@@ -380,67 +366,6 @@ const Map = ({ enableOverlay = true }: Props) => {
 
   const clearSelectedRegionPolygons = () => {
     clearSelectedRegionPolygonRefs(selectedRegionPolygonsRef.current);
-  };
-
-  const createSubwayIndexOverlayContent = (
-    item: SubwayIndexMapOverlayItem,
-    color: string,
-  ) => {
-    const container = document.createElement("div");
-    container.style.width = "97px";
-    container.style.height = "73px";
-    container.style.background = color;
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.alignItems = "center";
-    container.style.justifyContent = "center";
-    container.style.color = "white";
-    container.style.fontFamily = "'Pretendard', sans-serif";
-    container.style.fontWeight = "700";
-    container.style.boxShadow = "0 3px 8px rgba(0,0,0,0.16)";
-    container.style.textShadow = "0 1px 2px rgba(0,0,0,0.2)";
-
-    const name = document.createElement("div");
-    name.style.fontSize = "15px";
-    name.style.fontWeight = "700";
-    name.style.lineHeight = "1.2";
-    name.textContent = getRegionName(item.name);
-
-    const value = document.createElement("div");
-    value.style.fontSize = "15px";
-    value.style.fontWeight = "700";
-    value.style.lineHeight = "1.2";
-    value.textContent = `${item.value.toFixed(1)}점`;
-
-    container.append(name, value);
-
-    return container;
-  };
-
-  const drawSubwayIndexOverlays = (
-    map: any,
-    items: SubwayIndexMapOverlayItem[],
-  ) => {
-    clearSubwayIndexOverlays();
-
-    items.forEach((item) => {
-      const district = getRegionName(item.name);
-      const center = districtCenters.get(district);
-
-      if (!center) return;
-
-      const overlay = new window.kakao.maps.CustomOverlay({
-        map,
-        position: new window.kakao.maps.LatLng(center.lat, center.lng),
-        zIndex: 6,
-        content: createSubwayIndexOverlayContent(
-          item,
-          getSubwayIndexOverlayColor(item.value),
-        ),
-      });
-
-      subwayIndexOverlaysRef.current.push(overlay);
-    });
   };
 
   // const createPolygon = (map: any, rings: number[][][], properties: any) => {
@@ -540,7 +465,12 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSubwayIndexOverlays(mapRefInstance.current, subwayIndexItems);
+    drawSubwayIndexOverlays({
+      map: mapRefInstance.current,
+      items: subwayIndexItems,
+      districtCenters,
+      overlayRefs: subwayIndexOverlaysRef.current,
+    });
 
     return () => {
       clearSubwayIndexOverlays();
