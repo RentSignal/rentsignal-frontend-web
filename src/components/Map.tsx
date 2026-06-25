@@ -2,8 +2,11 @@ import { useEffect, useRef, useState } from "react";
 // import seoulGeoJson from "@/assets/geojson/seoul-gu.json";
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
 import { regionMap } from "@/constants/regionMap";
-import { regionColor, regionBoundaryColor } from "@/constants/regionColor";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
+import {
+  clearBasicDistrictPolygons,
+  drawBasicDistrictPolygons,
+} from "@/components/mapOverlays/basicDistrictOverlay";
 import {
   clearConsumerIndexPolygons,
   drawConsumerIndexPolygons,
@@ -237,96 +240,8 @@ const Map = ({ enableOverlay = true }: Props) => {
     // setCurrentLocation(map);
   };
 
-  /* ------------------------- GeoJSON ------------------------- */
-
-  const drawBasicGeoJSON = (map: any) => {
-    seoulGeoJson.features.forEach((feature: any) => {
-      const { geometry, properties } = feature;
-
-      if (geometry.type === "Polygon") {
-        createBasicPolygon(map, geometry.coordinates, properties);
-      }
-
-      if (geometry.type === "MultiPolygon") {
-        geometry.coordinates.forEach((coords: any) => {
-          createBasicPolygon(map, coords, properties);
-        });
-      }
-    });
-  };
-
-  const createBasicPolygon = (
-    map: any,
-    rings: number[][][],
-    properties: any,
-  ) => {
-    const paths = createPolygonPaths(rings);
-
-    const guName = properties.SIG_KOR_NM;
-    const region = regionMap[guName];
-    const fillColor = regionColor[region] ?? "#C4ECFE";
-    const strokeColor = regionBoundaryColor[region] ?? "#C4ECFE";
-
-    const polygon = new window.kakao.maps.Polygon({
-      map,
-      path: paths,
-      strokeWeight: 2,
-      strokeColor,
-      strokeOpacity: 1,
-      fillColor,
-      fillOpacity: 0.6,
-    });
-
-    basicPolygonsRef.current.push(polygon);
-
-    /* ---------------- Hover ---------------- */
-
-    window.kakao.maps.event.addListener(
-      polygon,
-      "mouseover",
-      (mouseEvent: any) => {
-        polygon.setOptions({
-          fillOpacity: 0.9,
-        });
-
-        if (!overlayRef.current || !enableOverlay) return;
-
-        overlayRef.current.setContent(`
-        <div style="
-          padding:6px 20px;
-          background:white;
-          text-align: center;
-          border-radius: 3px;
-          font-size: 14px;
-          font-family:'Pretendard', sans-serif;
-          box-shadow:0 2px 6px rgba(0,0,0,0.2);
-        ">
-          ${region}<br/>
-          ${guName}
-        </div>
-      `);
-
-        overlayRef.current.setPosition(mouseEvent.latLng);
-        overlayRef.current.setMap(map);
-      },
-    );
-
-    window.kakao.maps.event.addListener(polygon, "mouseout", () => {
-      polygon.setOptions({
-        fillOpacity: 0.6,
-      });
-
-      if (overlayRef.current) {
-        overlayRef.current.setMap(null);
-      }
-    });
-  };
-
   const clearBasicPolygons = () => {
-    basicPolygonsRef.current.forEach((polygon) => {
-      polygon.setMap(null);
-    });
-    basicPolygonsRef.current = [];
+    clearBasicDistrictPolygons(basicPolygonsRef.current);
   };
 
   const clearRentIndexOverlays = () => {
@@ -438,7 +353,12 @@ const Map = ({ enableOverlay = true }: Props) => {
 
     if (enableOverlay) {
       if (basicPolygonsRef.current.length === 0) {
-        drawBasicGeoJSON(mapRefInstance.current);
+        drawBasicDistrictPolygons({
+          map: mapRefInstance.current,
+          overlay: overlayRef.current,
+          enableOverlay,
+          polygonRefs: basicPolygonsRef.current,
+        });
       }
     } else {
       clearBasicPolygons();
