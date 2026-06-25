@@ -16,7 +16,7 @@ export default function Step1({
   const [list, setList] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(false); //검색 드롭타인 메뉴에서 선택되었는지
-
+  const pMessage = `예) "삼성동" 또는 "강남구 삼성동"`;
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebounced(value);
@@ -78,7 +78,7 @@ export default function Step1({
               setOpen(true);
               setIsSelected(false);
             }}
-            placeholder="거주하고자 하는 지역을 검색해 주세요."
+            placeholder={pMessage}
           />
           <span className="absolute -translate-y-1/2 right-3 top-1/2">
             {value && (
