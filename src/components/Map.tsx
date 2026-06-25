@@ -21,20 +21,23 @@ import {
   drawConvenienceMarkers,
 } from "@/components/mapOverlays/convenienceMarkerOverlay";
 import {
+  clearSubwayLinePolylines,
+  clearSubwayStationMarkers,
+  drawSubwayLinePolylines,
+  drawSubwayStationMarkers,
+} from "@/components/mapOverlays/subwayOverlay";
+import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
   getGeoJsonLngLatPoints,
   type GeoJsonLngLatGeometry,
 } from "@/components/mapOverlays/geoJson";
-import { getSubwayLineColor } from "@/utils/subwayLineStyle";
 import type {
   HomeSubwayRankingMapItem,
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
   SafetyIndexMapOverlayItem,
   SubwayIndexMapOverlayItem,
-  SubwayLinePolyline,
-  SubwayStationMarker,
 } from "@/store/mapOverlayStore";
 
 declare global {
@@ -82,25 +85,6 @@ const getSafetyIndexOverlayColor = (value: number) => {
   if (value >= 25) return "#66D575";
   return "#005EFF";
 };
-
-const getSubwayStationMarkerImage = (color: string) => {
-  const markerSvg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
-      <circle cx="14" cy="14" r="10" fill="${color}" stroke="white" stroke-width="4"/>
-      <circle cx="14" cy="14" r="4" fill="white"/>
-    </svg>
-  `;
-
-  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(markerSvg)}`;
-};
-
-const escapeHtml = (value: string) =>
-  value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 
 const getDistrictCenters = () => {
   const centers = new globalThis.Map<string, { lat: number; lng: number }>();
@@ -412,20 +396,6 @@ const Map = ({ enableOverlay = true }: Props) => {
 
   const clearSelectedTransportDongPolygons = () => {
     clearTransportDongOverlay(selectedTransportDongPolygonsRef.current);
-  };
-
-  const clearSubwayLinePolylineOverlays = () => {
-    subwayLinePolylineRefs.current.forEach((polyline) => {
-      polyline.setMap(null);
-    });
-    subwayLinePolylineRefs.current = [];
-  };
-
-  const clearSubwayStationMarkers = () => {
-    subwayStationMarkerRefs.current.forEach((marker) => {
-      marker.setMap(null);
-    });
-    subwayStationMarkerRefs.current = [];
   };
 
   const clearSelectedRegionPolygons = () => {
@@ -764,72 +734,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
-  const drawSubwayLinePolylines = (
-    map: any,
-    polylines: SubwayLinePolyline[],
-  ) => {
-    clearSubwayLinePolylineOverlays();
-
-    polylines.forEach((polyline) => {
-      const path = polyline.path.map(
-        (point) => new window.kakao.maps.LatLng(point.latitude, point.longitude),
-      );
-
-      const subwayLinePolyline = new window.kakao.maps.Polyline({
-        map,
-        path,
-        strokeWeight: 5,
-        strokeColor: polyline.color ?? getSubwayLineColor(polyline.lineName),
-        strokeOpacity: 0.88,
-        strokeStyle: "solid",
-        zIndex: 8,
-      });
-
-      subwayLinePolylineRefs.current.push(subwayLinePolyline);
-    });
-  };
-
-  const drawSubwayStationMarkers = (
-    map: any,
-    markers: SubwayStationMarker[],
-  ) => {
-    clearSubwayStationMarkers();
-
-    markers.forEach((marker) => {
-      const color = marker.color ?? getSubwayLineColor(marker.lineName);
-      const position = new window.kakao.maps.LatLng(
-        marker.latitude,
-        marker.longitude,
-      );
-      const markerImage = new window.kakao.maps.MarkerImage(
-        getSubwayStationMarkerImage(color),
-        new window.kakao.maps.Size(28, 28),
-        {
-          offset: new window.kakao.maps.Point(14, 14),
-        },
-      );
-      const subwayStationMarker = new window.kakao.maps.Marker({
-        map,
-        position,
-        title: marker.stationName,
-        image: markerImage,
-        zIndex: 9,
-      });
-      const infoWindow = new window.kakao.maps.InfoWindow({
-        content: `<div style="padding:6px 10px;font-size:12px;white-space:nowrap;">${escapeHtml(marker.stationName)} · ${escapeHtml(marker.lineName)}</div>`,
-      });
-
-      window.kakao.maps.event.addListener(subwayStationMarker, "mouseover", () => {
-        infoWindow.open(map, subwayStationMarker);
-      });
-      window.kakao.maps.event.addListener(subwayStationMarker, "mouseout", () => {
-        infoWindow.close();
-      });
-
-      subwayStationMarkerRefs.current.push(subwayStationMarker);
-    });
-  };
-
   const selectRentIndexItemOnMap = (
     map: any,
     item: RentIndexMapOverlayItem,
@@ -1000,20 +904,28 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSubwayLinePolylines(mapRefInstance.current, subwayLinePolylines);
+    drawSubwayLinePolylines({
+      map: mapRefInstance.current,
+      polylines: subwayLinePolylines,
+      polylineRefs: subwayLinePolylineRefs.current,
+    });
 
     return () => {
-      clearSubwayLinePolylineOverlays();
+      clearSubwayLinePolylines(subwayLinePolylineRefs.current);
     };
   }, [isMapReady, subwayLinePolylines]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSubwayStationMarkers(mapRefInstance.current, subwayStationMarkers);
+    drawSubwayStationMarkers({
+      map: mapRefInstance.current,
+      markers: subwayStationMarkers,
+      markerRefs: subwayStationMarkerRefs.current,
+    });
 
     return () => {
-      clearSubwayStationMarkers();
+      clearSubwayStationMarkers(subwayStationMarkerRefs.current);
     };
   }, [isMapReady, subwayStationMarkers]);
 
