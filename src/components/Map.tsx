@@ -36,14 +36,18 @@ import {
   drawSafetyIndexOverlays,
 } from "@/components/mapOverlays/safetyOverlay";
 import {
+  clearRentIndexOverlays as clearRentIndexOverlayRefs,
+  clearSelectedRegionPolygons as clearSelectedRegionPolygonRefs,
+  drawRentIndexOverlays,
+  selectRentIndexItemOnMap,
+} from "@/components/mapOverlays/rentIndexOverlay";
+import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
   getGeoJsonLngLatPoints,
   type GeoJsonLngLatGeometry,
 } from "@/components/mapOverlays/geoJson";
 import type {
-  RentIndexMapOverlayItem,
-  RentIndexMapOverlayType,
   SubwayIndexMapOverlayItem,
 } from "@/store/mapOverlayStore";
 
@@ -61,22 +65,6 @@ const KAKAO_SDK_ID = "kakao-map-sdk";
 
 const getRegionName = (name: string) => {
   return name.split(" ").at(-1) ?? name;
-};
-
-const getOverlayColor = (type: RentIndexMapOverlayType) => {
-  if (type === "RISE") return "#FF5555";
-  if (type === "FALL") return "#4D8DFF";
-  return "#3385FF";
-};
-
-const getOverlayValueLabel = (item: RentIndexMapOverlayItem) => {
-  if (item.type === "CURRENT") {
-    return item.value.toFixed(1);
-  }
-
-  const prefix = item.type === "RISE" && item.value > 0 ? "+" : "";
-
-  return `${prefix}${item.value.toFixed(0)}%`;
 };
 
 const getSubwayIndexOverlayColor = (value: number) => {
@@ -353,10 +341,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearRentIndexOverlays = () => {
-    rentIndexOverlaysRef.current.forEach((overlay) => {
-      overlay.setMap(null);
-    });
-    rentIndexOverlaysRef.current = [];
+    clearRentIndexOverlayRefs(rentIndexOverlaysRef.current);
   };
 
   const clearSubwayIndexOverlays = () => {
@@ -394,109 +379,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearSelectedRegionPolygons = () => {
-    selectedRegionPolygonsRef.current.forEach((polygon) => {
-      polygon.setMap(null);
-    });
-    selectedRegionPolygonsRef.current = [];
-  };
-
-  const drawSelectedRegionPolygons = (
-    map: any,
-    regionName: string,
-    type: RentIndexMapOverlayType,
-  ) => {
-    clearSelectedRegionPolygons();
-
-    const fillColor = getOverlayColor(type);
-
-    seoulGeoJson.features.forEach((feature: any) => {
-      const guName = feature.properties.SIG_KOR_NM;
-
-      if (regionMap[guName] !== regionName) return;
-
-      const { geometry } = feature;
-      const polygons =
-        geometry.type === "Polygon"
-          ? [geometry.coordinates]
-          : geometry.coordinates;
-
-      polygons.forEach((rings: number[][][]) => {
-        const polygon = new window.kakao.maps.Polygon({
-          map,
-          path: createPolygonPaths(rings),
-          strokeWeight: 3,
-          strokeColor: fillColor,
-          strokeOpacity: 1,
-          fillColor,
-          fillOpacity: 0.28,
-          zIndex: 4,
-        });
-
-        selectedRegionPolygonsRef.current.push(polygon);
-      });
-    });
-  };
-
-  const createRentIndexOverlayContent = (
-    item: RentIndexMapOverlayItem,
-    color: string,
-    onClick: () => void,
-  ) => {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.style.width = "145px";
-    button.style.height = "145px";
-    button.style.border = "none";
-    button.style.borderRadius = "9999px";
-    button.style.background = color;
-    button.style.opacity = "0.82";
-    button.style.display = "flex";
-    button.style.alignItems = "center";
-    button.style.justifyContent = "center";
-    button.style.color = "white";
-    button.style.fontSize = "24px";
-    button.style.fontWeight = "700";
-    button.style.fontFamily = "'Pretendard', sans-serif";
-    button.style.textShadow = "0 1px 2px rgba(0,0,0,0.2)";
-    button.style.boxShadow = "0 4px 12px rgba(0,0,0,0.12)";
-    button.style.cursor = "pointer";
-    button.style.padding = "0";
-    button.textContent = getOverlayValueLabel(item);
-
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      onClick();
-    });
-
-    return button;
-  };
-
-  const drawRentIndexOverlays = (
-    map: any,
-    items: RentIndexMapOverlayItem[],
-  ) => {
-    clearRentIndexOverlays();
-
-    items.forEach((item) => {
-      const region = getRegionName(item.name);
-      const center = regionCenters.get(region);
-
-      if (!center) return;
-
-      const color = getOverlayColor(item.type);
-      const content = createRentIndexOverlayContent(item, color, () => {
-        selectRentIndexItemOnMap(map, item);
-      });
-      const overlay = new window.kakao.maps.CustomOverlay({
-        map,
-        position: new window.kakao.maps.LatLng(center.lat, center.lng),
-        zIndex: 5,
-        content,
-      });
-
-      rentIndexOverlaysRef.current.push(overlay);
-    });
+    clearSelectedRegionPolygonRefs(selectedRegionPolygonsRef.current);
   };
 
   const createSubwayIndexOverlayContent = (
@@ -558,20 +441,6 @@ const Map = ({ enableOverlay = true }: Props) => {
 
       subwayIndexOverlaysRef.current.push(overlay);
     });
-  };
-
-  const selectRentIndexItemOnMap = (
-    map: any,
-    item: RentIndexMapOverlayItem,
-  ) => {
-    const region = getRegionName(item.name);
-    const center = regionCenters.get(region);
-
-    if (!center) return;
-
-    drawSelectedRegionPolygons(map, region, item.type);
-    clearRentIndexOverlays();
-    map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
   // const createPolygon = (map: any, rings: number[][][], properties: any) => {
@@ -654,7 +523,13 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawRentIndexOverlays(mapRefInstance.current, rentIndexItems);
+    drawRentIndexOverlays({
+      map: mapRefInstance.current,
+      items: rentIndexItems,
+      regionCenters,
+      overlayRefs: rentIndexOverlaysRef.current,
+      selectedPolygonRefs: selectedRegionPolygonsRef.current,
+    });
 
     return () => {
       clearRentIndexOverlays();
@@ -817,7 +692,13 @@ const Map = ({ enableOverlay = true }: Props) => {
       return;
     }
 
-    selectRentIndexItemOnMap(mapRefInstance.current, selectedRentIndexItem);
+    selectRentIndexItemOnMap({
+      map: mapRefInstance.current,
+      item: selectedRentIndexItem,
+      regionCenters,
+      overlayRefs: rentIndexOverlaysRef.current,
+      selectedPolygonRefs: selectedRegionPolygonsRef.current,
+    });
   }, [isMapReady, selectedRentIndexItem]);
 
   return (
