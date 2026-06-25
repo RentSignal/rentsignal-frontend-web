@@ -31,6 +31,11 @@ import {
   drawHomeSubwayDistrictOverlay,
 } from "@/components/mapOverlays/homeSubwayDistrictOverlay";
 import {
+  clearSafetyIndexOverlays as clearSafetyIndexOverlayRefs,
+  clearSelectedSafetyDistrictPolygons as clearSelectedSafetyDistrictPolygonRefs,
+  drawSafetyIndexOverlays,
+} from "@/components/mapOverlays/safetyOverlay";
+import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
   getGeoJsonLngLatPoints,
@@ -39,7 +44,6 @@ import {
 import type {
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
-  SafetyIndexMapOverlayItem,
   SubwayIndexMapOverlayItem,
 } from "@/store/mapOverlayStore";
 
@@ -79,13 +83,6 @@ const getSubwayIndexOverlayColor = (value: number) => {
   if (value >= 100.8) return "#FF0000";
   if (value >= 100.6) return "#FF8000";
   if (value >= 100.4) return "#66D575";
-  return "#005EFF";
-};
-
-const getSafetyIndexOverlayColor = (value: number) => {
-  if (value >= 45) return "#FF0000";
-  if (value >= 35) return "#FF8000";
-  if (value >= 25) return "#66D575";
   return "#005EFF";
 };
 
@@ -370,17 +367,13 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearSafetyIndexOverlays = () => {
-    safetyIndexOverlaysRef.current.forEach((overlay) => {
-      overlay.setMap(null);
-    });
-    safetyIndexOverlaysRef.current = [];
+    clearSafetyIndexOverlayRefs(safetyIndexOverlaysRef.current);
   };
 
   const clearSelectedSafetyDistrictPolygons = () => {
-    selectedSafetyDistrictPolygonsRef.current.forEach((polygon) => {
-      polygon.setMap(null);
-    });
-    selectedSafetyDistrictPolygonsRef.current = [];
+    clearSelectedSafetyDistrictPolygonRefs(
+      selectedSafetyDistrictPolygonsRef.current,
+    );
   };
 
   const clearSelectedHomeSubwayDistrictPolygons = () => {
@@ -567,126 +560,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     });
   };
 
-  const createSafetyIndexOverlayContent = (
-    item: SafetyIndexMapOverlayItem,
-    color: string,
-  ) => {
-    const container = document.createElement("div");
-    container.style.width = "97px";
-    container.style.height = "73px";
-    container.style.background = color;
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.alignItems = "center";
-    container.style.justifyContent = "center";
-    container.style.color = "white";
-    container.style.fontFamily = "'Pretendard', sans-serif";
-    container.style.fontWeight = "700";
-    container.style.boxShadow = "0 3px 8px rgba(0,0,0,0.16)";
-    container.style.textShadow = "0 1px 2px rgba(0,0,0,0.2)";
-
-    const name = document.createElement("div");
-    name.style.fontSize = "15px";
-    name.style.fontWeight = "700";
-    name.style.lineHeight = "1.2";
-    name.textContent = getRegionName(item.name);
-
-    const value = document.createElement("div");
-    value.style.fontSize = "15px";
-    value.style.fontWeight = "700";
-    value.style.lineHeight = "1.2";
-    value.textContent = `${item.value.toFixed(1)}점`;
-
-    container.append(name, value);
-
-    return container;
-  };
-
-  const drawSafetyIndexOverlays = (
-    map: any,
-    items: SafetyIndexMapOverlayItem[],
-  ) => {
-    clearSafetyIndexOverlays();
-    clearSelectedSafetyDistrictPolygons();
-
-    const bounds = new window.kakao.maps.LatLngBounds();
-
-    items.forEach((item) => {
-      const district = getRegionName(item.name);
-      const center = districtCenters.get(district);
-
-      if (!center) return;
-
-      const position = new window.kakao.maps.LatLng(center.lat, center.lng);
-
-      const overlay = new window.kakao.maps.CustomOverlay({
-        map,
-        position,
-        zIndex: 6,
-        content: createSafetyIndexOverlayContent(
-          item,
-          getSafetyIndexOverlayColor(item.value),
-        ),
-      });
-
-      safetyIndexOverlaysRef.current.push(overlay);
-      bounds.extend(position);
-    });
-
-    if (items.length === 1) {
-      const district = getRegionName(items[0].name);
-      const center = districtCenters.get(district);
-
-      if (!center) return;
-
-      drawSelectedSafetyDistrictPolygon(
-        map,
-        district,
-        getSafetyIndexOverlayColor(items[0].value),
-      );
-      map.setLevel(6);
-      map.setCenter(new window.kakao.maps.LatLng(center.lat, center.lng));
-      return;
-    }
-
-    if (items.length > 1) {
-      map.setBounds(bounds);
-    }
-  };
-
-  const drawSelectedSafetyDistrictPolygon = (
-    map: any,
-    districtName: string,
-    color: string,
-  ) => {
-    seoulGeoJson.features.forEach((feature: any) => {
-      const guName = feature.properties.SIG_KOR_NM;
-
-      if (guName !== districtName) return;
-
-      const { geometry } = feature;
-      const polygons =
-        geometry.type === "Polygon"
-          ? [geometry.coordinates]
-          : geometry.coordinates;
-
-      polygons.forEach((rings: number[][][]) => {
-        const polygon = new window.kakao.maps.Polygon({
-          map,
-          path: createPolygonPaths(rings),
-          strokeWeight: 3,
-          strokeColor: color,
-          strokeOpacity: 1,
-          fillColor: color,
-          fillOpacity: 0.24,
-          zIndex: 5,
-        });
-
-        selectedSafetyDistrictPolygonsRef.current.push(polygon);
-      });
-    });
-  };
-
   const selectRentIndexItemOnMap = (
     map: any,
     item: RentIndexMapOverlayItem,
@@ -802,7 +675,13 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSafetyIndexOverlays(mapRefInstance.current, safetyIndexItems);
+    drawSafetyIndexOverlays({
+      map: mapRefInstance.current,
+      items: safetyIndexItems,
+      districtCenters,
+      overlayRefs: safetyIndexOverlaysRef.current,
+      selectedPolygonRefs: selectedSafetyDistrictPolygonsRef.current,
+    });
 
     return () => {
       clearSafetyIndexOverlays();
