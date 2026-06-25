@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 // import seoulGeoJson from "@/assets/geojson/seoul-gu.json";
 import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
-import seoulDongGeoJson from "@/assets/geojson/seoul_dong_geo.json";
 import { regionMap } from "@/constants/regionMap";
 import { regionColor, regionBoundaryColor } from "@/constants/regionColor";
 import { useMapOverlayStore } from "@/store/mapOverlayStore";
@@ -13,6 +12,10 @@ import {
   clearRecommendationDongOverlay,
   drawRecommendationDongOverlay,
 } from "@/components/mapOverlays/recommendationDongOverlay";
+import {
+  clearTransportDongOverlay,
+  drawTransportDongOverlay,
+} from "@/components/mapOverlays/transportDongOverlay";
 import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
@@ -50,15 +53,6 @@ const KAKAO_SDK_ID = "kakao-map-sdk";
 
 const getRegionName = (name: string) => {
   return name.split(" ").at(-1) ?? name;
-};
-
-const getTransportNeighborhoodParts = (name: string) => {
-  const parts = name.split(" ").filter(Boolean);
-
-  return {
-    districtName: parts[0] ?? "",
-    dongName: parts.at(-1) ?? name,
-  };
 };
 
 const getOverlayColor = (type: RentIndexMapOverlayType) => {
@@ -426,10 +420,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearSelectedTransportDongPolygons = () => {
-    selectedTransportDongPolygonsRef.current.forEach((polygon) => {
-      polygon.setMap(null);
-    });
-    selectedTransportDongPolygonsRef.current = [];
+    clearTransportDongOverlay(selectedTransportDongPolygonsRef.current);
   };
 
   const clearSubwayLinePolylineOverlays = () => {
@@ -789,72 +780,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
-  const drawSelectedTransportDongPolygon = (
-    map: any,
-    neighborhoodName: string | null,
-  ) => {
-    clearSelectedTransportDongPolygons();
-
-    if (!neighborhoodName) {
-      return;
-    }
-
-    const { districtName, dongName } =
-      getTransportNeighborhoodParts(neighborhoodName);
-    const districtCode = districtCodeMap.get(districtName);
-
-    if (!districtCode) {
-      return;
-    }
-
-    const bounds = new window.kakao.maps.LatLngBounds();
-    let hasPolygon = false;
-
-    seoulDongGeoJson.features.forEach((feature: any) => {
-      const properties = feature.properties;
-
-      if (
-        properties.COL_ADM_SE !== districtCode ||
-        properties.EMD_NM !== dongName
-      ) {
-        return;
-      }
-
-      const { geometry } = feature;
-      const polygons =
-        geometry.type === "Polygon"
-          ? [geometry.coordinates]
-          : geometry.coordinates;
-
-      polygons.forEach((rings: number[][][]) => {
-        const polygon = new window.kakao.maps.Polygon({
-          map,
-          path: createPolygonPaths(rings),
-          strokeWeight: 3,
-          strokeColor: "#3385FF",
-          strokeOpacity: 1,
-          fillColor: "#3385FF",
-          fillOpacity: 0.24,
-          zIndex: 7,
-        });
-
-        getGeoJsonLngLatPoints({
-          type: "Polygon",
-          coordinates: rings,
-        }).forEach(([lng, lat]) => {
-          bounds.extend(new window.kakao.maps.LatLng(lat, lng));
-        });
-
-        selectedTransportDongPolygonsRef.current.push(polygon);
-        hasPolygon = true;
-      });
-    });
-
-    if (hasPolygon) {
-      map.setBounds(bounds);
-    }
-  };
-
   const drawConvenienceMarkers = (
     map: any,
     pins: ConvenienceMapPin[],
@@ -1136,10 +1061,12 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSelectedTransportDongPolygon(
-      mapRefInstance.current,
-      selectedTransportNeighborhoodName,
-    );
+    drawTransportDongOverlay({
+      map: mapRefInstance.current,
+      neighborhoodName: selectedTransportNeighborhoodName,
+      districtCodeMap,
+      polygonRefs: selectedTransportDongPolygonsRef.current,
+    });
 
     return () => {
       clearSelectedTransportDongPolygons();
