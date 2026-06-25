@@ -16,6 +16,7 @@ export default function Step1({
   const [list, setList] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(false); //검색 드롭타인 메뉴에서 선택되었는지
+  const [isFocused, setIsFocused] = useState(false);
   const pMessage = `예) "삼성동" 또는 "강남구 삼성동"`;
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -59,20 +60,28 @@ export default function Step1({
           </span>
           <input
             className={`
-                      px-10 py-[10px]
-                      border rounded-[10px]
-                      outline-none
-                      bg-blue-99
-                      text-[14px] font-normal text-coolNeutral-30
-                      w-full
+                px-10 py-[10px]
+                border rounded-[10px]
+                outline-none
+                bg-blue-99
+                text-[14px] font-semibold
+                w-full
 
-                      ${
-                        isSelected
-                          ? "border-blue-500 text-blue-500"
-                          : "border-blue-90 text-coolNeutral-50"
-                      }
-                    `}
+                ${
+                  isSelected
+                    ? "border-blue-500 text-blue-500"
+                    : isFocused
+                      ? "border-blue-60 text-coolNeutral-30"
+                      : "border-blue-90 text-coolNeutral-50"
+                }
+              `}
             value={value}
+            onFocus={() => {
+              setIsFocused(true);
+            }}
+            onBlur={() => {
+              setIsFocused(false);
+            }}
             onChange={(e) => {
               onChange(e.target.value);
               setOpen(true);
