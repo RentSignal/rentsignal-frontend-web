@@ -1,4 +1,4 @@
-import { getAccessToken, reissueToken, clearAccessToken } from "./auth";
+import { reissueToken, clearAccessToken } from "./auth";
 
 interface ApiParams {
   apiUrl: string;
@@ -24,22 +24,19 @@ const request = async (
     url += `?${query}`;
   }
 
-  const accessToken = getAccessToken();
-
   const response = await fetch(url, {
     method,
     headers: {
       "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
     credentials: "include",
   });
 
   if (response.status === 401 && retry) {
-    const newAccessToken = await reissueToken();
+    const reissued = await reissueToken();
 
-    if (!newAccessToken) {
+    if (!reissued) {
       clearAccessToken();
       throw new Error("인증이 만료되었습니다. 다시 로그인해주세요.");
     }
