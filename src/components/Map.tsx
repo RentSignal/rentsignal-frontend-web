@@ -9,6 +9,16 @@ import {
   clearConsumerIndexPolygons,
   drawConsumerIndexPolygons,
 } from "@/components/mapOverlays/consumerIndexOverlay";
+import {
+  clearRecommendationDongOverlay,
+  drawRecommendationDongOverlay,
+} from "@/components/mapOverlays/recommendationDongOverlay";
+import {
+  createPolygonPaths,
+  getCenterFromLngLatPoints,
+  getGeoJsonLngLatPoints,
+  type GeoJsonLngLatGeometry,
+} from "@/components/mapOverlays/geoJson";
 import { getSubwayLineColor } from "@/utils/subwayLineStyle";
 import cafeMarkerUrl from "@/assets/icons/maker/cafe_marker.svg";
 import convenienceMarkerUrl from "@/assets/icons/maker/conv_marker.svg";
@@ -107,65 +117,13 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
-const getGeoJsonLngLatPoints = (geometry: any) => {
-  const points: number[][] = [];
-
-  if (geometry.type === "Polygon") {
-    geometry.coordinates.forEach((ring: number[][]) => {
-      points.push(...ring);
-    });
-  }
-
-  if (geometry.type === "MultiPolygon") {
-    geometry.coordinates.forEach((polygon: number[][][]) => {
-      polygon.forEach((ring: number[][]) => {
-        points.push(...ring);
-      });
-    });
-  }
-
-  return points;
-};
-
-const getCenterFromLngLatPoints = (points: number[][]) => {
-  if (points.length === 0) return null;
-
-  const bounds = points.reduce(
-    (
-      acc: {
-        minLat: number;
-        maxLat: number;
-        minLng: number;
-        maxLng: number;
-      },
-      [lng, lat]: number[],
-    ) => ({
-      minLat: Math.min(acc.minLat, lat),
-      maxLat: Math.max(acc.maxLat, lat),
-      minLng: Math.min(acc.minLng, lng),
-      maxLng: Math.max(acc.maxLng, lng),
-    }),
-    {
-      minLat: Number.POSITIVE_INFINITY,
-      maxLat: Number.NEGATIVE_INFINITY,
-      minLng: Number.POSITIVE_INFINITY,
-      maxLng: Number.NEGATIVE_INFINITY,
-    },
-  );
-
-  return {
-    lat: (bounds.minLat + bounds.maxLat) / 2,
-    lng: (bounds.minLng + bounds.maxLng) / 2,
-  };
-};
-
 const getDistrictCenters = () => {
   const centers = new globalThis.Map<string, { lat: number; lng: number }>();
 
   seoulGeoJson.features.forEach((feature: any) => {
     const guName = feature.properties.SIG_KOR_NM;
     const center = getCenterFromLngLatPoints(
-      getGeoJsonLngLatPoints(feature.geometry),
+      getGeoJsonLngLatPoints(feature.geometry as GeoJsonLngLatGeometry),
     );
 
     if (!center) return;
@@ -195,7 +153,9 @@ const getRegionCenters = () => {
 
     if (!region) return;
 
-    const points = getGeoJsonLngLatPoints(feature.geometry);
+    const points = getGeoJsonLngLatPoints(
+      feature.geometry as GeoJsonLngLatGeometry,
+    );
     const existingPoints = regionPoints.get(region) ?? [];
 
     regionPoints.set(region, [...existingPoints, ...points]);
@@ -232,6 +192,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   const selectedHomeRecommendationPolygonsRef = useRef<any[]>([]);
   const selectedHomeSubwayDistrictPolygonsRef = useRef<any[]>([]);
   const selectedTransportDongPolygonsRef = useRef<any[]>([]);
+  const selectedHomeRecommendationLabelRef = useRef<any>(null);
   const subwayLinePolylineRefs = useRef<any[]>([]);
   const subwayStationMarkerRefs = useRef<any[]>([]);
   const convenienceMarkersRef = useRef<any[]>([]);
@@ -422,12 +383,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     basicPolygonsRef.current = [];
   };
 
-  const createPolygonPaths = (rings: number[][][]) => {
-    return rings.map((ring) =>
-      ring.map(([lng, lat]) => new window.kakao.maps.LatLng(lat, lng)),
-    );
-  };
-
   const clearRentIndexOverlays = () => {
     rentIndexOverlaysRef.current.forEach((overlay) => {
       overlay.setMap(null);
@@ -464,10 +419,10 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearSelectedHomeRecommendationPolygons = () => {
-    selectedHomeRecommendationPolygonsRef.current.forEach((polygon) => {
-      polygon.setMap(null);
+    clearRecommendationDongOverlay({
+      polygonRefs: selectedHomeRecommendationPolygonsRef.current,
+      labelRef: selectedHomeRecommendationLabelRef,
     });
-    selectedHomeRecommendationPolygonsRef.current = [];
   };
 
   const clearSelectedTransportDongPolygons = () => {
@@ -834,73 +789,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
-  const drawSelectedHomeRecommendationPolygon = (
-    map: any,
-    neighborhoodName: string | null,
-  ) => {
-    clearSelectedHomeRecommendationPolygons();
-
-    if (!neighborhoodName) {
-      return;
-    }
-
-    const nameParts = neighborhoodName.split(" ").filter(Boolean);
-    const districtName = nameParts.at(-2) ?? "";
-    const dongName = nameParts.at(-1) ?? "";
-    const districtCode = districtCodeMap.get(districtName);
-
-    if (!districtCode) {
-      return;
-    }
-
-    const bounds = new window.kakao.maps.LatLngBounds();
-    let hasPolygon = false;
-
-    seoulDongGeoJson.features.forEach((feature: any) => {
-      const properties = feature.properties;
-
-      if (
-        properties.COL_ADM_SE !== districtCode ||
-        properties.EMD_NM !== dongName
-      ) {
-        return;
-      }
-
-      const { geometry } = feature;
-      const polygons =
-        geometry.type === "Polygon"
-          ? [geometry.coordinates]
-          : geometry.coordinates;
-
-      polygons.forEach((rings: number[][][]) => {
-        const polygon = new window.kakao.maps.Polygon({
-          map,
-          path: createPolygonPaths(rings),
-          strokeWeight: 3,
-          strokeColor: "#3385FF",
-          strokeOpacity: 1,
-          fillColor: "#3385FF",
-          fillOpacity: 0.28,
-          zIndex: 7,
-        });
-
-        getGeoJsonLngLatPoints({
-          type: "Polygon",
-          coordinates: rings,
-        }).forEach(([lng, lat]) => {
-          bounds.extend(new window.kakao.maps.LatLng(lat, lng));
-        });
-
-        selectedHomeRecommendationPolygonsRef.current.push(polygon);
-        hasPolygon = true;
-      });
-    });
-
-    if (hasPolygon) {
-      map.setBounds(bounds);
-    }
-  };
-
   const drawSelectedTransportDongPolygon = (
     map: any,
     neighborhoodName: string | null,
@@ -1219,10 +1107,13 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSelectedHomeRecommendationPolygon(
-      mapRefInstance.current,
-      selectedHomeRecommendationName,
-    );
+    drawRecommendationDongOverlay({
+      map: mapRefInstance.current,
+      neighborhoodName: selectedHomeRecommendationName,
+      districtCodeMap,
+      polygonRefs: selectedHomeRecommendationPolygonsRef.current,
+      labelRef: selectedHomeRecommendationLabelRef,
+    });
 
     return () => {
       clearSelectedHomeRecommendationPolygons();

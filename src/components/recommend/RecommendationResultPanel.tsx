@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import RestaurantIcon from "@/assets/icons/facilities/restaurant.svg?react";
 import HospitalIcon from "@/assets/icons/facilities/Hospital.svg?react";
 import CafeIcon from "@/assets/icons/facilities/cafe.svg?react";
@@ -6,6 +7,7 @@ import TrafficIcon from "@/assets/icons/facilities/busfront_icon.svg?react";
 import CctvIcon from "@/assets/icons/facilities/cctv.svg?react";
 import ConvenienceIcon from "@/assets/icons/facilities/convenience_store.svg?react";
 import Divider from "../Divider";
+import { useMapOverlayStore } from "@/store/mapOverlayStore";
 
 type Props = {
   open: boolean;
@@ -17,6 +19,16 @@ export default function RecommendationResultPanel({
   open,
   data,
 }: Props) {
+  const clearSelectedHomeRecommendation = useMapOverlayStore(
+    (state) => state.clearSelectedHomeRecommendation,
+  );
+
+  useEffect(() => {
+    if (!open) {
+      clearSelectedHomeRecommendation();
+    }
+  }, [clearSelectedHomeRecommendation, open]);
+
   return (
     <div
       className={`
@@ -79,13 +91,24 @@ function SelectedTag({ data }: { data: any }) {
 
 function RecommendList({ data }: { data: any }) {
   const list = data?.recommendedNeighborhoods;
+  const selectHomeRecommendation = useMapOverlayStore(
+    (state) => state.selectHomeRecommendation,
+  );
+  const clearSelectedHomeRecommendation = useMapOverlayStore(
+    (state) => state.clearSelectedHomeRecommendation,
+  );
 
   if (!list?.length) return null;
 
   return (
     <>
       {list.map((item: any) => (
-        <div key={item.rank}>
+        <div
+          key={item.rank}
+          onMouseEnter={() => selectHomeRecommendation(item.dongName)}
+          onMouseLeave={clearSelectedHomeRecommendation}
+          className="transition-colors hover:bg-blue-99/50"
+        >
           <RecommendItemInfo item={item} />
           <RecommendFacilities data={item} />
           <StatItem item={item} />

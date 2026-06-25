@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Map from "@/components/Map";
@@ -12,6 +12,7 @@ const MainLayout = () => {
 
   const isHome = location.pathname === "/";
   const isCommunity = location.pathname.startsWith("/community");
+  const isRecommend = location.pathname.startsWith("/recommend");
 
   // 로고 헤더 숨길 경로들
   const noHeaderPaths = [
@@ -30,6 +31,13 @@ const MainLayout = () => {
   const [phoneOpen, setPhoneOpen] = useState(false);
   const [recommendResultOpen, setRecommendResultOpen] = useState(false);
   const [recommendResult, setRecommendResult] = useState<any>(null);
+
+  useEffect(() => {
+    if (!isRecommend) {
+      setRecommendResultOpen(false);
+      setRecommendResult(null);
+    }
+  }, [isRecommend]);
 
   return (
     <div className="flex h-screen overflow-hidden">
