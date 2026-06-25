@@ -27,13 +27,16 @@ import {
   drawSubwayStationMarkers,
 } from "@/components/mapOverlays/subwayOverlay";
 import {
+  clearHomeSubwayDistrictOverlay,
+  drawHomeSubwayDistrictOverlay,
+} from "@/components/mapOverlays/homeSubwayDistrictOverlay";
+import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
   getGeoJsonLngLatPoints,
   type GeoJsonLngLatGeometry,
 } from "@/components/mapOverlays/geoJson";
 import type {
-  HomeSubwayRankingMapItem,
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
   SafetyIndexMapOverlayItem,
@@ -381,10 +384,9 @@ const Map = ({ enableOverlay = true }: Props) => {
   };
 
   const clearSelectedHomeSubwayDistrictPolygons = () => {
-    selectedHomeSubwayDistrictPolygonsRef.current.forEach((polygon) => {
-      polygon.setMap(null);
-    });
-    selectedHomeSubwayDistrictPolygonsRef.current = [];
+    clearHomeSubwayDistrictOverlay(
+      selectedHomeSubwayDistrictPolygonsRef.current,
+    );
   };
 
   const clearSelectedHomeRecommendationPolygons = () => {
@@ -685,55 +687,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     });
   };
 
-  const drawSelectedHomeSubwayDistrictPolygon = (
-    map: any,
-    item: HomeSubwayRankingMapItem | null,
-  ) => {
-    clearSelectedHomeSubwayDistrictPolygons();
-
-    if (!item) {
-      return;
-    }
-
-    const districtName = getRegionName(item.name);
-    const center = districtCenters.get(districtName);
-    const color = "#3385FF";
-
-    if (!center) {
-      return;
-    }
-
-    seoulGeoJson.features.forEach((feature: any) => {
-      if (feature.properties.SIG_KOR_NM !== districtName) {
-        return;
-      }
-
-      const { geometry } = feature;
-      const polygons =
-        geometry.type === "Polygon"
-          ? [geometry.coordinates]
-          : geometry.coordinates;
-
-      polygons.forEach((rings: number[][][]) => {
-        const polygon = new window.kakao.maps.Polygon({
-          map,
-          path: createPolygonPaths(rings),
-          strokeWeight: 3,
-          strokeColor: color,
-          strokeOpacity: 1,
-          fillColor: color,
-          fillOpacity: 0.28,
-          zIndex: 7,
-        });
-
-        selectedHomeSubwayDistrictPolygonsRef.current.push(polygon);
-      });
-    });
-
-    map.setLevel(6);
-    map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
-  };
-
   const selectRentIndexItemOnMap = (
     map: any,
     item: RentIndexMapOverlayItem,
@@ -876,10 +829,12 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawSelectedHomeSubwayDistrictPolygon(
-      mapRefInstance.current,
-      selectedHomeSubwayRanking,
-    );
+    drawHomeSubwayDistrictOverlay({
+      map: mapRefInstance.current,
+      item: selectedHomeSubwayRanking,
+      districtCenters,
+      polygonRefs: selectedHomeSubwayDistrictPolygonsRef.current,
+    });
 
     return () => {
       clearSelectedHomeSubwayDistrictPolygons();
