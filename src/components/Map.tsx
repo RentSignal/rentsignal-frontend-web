@@ -17,19 +17,17 @@ import {
   drawTransportDongOverlay,
 } from "@/components/mapOverlays/transportDongOverlay";
 import {
+  clearConvenienceMarkers,
+  drawConvenienceMarkers,
+} from "@/components/mapOverlays/convenienceMarkerOverlay";
+import {
   createPolygonPaths,
   getCenterFromLngLatPoints,
   getGeoJsonLngLatPoints,
   type GeoJsonLngLatGeometry,
 } from "@/components/mapOverlays/geoJson";
 import { getSubwayLineColor } from "@/utils/subwayLineStyle";
-import cafeMarkerUrl from "@/assets/icons/maker/cafe_marker.svg";
-import convenienceMarkerUrl from "@/assets/icons/maker/conv_marker.svg";
-import hospitalMarkerUrl from "@/assets/icons/maker/hospital_marker.svg";
-import martMarkerUrl from "@/assets/icons/maker/mart_marker.svg";
 import type {
-  ConvenienceMapPin,
-  ConvenienceMarkerType,
   HomeSubwayRankingMapItem,
   RentIndexMapOverlayItem,
   RentIndexMapOverlayType,
@@ -94,13 +92,6 @@ const getSubwayStationMarkerImage = (color: string) => {
   `;
 
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(markerSvg)}`;
-};
-
-const convenienceMarkerImageMap: Record<ConvenienceMarkerType, string> = {
-  mart: martMarkerUrl,
-  convenienceStore: convenienceMarkerUrl,
-  hospital: hospitalMarkerUrl,
-  cafe: cafeMarkerUrl,
 };
 
 const escapeHtml = (value: string) =>
@@ -435,13 +426,6 @@ const Map = ({ enableOverlay = true }: Props) => {
       marker.setMap(null);
     });
     subwayStationMarkerRefs.current = [];
-  };
-
-  const clearConvenienceMarkers = () => {
-    convenienceMarkersRef.current.forEach((marker) => {
-      marker.setMap(null);
-    });
-    convenienceMarkersRef.current = [];
   };
 
   const clearSelectedRegionPolygons = () => {
@@ -780,66 +764,6 @@ const Map = ({ enableOverlay = true }: Props) => {
     map.panTo(new window.kakao.maps.LatLng(center.lat, center.lng));
   };
 
-  const drawConvenienceMarkers = (
-    map: any,
-    pins: ConvenienceMapPin[],
-    markerType: ConvenienceMarkerType | null,
-  ) => {
-    clearConvenienceMarkers();
-
-    if (pins.length === 0) {
-      return;
-    }
-
-    const bounds = new window.kakao.maps.LatLngBounds();
-    const markerImage = markerType
-      ? new window.kakao.maps.MarkerImage(
-          convenienceMarkerImageMap[markerType],
-          new window.kakao.maps.Size(32, 32),
-          {
-            offset: new window.kakao.maps.Point(16, 16),
-          },
-        )
-      : undefined;
-
-    pins.forEach((pin) => {
-      const position = new window.kakao.maps.LatLng(
-        pin.latitude,
-        pin.longitude,
-      );
-      const marker = new window.kakao.maps.Marker({
-        map,
-        position,
-        title: pin.name,
-        image: markerImage,
-      });
-
-      const infoWindow = new window.kakao.maps.InfoWindow({
-        content: `<div style="padding:6px 10px;font-size:12px;white-space:nowrap;">${escapeHtml(pin.name)}</div>`,
-      });
-
-      window.kakao.maps.event.addListener(marker, "mouseover", () => {
-        infoWindow.open(map, marker);
-      });
-      window.kakao.maps.event.addListener(marker, "mouseout", () => {
-        infoWindow.close();
-      });
-
-      convenienceMarkersRef.current.push(marker);
-      bounds.extend(position);
-    });
-
-    if (pins.length === 1) {
-      map.panTo(
-        new window.kakao.maps.LatLng(pins[0].latitude, pins[0].longitude),
-      );
-      map.setLevel(4);
-      return;
-    }
-
-    map.setBounds(bounds);
-  };
-
   const drawSubwayLinePolylines = (
     map: any,
     polylines: SubwayLinePolyline[],
@@ -1114,14 +1038,15 @@ const Map = ({ enableOverlay = true }: Props) => {
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
 
-    drawConvenienceMarkers(
-      mapRefInstance.current,
-      conveniencePins,
-      convenienceMarkerType,
-    );
+    drawConvenienceMarkers({
+      map: mapRefInstance.current,
+      pins: conveniencePins,
+      markerType: convenienceMarkerType,
+      markerRefs: convenienceMarkersRef.current,
+    });
 
     return () => {
-      clearConvenienceMarkers();
+      clearConvenienceMarkers(convenienceMarkersRef.current);
     };
   }, [convenienceMarkerType, conveniencePins, isMapReady]);
 
