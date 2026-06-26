@@ -116,15 +116,13 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
           </div>
         ) : (
           filteredPosts.map(
-            (post) =>
-              activeTab === post.category && (
+            (post) => (
                 <PostCard
                   key={post.id}
                   post={post}
                   onClick={() => onPostClick(post.id)}
                 />
-              ),
-          )
+            ))
         )}
       </div>
 

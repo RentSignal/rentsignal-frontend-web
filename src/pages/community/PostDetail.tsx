@@ -49,6 +49,7 @@ const PostDetailPage = ({ postId, onClose, onEditClick, onDeleteSuccess }: PostD
         const res = await fetchPostDetail(postId);
         if (ignore) return;
         setPost(res.data);
+        setLiked(res.data.isLiked);
       } catch (e: unknown) {
         if (ignore) return;
         setError(getErrorMessage(e, "게시글을 불러올 수 없습니다."));
