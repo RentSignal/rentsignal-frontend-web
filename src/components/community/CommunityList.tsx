@@ -116,15 +116,13 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
           </div>
         ) : (
           filteredPosts.map(
-            (post) =>
-              activeTab === post.category && (
+            (post) => (
                 <PostCard
                   key={post.id}
                   post={post}
                   onClick={() => onPostClick(post.id)}
                 />
-              ),
-          )
+            ))
         )}
       </div>
 
@@ -132,7 +130,7 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
       <div className="absolute z-10 -translate-x-1/2 bottom-20 left-1/2">
         <button
           onClick={onWriteClick}
-          className="flex items-center gap-2 px-6 py-2 text-sm text-black transition-colors border rounded-full shadow-md bg-blue-95 border-blue-90 hover:bg-gray-50"
+          className="flex items-center gap-2 px-6 py-2 text-sm text-coolNeutral-30 font-semibold transition-colors border rounded-full bg-blue-95 border-blue-90 hover:bg-gray-50"
         >
           <svg
             className="w-5 h-5 text-blue-500"

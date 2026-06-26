@@ -36,6 +36,7 @@ export type Post = {
 export type PostDetail = Post & {
   role: string;
   updatedAt: string;
+  isLiked: boolean;
 };
 
 export type CreatePostRequest = {
