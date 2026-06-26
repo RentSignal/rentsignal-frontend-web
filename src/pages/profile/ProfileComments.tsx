@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchMyCommentedPosts } from "@/services/profileApi";
 import type { ProfilePost } from "@/types/profile";
+import PostDetailPage from "@/pages/community/PostDetail";
 import { formatDateTime } from "@/utils/date";
 
 const ProfileComments = () => {
   const navigate = useNavigate();
   const [posts, setPosts] = useState<ProfilePost[]>([]);
+  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
 
   useEffect(() => {
     const loadPosts = async () => {
@@ -34,7 +36,11 @@ const ProfileComments = () => {
 
       <div className="flex-1 overflow-y-auto py-5">
         {posts.map((post) => (
-          <div key={post.id} className="py-3 cursor-pointer hover:bg-coolNeutral-99 font-Pretendard">
+          <div
+            key={post.id}
+            className="py-3 px-3 cursor-pointer hover:bg-coolNeutral-99 font-Pretendard"
+            onClick={() => setSelectedPostId(post.id)}
+          >
             <div className="flex gap-1 mb-2 flex-wrap text-coolNeutral-30">
               <span className="text-xs px-1.5 py-1 rounded-full bg-blue-99 border border-blue-70">
                 {post.category}
@@ -54,6 +60,16 @@ const ProfileComments = () => {
           </div>
         )}
       </div>
+
+      {selectedPostId !== null && (
+        <div className="fixed inset-0 bg-white z-50">
+          <PostDetailPage
+            postId={selectedPostId}
+            onClose={() => setSelectedPostId(null)}
+            onEditClick={(postId) => setSelectedPostId(postId)}
+          />
+        </div>
+      )}
     </div>
   );
 };
