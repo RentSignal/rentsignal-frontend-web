@@ -48,7 +48,8 @@ const request = async (
   }
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`);
+    const errorData = await response.json();
+    throw new Error(errorData.message ?? `API Error: ${response.status}`);
   }
 
   if (responseType === "blob") return response.blob();
