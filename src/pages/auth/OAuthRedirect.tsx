@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ensureAccessToken, setAccessToken } from "@/services/auth";
+import { clearAccessToken, ensureAccessToken } from "@/services/auth";
 
 const OAuthRedirect = () => {
   const navigate = useNavigate();
@@ -9,7 +9,6 @@ const OAuthRedirect = () => {
     const initializeAuth = async () => {
       const params = new URLSearchParams(location.search);
 
-      const accessToken = params.get("accessToken");
       const error = params.get("error");
 
       if (error) {
@@ -18,11 +17,8 @@ const OAuthRedirect = () => {
         return;
       }
 
-      if (accessToken) {
-        setAccessToken(accessToken);
-      } else {
-        await ensureAccessToken();
-      }
+      clearAccessToken();
+      await ensureAccessToken();
 
       navigate("/");
     };

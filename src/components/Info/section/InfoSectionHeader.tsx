@@ -2,7 +2,9 @@ import type { TimeIndicatorValue } from "@/components/TimeIndicator";
 import type { ConsumerIndexData } from "@/services/infoApi";
 import ConsumerIndexSection from "./ConsumerIndexSection";
 import RentIndexSection from "./RentIndexSection";
-import StationIndexSection from "./StationIndexSection";
+import StationIndexSection, {
+  type StationIndexDetail,
+} from "./StationIndexSection";
 
 export const IndexState = {
   rentIndex: 0,
@@ -21,6 +23,9 @@ type Props = {
   consumerIndexData?: ConsumerIndexData | null;
   isLoading?: boolean;
   errorMessage?: string;
+  stationIndexDetail?: StationIndexDetail | null;
+  isStationIndexDetailLoading?: boolean;
+  stationIndexDetailErrorMessage?: string;
 };
 
 const IndexSectionHeader = ({
@@ -32,6 +37,9 @@ const IndexSectionHeader = ({
   consumerIndexData,
   isLoading,
   errorMessage,
+  stationIndexDetail,
+  isStationIndexDetailLoading,
+  stationIndexDetailErrorMessage,
 }: Props) => {
   const currentIndex = selectedIndex ?? IndexState.rentIndex;
 
@@ -60,7 +68,14 @@ const IndexSectionHeader = ({
         );
 
       case IndexState.stationIndex:
-        return <StationIndexSection title={title} />;
+        return (
+          <StationIndexSection
+            title={title}
+            detail={stationIndexDetail}
+            isDetailLoading={isStationIndexDetailLoading}
+            detailErrorMessage={stationIndexDetailErrorMessage}
+          />
+        );
 
       default:
         return null;
