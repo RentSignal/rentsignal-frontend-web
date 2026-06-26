@@ -1,16 +1,16 @@
-import type { Post } from "@/types/community";
+import type { ResidenceReviewItem } from "@/types/home";
 import { formatDateTime } from "@/utils/date";
 
 interface PostCardProps {
-  post: Post;
+  post: ResidenceReviewItem;
   onClick: () => void;
 }
 
-const PostCard = ({ post, onClick }: PostCardProps) => {
+const ResidenceReviewCard = ({ post, onClick }: PostCardProps) => {
   return (
     <div
       onClick={onClick}
-      className="px-4 py-4 transition-colors border-b border-gray-100 cursor-pointer hover:bg-coolNeutral-99"
+      className="px-5 py-4 transition-colors border-b border-gray-100 cursor-pointer hover:bg-coolNeutral-99"
     >
       <div className="flex flex-wrap gap-1 mb-2 text-coolNeutral-30">
         <span className="text-xs px-1.5 py-1 rounded-full bg-blue-99 border border-blue-70 font-Pretendard">
@@ -35,4 +35,4 @@ const PostCard = ({ post, onClick }: PostCardProps) => {
   );
 };
 
-export default PostCard;
+export default ResidenceReviewCard;

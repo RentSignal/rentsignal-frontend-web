@@ -63,7 +63,7 @@ export default function Step1({
                       border rounded-[10px]
                       outline-none
                       bg-blue-99
-                      text-[14px] font-semibold text-coolNeutral-30
+                      text-[14px] font-normal text-coolNeutral-30
                       w-full
 
                       ${

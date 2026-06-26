@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import CommentModal from "@/components/community/CommentModal";
 import {
@@ -10,14 +10,19 @@ import {
 } from "@/services/communityApi";
 import { useUserStore } from "@/store/userStore";
 import type { PostDetail, Comment } from "@/types/community";
+import { formatDateTime } from "@/utils/date";
 
 interface PostDetailPageProps {
   postId: number;
   onClose: () => void;
   onEditClick: (postId: number) => void;
+  onDeleteSuccess?: () => void;
 }
 
-const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) => {
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
+const PostDetailPage = ({ postId, onClose, onEditClick, onDeleteSuccess }: PostDetailPageProps) => {
   const [post, setPost] = useState<PostDetail | null>(null);
   const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -25,37 +30,56 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
   const [error, setError] = useState("");
   const currentUser = useUserStore((s) => s.user);
 
+  const loadComments = useCallback(async () => {
+    try {
+      const res = await fetchComments(postId);
+      setComments(res.data.content);
+    } catch (e) {
+      console.error("댓글 조회 실패:", e);
+    }
+  }, [postId]);
+
   useEffect(() => {
     if (!postId) return;
+
+    let ignore = false;
 
     const loadPost = async () => {
       try {
         const res = await fetchPostDetail(postId);
+        if (ignore) return;
         setPost(res.data);
-      } catch (e: any) {
-        setError(e.message ?? "게시글을 불러올 수 없습니다.");
+      } catch (e: unknown) {
+        if (ignore) return;
+        setError(getErrorMessage(e, "게시글을 불러올 수 없습니다."));
       }
     };
 
-    const loadComments = async () => {
+    const loadInitialComments = async () => {
       try {
         const res = await fetchComments(postId);
+        if (ignore) return;
         setComments(res.data.content);
       } catch (e) {
+        if (ignore) return;
         console.error("댓글 조회 실패:", e);
       }
     };
 
     loadPost();
-    loadComments();
+    loadInitialComments();
+
+    return () => {
+      ignore = true;
+    };
   }, [postId]);
 
   const handleLike = async () => {
     try {
       await togglePostLike(postId);
       setLiked((prev) => !prev);
-    } catch (e: any) {
-      console.error("공감 실패:", e.message);
+    } catch (e: unknown) {
+      console.error("공감 실패:", getErrorMessage(e, "공감에 실패했습니다."));
     }
   };
 
@@ -63,20 +87,14 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
     if (!window.confirm("게시글을 삭제하시겠습니까?")) return;
     try {
       await deletePost(postId);
-      onClose();
-    } catch (e: any) {
-      alert(e.message ?? "삭제에 실패했습니다.");
+      if (onDeleteSuccess) {
+        onDeleteSuccess();
+      } else {
+        onClose();
+      }
+    } catch (e: unknown) {
+      alert(getErrorMessage(e, "삭제에 실패했습니다."));
     }
-  };
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("ko-KR", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   if (error) {
@@ -106,7 +124,7 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                 </div>
                 <div>
                     <p className="text-sm font-semibold text-black">{post.userName}</p>
-                    <p className="text-xs text-coolNeutral-70">{formatDate(post.createdAt)}</p>
+                    <p className="text-xs text-coolNeutral-70">{formatDateTime(post.createdAt)}</p>
                 </div>
             </div>
 
@@ -183,8 +201,8 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                                 try {
                                     await deleteComment(comment.id);
                                     setComments((prev) => prev.filter((c) => c.id !== comment.id));
-                                } catch (e: any) {
-                                    alert(e.message ?? "삭제에 실패했습니다.");
+                                } catch (e: unknown) {
+                                    alert(getErrorMessage(e, "삭제에 실패했습니다."));
                                 }
                             }}
                             className="flex items-center gap-1.5 text-xs text-coolNeutral-25 bg-blue-99 border border-blue-95 rounded-lg px-2.5 py-1 transition-colors"
@@ -194,7 +212,7 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
                     </div>
                 </div>
                   <p className="text-sm text-gray-600 leading-relaxed">{comment.content}</p>
-                  <p className="text-xs text-gray-400 mt-2">{formatDate(comment.createdAt)}</p>
+                  <p className="text-xs text-gray-400 mt-2">{formatDateTime(comment.createdAt)}</p>
                 </div>
               ))}
             </div>
@@ -208,8 +226,8 @@ const PostDetailPage = ({ postId, onClose, onEditClick }: PostDetailPageProps) =
           postId={String(postId)}
           userName={currentUser?.name ?? ""}
           onClose={() => setShowCommentModal(false)}
-          onSubmit={(newComment) => {
-            setComments((prev) => [...prev, newComment]);
+          onSubmit={async () => {
+            await loadComments();
             setShowCommentModal(false);
           }}
         />,

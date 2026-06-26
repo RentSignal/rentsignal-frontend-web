@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { createComment } from "@/services/communityApi";
-import type { Comment } from "@/types/community";
 
 interface CommentModalProps {
   postId: string;
   userName: string;
   onClose: () => void;
-  onSubmit: (comment: Comment) => void;
+  onSubmit: () => void | Promise<void>;
 }
 
 const CommentModal = ({ postId, userName, onClose, onSubmit }: CommentModalProps) => {
@@ -22,17 +21,9 @@ const CommentModal = ({ postId, userName, onClose, onSubmit }: CommentModalProps
     setLoading(true);
     try {
       await createComment(postId, content);
-      onSubmit({
-        id: Date.now(),
-        postId: Number(postId),
-        userId: 0,
-        userName,
-        content,
-        likeCount: 0,
-        createdAt: new Date().toISOString(),
-      });
-    } catch (e: any) {
-      setError(e.message ?? "댓글 작성에 실패했습니다.");
+      await onSubmit();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "댓글 작성에 실패했습니다.");
     } finally {
       setLoading(false);
     }

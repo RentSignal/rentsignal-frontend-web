@@ -85,7 +85,7 @@ function Profile() {
 
   return (
     <>
-      <div className="flex flex-col max-w-md gap-[26px] px-6 pb-[32px] mx-auto ">
+      <div className="flex flex-col max-w-md gap-[26px] pb-[32px] mx-auto ">
         {isProfileRoot ? (
           <>
             <ProfileHeader user={user} />
@@ -105,7 +105,7 @@ export default Profile;
 
 function ProfileHeader({ user }: { user: any }) {
   return (
-    <div className="flex gap-[18px]">
+    <div className="flex gap-[18px] px-6">
       <img
         src={user.imageUrl}
         className="object-cover rounded-full w-[61px] h-[61px]"
@@ -123,7 +123,7 @@ function ProfileHeader({ user }: { user: any }) {
 
 function ActivityMenuSection({ menus }: { menus: any[] }) {
   return (
-    <div className="py-3 border rounded-lg border-blue-95 bg-blue-99">
+    <div className="py-3 mx-6 border rounded-lg border-blue-95 bg-blue-99">
       <div className="flex justify-center">
         {menus.map((item, index) => {
           const Icon = item.icon;
@@ -149,7 +149,7 @@ function ActivityMenuSection({ menus }: { menus: any[] }) {
 function MenuSection({ title, menus }: { title: string; menus: MenuItem[] }) {
   return (
     <section>
-      <h2 className="text-base font-semibold pb-[14px] text-coolNeutral-25">
+      <h2 className="text-base font-semibold pb-[14px] text-coolNeutral-25 px-6">
         {title}
       </h2>
 
@@ -158,7 +158,7 @@ function MenuSection({ title, menus }: { title: string; menus: MenuItem[] }) {
           <button
             key={item.id}
             onClick={item.action}
-            className={`flex justify-between items-center w-full text-sm font-medium hover:bg-gray-50 ${
+            className={`px-6  py-2.5 flex justify-between items-center w-full text-sm font-medium hover:bg-gray-50 ${
               item.danger ? "text-[#FF4242]" : "text-coolNeutral-50"
             }`}
           >
@@ -169,7 +169,7 @@ function MenuSection({ title, menus }: { title: string; menus: MenuItem[] }) {
           <Link
             key={item.id}
             to={item.path!}
-            className={`flex justify-between items-center pb-5 text-sm hover:bg-gray-50 ${
+            className={`px-6 flex justify-between items-center py-2.5 text-sm hover:bg-gray-50 ${
               item.danger ? "text-red-500" : "text-coolNeutral-50"
             }`}
           >
