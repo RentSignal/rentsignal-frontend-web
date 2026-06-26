@@ -43,7 +43,7 @@ const CommentModal = ({ postId, userName, onClose, onSubmit }: CommentModalProps
           value={content}
           onChange={(e) => { setContent(e.target.value); if (error) setError(""); }}
           placeholder={`@${userName}으로 댓글 남기기`}
-          className="w-full h-[180px] text-sm text-coolNeutral-25 placeholder:text-coolNeutral-90 outline-none resize-none border border-blue-90 rounded-md p-3 mb-2focus:border-blue-300 transition-colors"
+          className="w-full h-[180px] text-sm text-coolNeutral-25 placeholder:text-coolNeutral-90 outline-none resize-none border border-blue-90 rounded-md p-3 mb-2 focus:border-blue-300 transition-colors"
         />
 
         {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
