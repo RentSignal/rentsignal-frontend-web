@@ -28,6 +28,7 @@ import {
   clearSubwayStationMarkers,
   drawSubwayLinePolylines,
   drawSubwayStationMarkers,
+  selectSubwayStationMarkerOnMap,
 } from "@/components/mapOverlays/subwayOverlay";
 import {
   clearHomeSubwayDistrictOverlay,
@@ -440,6 +441,11 @@ const Map = ({ enableOverlay = true }: Props) => {
 
     mapRefInstance.current.setLevel(4);
     mapRefInstance.current.panTo(position);
+    selectSubwayStationMarkerOnMap({
+      map: mapRefInstance.current,
+      marker: selectedSubwayStationMarker,
+      markerRefs: subwayStationMarkerRefs.current,
+    });
   }, [isMapReady, selectedSubwayStationMarker]);
 
   useEffect(() => {
