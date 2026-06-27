@@ -6,6 +6,15 @@ interface PostCardProps {
   onClick: () => void;
 }
 
+const getContentPreview = (content: string) => {
+  const sentences = content
+    .replace(/\s+/g, " ")
+    .trim()
+    .match(/[^.!?。！？]+[.!?。！？]?/g);
+
+  return sentences?.slice(0, 2).join("").trim() ?? content;
+};
+
 const ResidenceReviewCard = ({ post, onClick }: PostCardProps) => {
   return (
     <div
@@ -25,8 +34,8 @@ const ResidenceReviewCard = ({ post, onClick }: PostCardProps) => {
       <p className="mb-1 font-medium text-black text-md opacity-80">
         {post.title}
       </p>
-      <p className="mb-1 text-sm font-Pretendard text-coolNeutral-50">
-        {post.content}
+      <p className="mb-1 line-clamp-2 text-sm font-Pretendard text-coolNeutral-50">
+        {getContentPreview(post.content)}
       </p>
       <p className="text-xs font-Pretendard text-coolNeutral-70">
         @{post.userName} · {formatDateTime(post.createdAt)}
