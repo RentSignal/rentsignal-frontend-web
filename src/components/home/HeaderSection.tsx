@@ -15,6 +15,7 @@ const HeaderSection = () => {
         label="급상승 지역"
         iconWidth="30"
         iconHeight="42"
+        onClick={() => navigate("/info")}
       />
       <IconButton
         icon={RecommendationIcon}
