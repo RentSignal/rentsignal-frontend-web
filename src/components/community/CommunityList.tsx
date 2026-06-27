@@ -4,6 +4,7 @@ import { fetchPosts } from "@/services/communityApi";
 import type { Post } from "@/types/community";
 
 const TABS = [
+  { label: "전체", value: "전체" },
   { label: "추천", value: "추천" },
   { label: "질문", value: "질문" },
   { label: "거주리뷰", value: "거주리뷰" },
@@ -36,7 +37,7 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
   }, [activeTab]);
 
   const filteredPosts = posts.filter((post) => {
-    const matchesCategory = post.category === activeTab;
+    const matchesCategory = activeTab === "전체" || post.category === activeTab;
     const matchesSearch = search.trim()
       ? post.neighborhoodName?.includes(search.trim())
       : true;
