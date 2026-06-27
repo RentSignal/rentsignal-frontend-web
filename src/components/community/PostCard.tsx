@@ -25,7 +25,7 @@ const PostCard = ({ post, onClick }: PostCardProps) => {
       <p className="mb-1 font-medium text-black text-md opacity-80">
         {post.title}
       </p>
-      <p className="mb-1 text-sm font-Pretendard text-coolNeutral-50">
+      <p className="mb-1 line-clamp-2 text-sm font-Pretendard text-coolNeutral-50">
         {post.content}
       </p>
       <p className="text-xs font-Pretendard text-coolNeutral-70">
