@@ -15,6 +15,13 @@ type KakaoMap = {
 
 type KakaoMarker = {
   setMap: (map: KakaoMap | null) => void;
+  setZIndex?: (zIndex: number) => void;
+  __tooltipOverlay?: KakaoOverlay;
+};
+
+type KakaoOverlay = {
+  setMap: (map: KakaoMap | null) => void;
+  setZIndex?: (zIndex: number) => void;
 };
 
 type DrawConvenienceMarkersParams = {
@@ -39,8 +46,64 @@ const escapeHtml = (value: string) =>
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+const getConvenienceTooltipContent = (name: string) => `
+  <div
+    style="
+      position: relative;
+      z-index: 2147483647;
+      pointer-events: none;
+      transform: translateY(-8px);
+      padding: 9px 12px;
+      min-width: max-content;
+      max-width: 220px;
+      color: #111827;
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(17, 24, 39, 0.08);
+      border-radius: 8px;
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18), 0 2px 8px rgba(15, 23, 42, 0.10);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0;
+    "
+  >
+    ${escapeHtml(name)}
+    <div
+      style="
+        position: absolute;
+        left: 50%;
+        bottom: -6px;
+        width: 12px;
+        height: 12px;
+        transform: translateX(-50%) rotate(45deg);
+        background: rgba(255, 255, 255, 0.96);
+        border-right: 1px solid rgba(17, 24, 39, 0.08);
+        border-bottom: 1px solid rgba(17, 24, 39, 0.08);
+      "
+    ></div>
+  </div>
+`;
+
+const showConvenienceTooltip = (marker: KakaoMarker, map: KakaoMap) => {
+  marker.setZIndex?.(10001);
+  marker.__tooltipOverlay?.setZIndex?.(10000);
+  marker.__tooltipOverlay?.setMap(map);
+};
+
+const hideConvenienceTooltip = (marker: KakaoMarker) => {
+  marker.setZIndex?.(0);
+  marker.__tooltipOverlay?.setMap(null);
+};
+
 export const clearConvenienceMarkers = (markerRefs: KakaoMarker[]) => {
   markerRefs.forEach((marker) => {
+    hideConvenienceTooltip(marker);
     marker.setMap(null);
   });
   markerRefs.length = 0;
@@ -76,19 +139,23 @@ export const drawConvenienceMarkers = ({
       position,
       title: pin.name,
       image: markerImage,
-    });
-
-    const infoWindow = new window.kakao.maps.InfoWindow({
-      content: `<div style="padding:6px 10px;font-size:12px;white-space:nowrap;">${escapeHtml(pin.name)}</div>`,
+    }) as KakaoMarker;
+    const tooltipOverlay = new window.kakao.maps.CustomOverlay({
+      position,
+      content: getConvenienceTooltipContent(pin.name),
+      xAnchor: 0.5,
+      yAnchor: 1.25,
+      zIndex: 10000,
     });
 
     window.kakao.maps.event.addListener(marker, "mouseover", () => {
-      infoWindow.open(map, marker);
+      showConvenienceTooltip(marker, map);
     });
     window.kakao.maps.event.addListener(marker, "mouseout", () => {
-      infoWindow.close();
+      hideConvenienceTooltip(marker);
     });
 
+    marker.__tooltipOverlay = tooltipOverlay;
     markerRefs.push(marker);
     bounds.extend(position);
   });
