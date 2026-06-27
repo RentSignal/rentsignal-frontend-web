@@ -52,6 +52,22 @@ const getDistrictId = (
   return matchedDistrict?.id;
 };
 
+const getDistrictIndexItem = (
+  item: SubwayRankingClickItem,
+  districtIndexes: SubwayIndexDistrictItem[],
+) => {
+  const districtId = getDistrictId(item, districtIndexes);
+
+  return (
+    districtIndexes.find((district) => district.id === districtId) ??
+    districtIndexes.find(
+      (district) =>
+        normalizeDistrictName(district.name) ===
+        normalizeDistrictName(item.name),
+    )
+  );
+};
+
 const groupStationsByLine = (
   stations: DistrictSubwayStation[],
   subwayLines: string[],
@@ -98,6 +114,9 @@ const StationIndexPanel = () => {
   const clearSubwayIndexMapItems = useMapOverlayStore(
     (state) => state.clearSubwayIndexItems,
   );
+  const selectSubwayIndexMapItem = useMapOverlayStore(
+    (state) => state.selectSubwayIndexItem,
+  );
 
   useEffect(() => {
     let isCancelled = false;
@@ -139,6 +158,15 @@ const StationIndexPanel = () => {
 
   const handleDistrictClick = async (item: SubwayRankingClickItem) => {
     const districtId = getDistrictId(item, data.districtIndexes);
+    const districtIndexItem = getDistrictIndexItem(item, data.districtIndexes);
+
+    selectSubwayIndexMapItem(
+      districtIndexItem ?? {
+        id: districtId ?? 0,
+        name: item.name,
+        value: item.value,
+      },
+    );
 
     setStationIndexDetail({
       districtName: item.name,
