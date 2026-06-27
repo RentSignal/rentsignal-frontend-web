@@ -69,6 +69,7 @@ type MapOverlayStore = {
   selectedRentIndexItem: RentIndexMapOverlayItem | null;
   consumerIndexItem: ConsumerIndexMapOverlayItem | null;
   subwayIndexItems: SubwayIndexMapOverlayItem[];
+  selectedSubwayIndexItem: SubwayIndexMapOverlayItem | null;
   safetyIndexItems: SafetyIndexMapOverlayItem[];
   selectedHomeRecommendationName: string | null;
   selectedHomeSubwayRanking: HomeSubwayRankingMapItem | null;
@@ -84,6 +85,7 @@ type MapOverlayStore = {
   setConsumerIndexItem: (item: ConsumerIndexMapOverlayItem) => void;
   clearConsumerIndexItem: () => void;
   setSubwayIndexItems: (items: SubwayIndexMapOverlayItem[]) => void;
+  selectSubwayIndexItem: (item: SubwayIndexMapOverlayItem) => void;
   clearSubwayIndexItems: () => void;
   setSafetyIndexItems: (items: SafetyIndexMapOverlayItem[]) => void;
   clearSafetyIndexItems: () => void;
@@ -111,6 +113,7 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
   selectedRentIndexItem: null,
   consumerIndexItem: null,
   subwayIndexItems: [],
+  selectedSubwayIndexItem: null,
   safetyIndexItems: [],
   selectedHomeRecommendationName: null,
   selectedHomeSubwayRanking: null,
@@ -126,8 +129,11 @@ export const useMapOverlayStore = create<MapOverlayStore>((set) => ({
     set({ rentIndexItems: [], selectedRentIndexItem: null }),
   setConsumerIndexItem: (item) => set({ consumerIndexItem: item }),
   clearConsumerIndexItem: () => set({ consumerIndexItem: null }),
-  setSubwayIndexItems: (items) => set({ subwayIndexItems: items }),
-  clearSubwayIndexItems: () => set({ subwayIndexItems: [] }),
+  setSubwayIndexItems: (items) =>
+    set({ subwayIndexItems: items, selectedSubwayIndexItem: null }),
+  selectSubwayIndexItem: (item) => set({ selectedSubwayIndexItem: item }),
+  clearSubwayIndexItems: () =>
+    set({ subwayIndexItems: [], selectedSubwayIndexItem: null }),
   setSafetyIndexItems: (items) => set({ safetyIndexItems: items }),
   clearSafetyIndexItems: () => set({ safetyIndexItems: [] }),
   selectHomeRecommendation: (name) =>

@@ -1,8 +1,17 @@
+import seoulGeoJson from "@/assets/geojson/seoul-gu-simple.json";
+import { createPolygonPaths } from "@/components/mapOverlays/geoJson";
 import type { SubwayIndexMapOverlayItem } from "@/store/mapOverlayStore";
 
-type KakaoMap = object;
+type KakaoMap = {
+  setCenter?: (position: unknown) => void;
+  setLevel?: (level: number) => void;
+};
 
 type KakaoOverlay = {
+  setMap: (map: KakaoMap | null) => void;
+};
+
+type KakaoPolygon = {
   setMap: (map: KakaoMap | null) => void;
 };
 
@@ -16,6 +25,23 @@ type DrawSubwayIndexOverlaysParams = {
   items: SubwayIndexMapOverlayItem[];
   districtCenters: globalThis.Map<string, DistrictCenter>;
   overlayRefs: KakaoOverlay[];
+};
+
+type SelectSubwayIndexItemOnMapParams = {
+  map: KakaoMap;
+  item: SubwayIndexMapOverlayItem;
+  districtCenters: globalThis.Map<string, DistrictCenter>;
+  selectedPolygonRefs: KakaoPolygon[];
+};
+
+type DistrictGeoJsonFeature = {
+  properties: {
+    SIG_KOR_NM: string;
+  };
+  geometry: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: number[][][] | number[][][][];
+  };
 };
 
 const getRegionName = (name: string) => {
@@ -69,6 +95,71 @@ export const clearSubwayIndexOverlays = (overlayRefs: KakaoOverlay[]) => {
     overlay.setMap(null);
   });
   overlayRefs.length = 0;
+};
+
+export const clearSelectedSubwayIndexDistrictPolygons = (
+  polygonRefs: KakaoPolygon[],
+) => {
+  polygonRefs.forEach((polygon) => {
+    polygon.setMap(null);
+  });
+  polygonRefs.length = 0;
+};
+
+const drawSelectedSubwayIndexDistrictPolygon = (
+  map: KakaoMap,
+  districtName: string,
+  color: string,
+  polygonRefs: KakaoPolygon[],
+) => {
+  clearSelectedSubwayIndexDistrictPolygons(polygonRefs);
+
+  (seoulGeoJson.features as DistrictGeoJsonFeature[]).forEach((feature) => {
+    const guName = feature.properties.SIG_KOR_NM;
+
+    if (guName !== districtName) return;
+
+    const polygons =
+      feature.geometry.type === "Polygon"
+        ? [feature.geometry.coordinates as number[][][]]
+        : (feature.geometry.coordinates as number[][][][]);
+
+    polygons.forEach((rings) => {
+      const polygon = new window.kakao.maps.Polygon({
+        map,
+        path: createPolygonPaths(rings),
+        strokeWeight: 3,
+        strokeColor: color,
+        strokeOpacity: 1,
+        fillColor: color,
+        fillOpacity: 0.24,
+        zIndex: 5,
+      });
+
+      polygonRefs.push(polygon);
+    });
+  });
+};
+
+export const selectSubwayIndexItemOnMap = ({
+  map,
+  item,
+  districtCenters,
+  selectedPolygonRefs,
+}: SelectSubwayIndexItemOnMapParams) => {
+  const district = getRegionName(item.name);
+  const center = districtCenters.get(district);
+
+  if (!center) return;
+
+  drawSelectedSubwayIndexDistrictPolygon(
+    map,
+    district,
+    getSubwayIndexOverlayColor(item.value),
+    selectedPolygonRefs,
+  );
+  map.setLevel?.(6);
+  map.setCenter?.(new window.kakao.maps.LatLng(center.lat, center.lng));
 };
 
 export const drawSubwayIndexOverlays = ({

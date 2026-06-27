@@ -78,9 +78,9 @@ const InfoAmenities = ({
   onAmenityItemClick,
 }: AmenitiesProps) => {
   return (
-    <section className="px-5">
+    <section>
       <div className="mb-5">
-        <h2 className="text-lg font-semibold text-coolNeutral-10">
+        <h2 className="px-5 text-lg font-semibold text-coolNeutral-10">
           {title}의 편의시설 수
         </h2>
       </div>
@@ -112,7 +112,7 @@ const AmenityItem = ({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-[15px] bg-white px-[18px] py-[15px] text-left transition-colors hover:bg-coolNeutral-99 disabled:hover:bg-white ${
+      className={`flex w-full items-center gap-[15px] bg-white px-[36px] py-[15px] text-left transition-colors hover:bg-coolNeutral-99 disabled:hover:bg-white ${
         isSelected ? "bg-coolNeutral-99" : ""
       }`}
       disabled={!onClick}
@@ -147,7 +147,7 @@ const AmenityList = ({
   onAmenityItemClick?: (item: InfoAmenityItem) => void;
 }) => {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col ">
       {items.map((amenity, index) => {
         const style = amenityStyleMap[amenity.title] ?? defaultAmenityStyle;
 

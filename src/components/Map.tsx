@@ -28,6 +28,7 @@ import {
   clearSubwayStationMarkers,
   drawSubwayLinePolylines,
   drawSubwayStationMarkers,
+  selectSubwayStationMarkerOnMap,
 } from "@/components/mapOverlays/subwayOverlay";
 import {
   clearHomeSubwayDistrictOverlay,
@@ -45,8 +46,10 @@ import {
   selectRentIndexItemOnMap,
 } from "@/components/mapOverlays/rentIndexOverlay";
 import {
+  clearSelectedSubwayIndexDistrictPolygons as clearSelectedSubwayIndexDistrictPolygonRefs,
   clearSubwayIndexOverlays as clearSubwayIndexOverlayRefs,
   drawSubwayIndexOverlays,
+  selectSubwayIndexItemOnMap,
 } from "@/components/mapOverlays/subwayIndexOverlay";
 import {
   createPolygonPaths,
@@ -133,6 +136,7 @@ const Map = ({ enableOverlay = true }: Props) => {
   const basicPolygonsRef = useRef<any[]>([]);
   const rentIndexOverlaysRef = useRef<any[]>([]);
   const subwayIndexOverlaysRef = useRef<any[]>([]);
+  const selectedSubwayIndexDistrictPolygonsRef = useRef<any[]>([]);
   const safetyIndexOverlaysRef = useRef<any[]>([]);
   const selectedSafetyDistrictPolygonsRef = useRef<any[]>([]);
   const selectedHomeRecommendationPolygonsRef = useRef<any[]>([]);
@@ -153,6 +157,9 @@ const Map = ({ enableOverlay = true }: Props) => {
   );
   const subwayIndexItems = useMapOverlayStore(
     (state) => state.subwayIndexItems,
+  );
+  const selectedSubwayIndexItem = useMapOverlayStore(
+    (state) => state.selectedSubwayIndexItem,
   );
   const safetyIndexItems = useMapOverlayStore(
     (state) => state.safetyIndexItems,
@@ -192,6 +199,12 @@ const Map = ({ enableOverlay = true }: Props) => {
 
   const clearSubwayIndexOverlays = () => {
     clearSubwayIndexOverlayRefs(subwayIndexOverlaysRef.current);
+  };
+
+  const clearSelectedSubwayIndexDistrictPolygons = () => {
+    clearSelectedSubwayIndexDistrictPolygonRefs(
+      selectedSubwayIndexDistrictPolygonsRef.current,
+    );
   };
 
   const clearSafetyIndexOverlays = () => {
@@ -330,8 +343,29 @@ const Map = ({ enableOverlay = true }: Props) => {
 
     return () => {
       clearSubwayIndexOverlays();
+      clearSelectedSubwayIndexDistrictPolygons();
     };
   }, [isMapReady, subwayIndexItems]);
+
+  useEffect(() => {
+    if (!isMapReady || !mapRefInstance.current) return;
+
+    if (!selectedSubwayIndexItem) {
+      clearSelectedSubwayIndexDistrictPolygons();
+      return;
+    }
+
+    selectSubwayIndexItemOnMap({
+      map: mapRefInstance.current,
+      item: selectedSubwayIndexItem,
+      districtCenters,
+      selectedPolygonRefs: selectedSubwayIndexDistrictPolygonsRef.current,
+    });
+
+    return () => {
+      clearSelectedSubwayIndexDistrictPolygons();
+    };
+  }, [isMapReady, selectedSubwayIndexItem]);
 
   useEffect(() => {
     if (!isMapReady || !mapRefInstance.current) return;
@@ -440,6 +474,11 @@ const Map = ({ enableOverlay = true }: Props) => {
 
     mapRefInstance.current.setLevel(4);
     mapRefInstance.current.panTo(position);
+    selectSubwayStationMarkerOnMap({
+      map: mapRefInstance.current,
+      marker: selectedSubwayStationMarker,
+      markerRefs: subwayStationMarkerRefs.current,
+    });
   }, [isMapReady, selectedSubwayStationMarker]);
 
   useEffect(() => {

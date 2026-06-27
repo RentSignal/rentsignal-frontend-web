@@ -4,6 +4,7 @@ import { fetchPosts } from "@/services/communityApi";
 import type { Post } from "@/types/community";
 
 const TABS = [
+  { label: "전체", value: "전체" },
   { label: "추천", value: "추천" },
   { label: "질문", value: "질문" },
   { label: "거주리뷰", value: "거주리뷰" },
@@ -35,9 +36,14 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
     loadPosts();
   }, [activeTab]);
 
-  const filteredPosts = search.trim()
-    ? posts.filter((p) => p.neighborhoodName?.includes(search.trim()))
-    : posts;
+  const filteredPosts = posts.filter((post) => {
+    const matchesCategory = activeTab === "전체" || post.category === activeTab;
+    const matchesSearch = search.trim()
+      ? post.neighborhoodName?.includes(search.trim())
+      : true;
+
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <div className="relative flex flex-col flex-shrink-0 w-full h-full bg-white border-r border-gray-100">
@@ -115,14 +121,13 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
               : "게시글이 없습니다."}
           </div>
         ) : (
-          filteredPosts.map(
-            (post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  onClick={() => onPostClick(post.id)}
-                />
-            ))
+          filteredPosts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              onClick={() => onPostClick(post.id)}
+            />
+          ))
         )}
       </div>
 
@@ -130,7 +135,7 @@ const CommunityList = ({ onWriteClick, onPostClick }: CommunityListProps) => {
       <div className="absolute z-10 -translate-x-1/2 bottom-20 left-1/2">
         <button
           onClick={onWriteClick}
-          className="flex items-center gap-2 px-6 py-2 text-sm text-coolNeutral-30 font-semibold transition-colors border rounded-full bg-blue-95 border-blue-90 hover:bg-gray-50"
+          className="flex items-center gap-2 px-6 py-2 text-sm font-semibold transition-colors border rounded-full text-coolNeutral-30 bg-blue-95 border-blue-90 hover:bg-gray-50"
         >
           <svg
             className="w-5 h-5 text-blue-500"
